@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="GenAI field notes by Mohammad Sameer.">
+    <title>GenAI Field Notes | Mohammad Sameer</title>
+    <script>
+      (() => {
+        const stored = localStorage.getItem("sameer-theme");
+        const theme = stored || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="site-header" data-site-header></header>
+      <main id="post-root"></main>
+      <footer class="site-footer" data-site-footer></footer>
+    </div>
+    <script type="module" src="/src/post.js"></script>
+  </body>
+</html>

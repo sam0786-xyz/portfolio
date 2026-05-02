@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex,nofollow">
+    <title>Admin Login | Mohammad Sameer</title>
+    <script>
+      (() => {
+        const stored = localStorage.getItem("sameer-theme");
+        const theme = stored || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="admin-login-shell">
+      <section class="admin-login-card">
+        <p class="eyebrow">Protected admin</p>
+        <h1>Sign in to manage the website.</h1>
+        <p>CMS access is private and server-session protected.</p>
+        <form data-admin-login>
+          <label>
+            Username
+            <input name="username" autocomplete="username" required>
+          </label>
+          <label>
+            Password
+            <input name="password" type="password" autocomplete="current-password" required>
+          </label>
+          <button class="primary-link" type="submit">Sign in</button>
+        </form>
+        <p class="admin-login-status" data-login-status></p>
+      </section>
+    </main>
+    <script type="module" src="/src/admin-login.js"></script>
+  </body>
+</html>
