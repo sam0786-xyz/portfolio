@@ -70,20 +70,23 @@ async function handleReaction(section, slug, type) {
   if (localStorage.getItem(userKey)) return; // one reaction per post
 
   const config = getSupabaseConfig();
-  if (config.url && config.anonKey) {
-    try {
-      await supabaseFetch("blog_reactions", {
-        method: "POST",
-        headers: { Prefer: "return=minimal" },
-        body: JSON.stringify({ post_slug: slug, reaction: type })
-      });
-    } catch {}
-  }
+  if (!config.url || !config.anonKey) return;
 
-  localStorage.setItem(userKey, type);
-  const counter = section.querySelector(`[data-${type}-count]`);
-  counter.textContent = Number(counter.textContent) + 1;
-  section.querySelector(`[data-reaction="${type}"]`).classList.add("is-active");
+  try {
+    await supabaseFetch("blog_reactions", {
+      method: "POST",
+      headers: { Prefer: "return=minimal" },
+      body: JSON.stringify({ post_slug: slug, reaction: type })
+    });
+    // Only update UI + localStorage after successful persist
+    localStorage.setItem(userKey, type);
+    const counter = section.querySelector(`[data-${type}-count]`);
+    counter.textContent = Number(counter.textContent) + 1;
+    section.querySelector(`[data-reaction="${type}"]`).classList.add("is-active");
+  } catch (err) {
+    console.error("Failed to save reaction:", err);
+    // Don't update UI — user can retry
+  }
 }
 
 async function loadComments(section, slug) {
@@ -107,20 +110,28 @@ async function postComment(section, slug, name, body) {
   const config = getSupabaseConfig();
   const comment = { post_slug: slug, name, body, created_at: new Date().toISOString() };
 
-  if (config.url && config.anonKey) {
-    try {
-      await supabaseFetch("blog_comments", {
-        method: "POST",
-        headers: { Prefer: "return=minimal" },
-        body: JSON.stringify(comment)
-      });
-    } catch {}
-  }
+  if (!config.url || !config.anonKey) return;
 
-  const list = section.querySelector("[data-comment-list]");
-  const empty = list.querySelector(".comment-empty");
-  if (empty) empty.remove();
-  list.insertAdjacentHTML("afterbegin", renderComment(comment));
+  try {
+    await supabaseFetch("blog_comments", {
+      method: "POST",
+      headers: { Prefer: "return=minimal" },
+      body: JSON.stringify(comment)
+    });
+    // Only insert into DOM after successful persist
+    const list = section.querySelector("[data-comment-list]");
+    const empty = list.querySelector(".comment-empty");
+    if (empty) empty.remove();
+    list.insertAdjacentHTML("afterbegin", renderComment(comment));
+  } catch (err) {
+    console.error("Failed to post comment:", err);
+    const list = section.querySelector("[data-comment-list]");
+    list.insertAdjacentHTML("afterbegin", `<p class="comment-error" style="color:var(--danger,#e55)">Failed to post comment. Please try again.</p>`);
+    setTimeout(() => {
+      const errEl = list.querySelector(".comment-error");
+      if (errEl) errEl.remove();
+    }, 4000);
+  }
 }
 
 function renderComment(comment) {

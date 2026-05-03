@@ -62,16 +62,16 @@ export async function registerFocusUser(name, email) {
 
 /**
  * Validate an email against Supabase focus_users table.
- * Falls back to localStorage if Supabase is unavailable.
+ *
+ * Design note: This is a lightweight, trust-based login for a personal
+ * portfolio productivity tool — not a security-critical system. Anyone who
+ * knows a registered email can access Focus OS. For stricter auth,
+ * integrate Supabase Auth with magic links or OTP.
  */
 export async function validateFocusEmail(email) {
   const normalized = email.trim().toLowerCase();
 
-  // Check localStorage first
-  const local = checkFocusAuth();
-  if (local && local.email === normalized) return local;
-
-  // Check Supabase
+  // Always verify against Supabase if available
   const config = getSupabaseConfig();
   if (config.url && config.anonKey) {
     try {
@@ -85,9 +85,13 @@ export async function validateFocusEmail(email) {
         return authData;
       }
     } catch {
-      // Supabase unavailable
+      // Supabase unavailable — fall back to localStorage below
     }
   }
+
+  // Fallback: only trust localStorage if Supabase was unreachable
+  const local = checkFocusAuth();
+  if (local && local.email === normalized) return local;
 
   return null;
 }

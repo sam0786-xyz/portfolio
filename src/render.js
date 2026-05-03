@@ -184,15 +184,22 @@ export function renderBlogCards() {
 }
 
 export function renderLinkedInCard(post, options = {}) {
+  const showEmbed = options.embed !== false && post.embedHtml;
   return `
     <article class="linkedin-card" data-animate="fade-up">
-      <div class="linkedin-fallback">
-        <div class="linkedin-mark" aria-hidden="true">in</div>
-        <p class="eyebrow">${new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(new Date(post.publishedAt))}</p>
-        <h3>${escapeHtml(post.title)}</h3>
-        <p>${escapeHtml(post.summary)}</p>
-        <div class="tag-row">${(post.tags || []).map(item => `<span class="pill">${icon("tag")}&nbsp;${escapeHtml(item)}</span>`).join("")}</div>
-      </div>
+      ${
+        showEmbed
+          ? `<div class="linkedin-embed">${post.embedHtml}</div>`
+          : `
+            <div class="linkedin-fallback">
+              <div class="linkedin-mark" aria-hidden="true">in</div>
+              <p class="eyebrow">${new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(new Date(post.publishedAt))}</p>
+              <h3>${escapeHtml(post.title)}</h3>
+              <p>${escapeHtml(post.summary)}</p>
+              <div class="tag-row">${(post.tags || []).map(item => `<span class="pill">${icon("tag")}&nbsp;${escapeHtml(item)}</span>`).join("")}</div>
+            </div>
+          `
+      }
       <a class="text-link" href="${post.url}" target="_blank" rel="noreferrer">Open on LinkedIn</a>
     </article>
   `;

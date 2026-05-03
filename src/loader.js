@@ -5,6 +5,7 @@
  */
 
 const LOADER_ID = "app-loader";
+let stopAnimation = null;
 
 function createLoaderDOM() {
   if (document.getElementById(LOADER_ID)) return;
@@ -25,6 +26,8 @@ function animateLoader() {
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
   let width, height, nodes, frame = 0;
+  let rafId = null;
+  let stopped = false;
 
   function resize() {
     width = canvas.width = window.innerWidth;
@@ -47,6 +50,7 @@ function animateLoader() {
   }
 
   function draw() {
+    if (stopped) return;
     ctx.clearRect(0, 0, width, height);
     const cx = width / 2;
     const cy = height / 2;
@@ -104,13 +108,26 @@ function animateLoader() {
     ctx.fill();
 
     frame++;
-    requestAnimationFrame(draw);
+    rafId = requestAnimationFrame(draw);
+  }
+
+  function resizeHandler() {
+    resize();
+    initNodes();
   }
 
   resize();
   initNodes();
   draw();
-  window.addEventListener("resize", () => { resize(); initNodes(); });
+  window.addEventListener("resize", resizeHandler);
+
+  // Return a cleanup function
+  stopAnimation = () => {
+    stopped = true;
+    if (rafId != null) cancelAnimationFrame(rafId);
+    window.removeEventListener("resize", resizeHandler);
+    stopAnimation = null;
+  };
 }
 
 export function bootLoader() {
@@ -119,6 +136,7 @@ export function bootLoader() {
 }
 
 export function dismissLoader() {
+  if (stopAnimation) stopAnimation();
   const loader = document.getElementById(LOADER_ID);
   if (!loader) return;
   loader.classList.add("is-done");
