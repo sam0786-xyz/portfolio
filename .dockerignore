@@ -1,0 +1,13 @@
+node_modules
+.git
+.gitignore
+.env
+.env.*
+supabase/.env
+.DS_Store
+dist
+build
+.next
+.vscode
+.gemini
+README.md

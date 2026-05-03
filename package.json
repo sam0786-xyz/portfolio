@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "start": "node server.mjs",
     "dev": "node server.mjs",
     "check": "node --check server.mjs && node --check src/data/content.js && node --check src/content-store.js && node --check src/supabase-client.js && node --check src/theme.js && node --check src/render.js && node --check src/animations.js && node --check src/focus-store.js && node --check src/focus-auth.js && node --check src/main.js && node --check src/focus.js && node --check src/linkedin.js && node --check src/admin-login.js && node --check src/certificates.js && node --check src/blog.js && node --check src/post.js && node --check src/studio.js && node --check src/cms.js"
   }

@@ -7,8 +7,8 @@ import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
 const env = loadEnv([".env", "supabase/.env"]);
-const port = Number(process.env.PORT || env.PORT || 4173);
-const host = process.env.HOST || env.HOST || "127.0.0.1";
+const port = Number(process.env.PORT || env.PORT || 8080);
+const host = process.env.HOST || env.HOST || "0.0.0.0";
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || env.ADMIN_USERNAME || "sam.xyz";
 const DEFAULT_ADMIN_HASH = "pbkdf2_sha256$210000$sameer-portfolio-admin-v1$b115dfcb8e54c1fd2464402b766df7431626cf77a0a6fee32254d1d686e9d94b";
