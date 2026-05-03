@@ -1,4 +1,6 @@
 node_modules/
+*.json.bak
+gen-lang-client-*.json
 .env
 .env.*
 !.env.example
