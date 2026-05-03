@@ -1,3 +1,4 @@
+import { bootLoader, dismissLoader } from "./loader.js";
 import { getSiteContent, initSiteContent } from "./content-store.js";
 import { bootInteractions } from "./animations.js";
 import { bootTheme } from "./theme.js";
@@ -27,8 +28,10 @@ function renderPage() {
   `;
 }
 
+bootLoader();
 await initSiteContent();
 mountShell("certificates");
 bootTheme();
 renderPage();
 bootInteractions(document.querySelector("#certificates-root"));
+dismissLoader();
