@@ -94,7 +94,7 @@ function renderHome() {
             ${renderHeroContacts(profile)}
           </div>
           <p class="eyebrow">AI portfolio / research OS</p>
-          <h1 id="hero-title" class="hero-name"><span class="hero-firstname">Mohammad</span><br><span class="hero-lastname">Sameer</span></h1>
+          <h1 id="hero-title" class="hero-name">Mohammad<br>Sameer</h1>
           <p class="lede">
             ${escapeHtml(profile.role)} at ${escapeHtml(profile.company)}. ${escapeHtml(profile.summary)}
           </p>
@@ -134,8 +134,8 @@ function renderHome() {
       <section class="section editorial-band" id="projects">
         <div class="section-header" data-animate="fade-up">
           <div>
-            <p class="eyebrow">Selected evidence</p>
-            <h2>Systems, outcomes, and the engineering decisions behind them.</h2>
+            <p class="eyebrow">Projects</p>
+            <h2>What I've built.</h2>
           </div>
           <p>Select a project to explore the details.</p>
         </div>
@@ -161,8 +161,8 @@ function renderHome() {
       <section class="section editorial-band" id="writing">
         <div class="section-header" data-animate="fade-up">
           <div>
-            <p class="eyebrow">Writing system</p>
-            <h2>Field Notes and Essays.</h2>
+            <p class="eyebrow">Blog</p>
+            <h2>Notes and essays.</h2>
           </div>
           <a class="secondary-link" href="/blog/">${icon("arrow")} Read all posts</a>
         </div>
@@ -171,9 +171,9 @@ function renderHome() {
 
       <section class="section split-section" id="skills">
         <div class="sticky-copy" data-animate="slide-right">
-          <p class="eyebrow">Signal map</p>
-          <h2>Skills organized by domain for clear exploration.</h2>
-          <p>Filter by AI, backend, and cloud to explore capabilities across each domain.</p>
+          <p class="eyebrow">Skills</p>
+          <h2>What I work with.</h2>
+          <p>Filter by domain.</p>
           <div class="filter-rail" data-skill-filters>
             <button class="is-active" type="button" data-filter="all">All</button>
             <button type="button" data-filter="ai">AI</button>
@@ -198,7 +198,7 @@ function renderHome() {
       <section class="section split-section" id="experience">
         <div class="sticky-copy" data-animate="slide-right">
           <p class="eyebrow">Experience</p>
-          <h2>Production AI systems, not only experiments.</h2>
+          <h2>Where I've worked.</h2>
           <p>${escapeHtml(profile.education)}. ${escapeHtml(profile.location)}.</p>
         </div>
         <div class="timeline-stack">
@@ -220,8 +220,8 @@ function renderHome() {
       <section class="section education-flow" id="education">
         <div class="section-header" data-animate="fade-up">
           <div>
-            <p class="eyebrow">Education & leadership</p>
-            <h2>Academic track with community execution.</h2>
+            <p class="eyebrow">Education</p>
+            <h2>Background and leadership.</h2>
           </div>
         </div>
         <div class="masonry-lite">
@@ -253,8 +253,8 @@ function renderHome() {
       <section class="section editorial-band" id="certificates">
         <div class="section-header" data-animate="fade-up">
           <div>
-            <p class="eyebrow">Verified credentials</p>
-            <h2>Certificates with context, skills, and verification paths.</h2>
+            <p class="eyebrow">Certificates</p>
+            <h2>Verified credentials.</h2>
           </div>
           <a class="secondary-link" href="/certificates/">${icon("arrow")} Full timeline</a>
         </div>
@@ -266,8 +266,8 @@ function renderHome() {
       <section class="section" id="linkedin">
         <div class="section-header" data-animate="fade-up">
           <div>
-            <p class="eyebrow">LinkedIn signal</p>
-            <h2>Posts that show public learning and execution.</h2>
+            <p class="eyebrow">LinkedIn</p>
+            <h2>Recent posts.</h2>
           </div>
           <a class="secondary-link" href="/linkedin/">${icon("arrow")} View all posts</a>
         </div>

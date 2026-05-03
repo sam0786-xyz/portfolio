@@ -2388,26 +2388,9 @@ h3 {
   word-break: keep-all;
   white-space: normal;
   font-size: 6.9rem;
-  letter-spacing: 0;
-  line-height: 0.92;
-}
-
-.hero-firstname {
-  display: block;
-  font-weight: 300;
-  font-size: 0.52em;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.hero-lastname {
-  display: block;
-  font-weight: 900;
-  background: linear-gradient(135deg, var(--teal), var(--violet));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
 }
 
 @media (max-width: 1180px) {
