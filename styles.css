@@ -2524,11 +2524,7 @@ h3 {
 .skill-svg {
   width: 28px;
   height: 28px;
-  stroke: var(--teal);
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  fill: none;
+  object-fit: contain;
 }
 
 .skill-icon-card span {
@@ -2536,6 +2532,14 @@ h3 {
   font-weight: 700;
   color: var(--muted);
   line-height: 1.2;
+}
+
+.tech-tag-logo {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+  margin-right: 4px;
+  vertical-align: -2px;
 }
 
 /* ═══ Education Cards ═══ */
