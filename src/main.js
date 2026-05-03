@@ -11,7 +11,8 @@ import {
   renderLinkedInCards,
   renderPills,
   icon,
-  skillIcon
+  skillIcon,
+  techTagLogo
 } from "./render.js";
 
 function heroContactIcon(link) {
@@ -312,7 +313,7 @@ function renderProjectDetail(project) {
     <h3>${escapeHtml(project.title)}</h3>
     <p>${escapeHtml(project.summary)}</p>
     <p><strong>${escapeHtml(project.impact || "Impact details will appear here.")}</strong></p>
-    <div class="tag-row">${renderPills(project.tags || [])}</div>
+    <div class="tag-row">${(project.tags || []).map(t => `<span class="pill">${techTagLogo(t)}${escapeHtml(t)}</span>`).join("")}</div>
     <a class="text-link" href="${project.href}">Open evidence</a>
   `;
 }

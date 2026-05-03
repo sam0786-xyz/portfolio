@@ -5,11 +5,14 @@
  */
 
 const LOADER_ID = "app-loader";
+const MIN_DISPLAY_MS = 1800;
 let stopAnimation = null;
 let removalTimeout = null;
+let bootTime = 0;
 
 function createLoaderDOM() {
-  if (document.getElementById(LOADER_ID)) return;
+  const existing = document.getElementById(LOADER_ID);
+  if (existing) existing.remove();
   const loader = document.createElement("div");
   loader.id = LOADER_ID;
   loader.innerHTML = `
@@ -56,7 +59,6 @@ function animateLoader() {
     const cx = width / 2;
     const cy = height / 2;
 
-    // Draw edges
     for (let i = 0; i < nodes.length; i++) {
       for (let j = i + 1; j < nodes.length; j++) {
         const dx = nodes[i].x - nodes[j].x;
@@ -74,31 +76,23 @@ function animateLoader() {
       }
     }
 
-    // Draw nodes + data pulse toward center
     for (const node of nodes) {
       node.pulse += 0.03;
       const glow = 0.4 + Math.sin(node.pulse) * 0.3;
-
-      // Node
       ctx.beginPath();
       ctx.arc(node.x, node.y, node.r, 0, Math.PI * 2);
       ctx.fillStyle = `rgba(82, 199, 184, ${glow})`;
       ctx.fill();
-
-      // Drift toward center slowly
       const toCenterX = (cx - node.x) * 0.0004;
       const toCenterY = (cy - node.y) * 0.0004;
       node.x += node.vx + toCenterX;
       node.y += node.vy + toCenterY;
-
-      // Wrap
       if (node.x < -10) node.x = width + 10;
       if (node.x > width + 10) node.x = -10;
       if (node.y < -10) node.y = height + 10;
       if (node.y > height + 10) node.y = -10;
     }
 
-    // Central glow pulse
     const pulseR = 40 + Math.sin(frame * 0.04) * 12;
     const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, pulseR);
     gradient.addColorStop(0, "rgba(82, 199, 184, 0.12)");
@@ -112,17 +106,13 @@ function animateLoader() {
     rafId = requestAnimationFrame(draw);
   }
 
-  function resizeHandler() {
-    resize();
-    initNodes();
-  }
+  function resizeHandler() { resize(); initNodes(); }
 
   resize();
   initNodes();
   draw();
   window.addEventListener("resize", resizeHandler);
 
-  // Return a cleanup function
   stopAnimation = () => {
     stopped = true;
     if (rafId != null) cancelAnimationFrame(rafId);
@@ -133,27 +123,31 @@ function animateLoader() {
 }
 
 export function bootLoader() {
-  // Tear down any prior loader to make re-entry safe
   if (stopAnimation) stopAnimation();
-  if (removalTimeout != null) {
-    clearTimeout(removalTimeout);
-    removalTimeout = null;
-  }
-  const existing = document.getElementById(LOADER_ID);
-  if (existing) existing.remove();
-
+  if (removalTimeout != null) { clearTimeout(removalTimeout); removalTimeout = null; }
+  bootTime = Date.now();
   createLoaderDOM();
   animateLoader();
+
+  // Safety: auto-dismiss after 6s in case dismissLoader is never called
+  removalTimeout = setTimeout(() => dismissLoader(), 6000);
 }
 
-export function dismissLoader() {
+function fadeAndRemove() {
   if (stopAnimation) stopAnimation();
   const loader = document.getElementById(LOADER_ID);
   if (!loader) return;
   loader.classList.add("is-done");
-  removalTimeout = setTimeout(() => {
-    loader.remove();
-    removalTimeout = null;
-  }, 600);
+  removalTimeout = setTimeout(() => { loader.remove(); removalTimeout = null; }, 600);
 }
 
+export function dismissLoader() {
+  if (removalTimeout != null) { clearTimeout(removalTimeout); removalTimeout = null; }
+  const elapsed = Date.now() - bootTime;
+  const remaining = Math.max(0, MIN_DISPLAY_MS - elapsed);
+  if (remaining > 0) {
+    removalTimeout = setTimeout(fadeAndRemove, remaining);
+  } else {
+    fadeAndRemove();
+  }
+}

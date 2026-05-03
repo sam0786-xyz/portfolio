@@ -26,32 +26,53 @@ export function icon(name) {
   return `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="${icons[name] || icons.spark}"></path></svg>`;
 }
 
-const skillIcons = {
-  "generative ai": "M12 2l1.9 6.1L20 10l-6.1 1.9L12 18l-1.9-6.1L4 10l6.1-1.9L12 2z",
-  "rag": "M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15z",
-  "langchain": "M13.19 8.69a4.5 4.5 0 0 1 1.81 7.28l-4.24 4.25a4.5 4.5 0 1 1-6.36-6.36l.71-.71M10.81 15.31a4.5 4.5 0 0 1-1.81-7.28l4.24-4.25a4.5 4.5 0 1 1 6.36 6.36l-.71.71",
-  "gemini llms": "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10z",
-  "scikit-learn": "M22 12h-4l-3 9L9 3l-3 9H2",
-  "tensorflow": "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5",
-  "python": "M12 2C6.48 2 2 3.79 2 6v3c0 2.21 4.48 4 10 4s10-1.79 10-4V6c0-2.21-4.48-4-10-4zM2 12v3c0 2.21 4.48 4 10 4s10-1.79 10-4v-3",
-  "c++": "M6 3v18h12V9l-6-6H6zM14 3v6h6M9 13h6M12 10v6",
-  "java": "M8 21s-1-1-1-4c0-3 3-3 3-3s1 0 2 1l2-2s-1-2-4-2-5 3-5 5 3 5 3 5zM12 3s6 2 6 10c0 4-2 5-2 5",
-  "sql": "M12 8c-3.31 0-6 1.34-6 3v6c0 1.66 2.69 3 6 3s6-1.34 6-3v-6c0-1.66-2.69-3-6-3zM6 11c0 1.66 2.69 3 6 3s6-1.34 6-3",
-  "fastapi": "M13 2L3 14h9l-1 8 10-12h-9l1-8z",
-  "jwt authentication": "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
-  "aws": "M2 20h20M7 20V8l5-5 5 5v12",
-  "gcp": "M4.5 16.5c-1.5 0-2.5-1-2.5-2.5s1-2.5 2.5-2.5c.3 0 .5 0 .8.1C6 9.4 8 8 10.5 8c3 0 5.5 2 6 4.5.4 0 .8-.1 1.2-.1 2 0 3.8 1.5 3.8 3.5S19.7 19.5 17.7 19.5H4.5",
-  "azure": "M13 3l-8 16h6l-1.5-4L18 3H13zM8 19l3-6 5 6H8z",
-  "dynamodb": "M12 3c-4.42 0-8 1.34-8 3s3.58 3 8 3 8-1.34 8-3-3.58-3-8-3zM4 9c0 1.66 3.58 3 8 3s8-1.34 8-3M4 15c0 1.66 3.58 3 8 3s8-1.34 8-3M4 9v12c0 1.66 3.58 3 8 3s8-1.34 8-3V9",
-  "qdrant": "M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z",
-  "elevenlabs": "M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3zM19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8",
-  "twilio": "M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.34 1.9.63 2.8a2 2 0 0 1-.45 2.11L8 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.29 1.84.5 2.8.63A2 2 0 0 1 22 16.92z"
+const skillLogos = {
+  "generative ai": "https://cdn.simpleicons.org/openai/52c7b8",
+  "rag": "https://cdn.simpleicons.org/readthedocs/52c7b8",
+  "langchain": "https://cdn.simpleicons.org/langchain/52c7b8",
+  "gemini llms": "https://cdn.simpleicons.org/googlegemini/52c7b8",
+  "scikit-learn": "https://cdn.simpleicons.org/scikitlearn/52c7b8",
+  "tensorflow": "https://cdn.simpleicons.org/tensorflow/52c7b8",
+  "python": "https://cdn.simpleicons.org/python/52c7b8",
+  "c++": "https://cdn.simpleicons.org/cplusplus/52c7b8",
+  "java": "https://cdn.simpleicons.org/oracle/52c7b8",
+  "sql": "https://cdn.simpleicons.org/postgresql/52c7b8",
+  "fastapi": "https://cdn.simpleicons.org/fastapi/52c7b8",
+  "jwt authentication": "https://cdn.simpleicons.org/jsonwebtokens/52c7b8",
+  "aws": "https://cdn.simpleicons.org/amazonaws/52c7b8",
+  "gcp": "https://cdn.simpleicons.org/googlecloud/52c7b8",
+  "azure": "https://cdn.simpleicons.org/microsoftazure/52c7b8",
+  "dynamodb": "https://cdn.simpleicons.org/amazondynamodb/52c7b8",
+  "qdrant": "https://cdn.simpleicons.org/qdrant/52c7b8",
+  "elevenlabs": "https://cdn.simpleicons.org/elevenlabs/52c7b8",
+  "twilio": "https://cdn.simpleicons.org/twilio/52c7b8",
+  "next.js": "https://cdn.simpleicons.org/nextdotjs/52c7b8",
+  "typescript": "https://cdn.simpleicons.org/typescript/52c7b8",
+  "tailwind css": "https://cdn.simpleicons.org/tailwindcss/52c7b8",
+  "framer motion": "https://cdn.simpleicons.org/framer/52c7b8",
+  "supabase": "https://cdn.simpleicons.org/supabase/52c7b8",
+  "resend": "https://cdn.simpleicons.org/resend/52c7b8",
+  "gmail api": "https://cdn.simpleicons.org/gmail/52c7b8",
+  "gemini 2.5 flash": "https://cdn.simpleicons.org/googlegemini/52c7b8",
+  "gemini": "https://cdn.simpleicons.org/googlegemini/52c7b8",
+  "pydub": "https://cdn.simpleicons.org/python/52c7b8",
+  "rag": "https://cdn.simpleicons.org/readthedocs/52c7b8"
 };
 
 export function skillIcon(name) {
   const key = (typeof name === "string" && name) ? name.toLowerCase() : "";
-  const path = skillIcons[key] || skillIcons["generative ai"];
-  return `<svg class="skill-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="${path}"></path></svg>`;
+  const url = skillLogos[key] || skillLogos["generative ai"];
+  return `<img class="skill-svg" src="${url}" alt="${escapeHtml(name || "skill")}" loading="lazy">`;
+}
+
+/**
+ * Return a small inline logo for a project tech tag.
+ */
+export function techTagLogo(tag) {
+  const key = (typeof tag === "string" && tag) ? tag.toLowerCase() : "";
+  const url = skillLogos[key];
+  if (!url) return "";
+  return `<img class="tech-tag-logo" src="${url}" alt="" loading="lazy">`;
 }
 
 export function escapeHtml(value) {
