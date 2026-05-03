@@ -49,7 +49,7 @@ const skillIcons = {
 };
 
 export function skillIcon(name) {
-  const key = name.toLowerCase();
+  const key = (typeof name === "string" && name) ? name.toLowerCase() : "";
   const path = skillIcons[key] || skillIcons["generative ai"];
   return `<svg class="skill-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="${path}"></path></svg>`;
 }

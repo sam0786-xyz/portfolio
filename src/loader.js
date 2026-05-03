@@ -6,6 +6,7 @@
 
 const LOADER_ID = "app-loader";
 let stopAnimation = null;
+let removalTimeout = null;
 
 function createLoaderDOM() {
   if (document.getElementById(LOADER_ID)) return;
@@ -125,12 +126,22 @@ function animateLoader() {
   stopAnimation = () => {
     stopped = true;
     if (rafId != null) cancelAnimationFrame(rafId);
+    rafId = null;
     window.removeEventListener("resize", resizeHandler);
     stopAnimation = null;
   };
 }
 
 export function bootLoader() {
+  // Tear down any prior loader to make re-entry safe
+  if (stopAnimation) stopAnimation();
+  if (removalTimeout != null) {
+    clearTimeout(removalTimeout);
+    removalTimeout = null;
+  }
+  const existing = document.getElementById(LOADER_ID);
+  if (existing) existing.remove();
+
   createLoaderDOM();
   animateLoader();
 }
@@ -140,5 +151,9 @@ export function dismissLoader() {
   const loader = document.getElementById(LOADER_ID);
   if (!loader) return;
   loader.classList.add("is-done");
-  setTimeout(() => loader.remove(), 600);
+  removalTimeout = setTimeout(() => {
+    loader.remove();
+    removalTimeout = null;
+  }, 600);
 }
+

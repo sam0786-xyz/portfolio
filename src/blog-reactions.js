@@ -34,19 +34,31 @@ export function renderBlogReactions(container, slug) {
   loadComments(section, slug);
 
   // Reaction handlers
+  let reactionInFlight = false;
   section.querySelectorAll("[data-reaction]").forEach((btn) => {
-    btn.addEventListener("click", () => handleReaction(section, slug, btn.dataset.reaction));
+    btn.addEventListener("click", async () => {
+      if (reactionInFlight) return;
+      reactionInFlight = true;
+      section.querySelectorAll(".reaction-btn").forEach(b => b.disabled = true);
+      try {
+        await handleReaction(section, slug, btn.dataset.reaction);
+      } finally {
+        reactionInFlight = false;
+        section.querySelectorAll(".reaction-btn").forEach(b => b.disabled = false);
+      }
+    });
   });
 
   // Comment form
-  section.querySelector("[data-comment-form]").addEventListener("submit", (event) => {
+  section.querySelector("[data-comment-form]").addEventListener("submit", async (event) => {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const formEl = event.currentTarget;
+    const form = new FormData(formEl);
     const name = form.get("name").toString().trim();
     const body = form.get("body").toString().trim();
     if (!name || !body) return;
-    postComment(section, slug, name, body);
-    event.currentTarget.reset();
+    const ok = await postComment(section, slug, name, body);
+    if (ok) formEl.reset();
   });
 }
 
@@ -110,7 +122,7 @@ async function postComment(section, slug, name, body) {
   const config = getSupabaseConfig();
   const comment = { post_slug: slug, name, body, created_at: new Date().toISOString() };
 
-  if (!config.url || !config.anonKey) return;
+  if (!config.url || !config.anonKey) return false;
 
   try {
     await supabaseFetch("blog_comments", {
@@ -123,6 +135,7 @@ async function postComment(section, slug, name, body) {
     const empty = list.querySelector(".comment-empty");
     if (empty) empty.remove();
     list.insertAdjacentHTML("afterbegin", renderComment(comment));
+    return true;
   } catch (err) {
     console.error("Failed to post comment:", err);
     const list = section.querySelector("[data-comment-list]");
@@ -131,6 +144,7 @@ async function postComment(section, slug, name, body) {
       const errEl = list.querySelector(".comment-error");
       if (errEl) errEl.remove();
     }, 4000);
+    return false;
   }
 }
 
