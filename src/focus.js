@@ -1,3 +1,4 @@
+import { bootLoader, dismissLoader } from "./loader.js";
 import { bootInteractions } from "./animations.js";
 import { initSiteContent } from "./content-store.js";
 import {
@@ -368,6 +369,7 @@ function setupEvents() {
   });
 }
 
+bootLoader();
 await initSiteContent();
 mountShell("focus");
 bootTheme();
@@ -389,3 +391,4 @@ if (auth) {
   });
   bootInteractions(focusRoot);
 }
+dismissLoader();

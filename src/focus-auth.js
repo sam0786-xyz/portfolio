@@ -3,18 +3,6 @@ import { supabaseFetch, getSupabaseConfig } from "./supabase-client.js";
 const AUTH_KEY = "sameer-focus-auth-v1";
 
 /**
- * Generate a unique 8-char alphanumeric code in XXXX-XXXX format.
- */
-function generateCode() {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let code = "";
-  for (let i = 0; i < 8; i++) {
-    code += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return `${code.slice(0, 4)}-${code.slice(4)}`;
-}
-
-/**
  * Check if the user is authenticated for Focus OS.
  * Returns the stored profile or null.
  */
@@ -23,7 +11,7 @@ export function checkFocusAuth() {
     const raw = localStorage.getItem(AUTH_KEY);
     if (!raw) return null;
     const data = JSON.parse(raw);
-    if (data && data.code && data.name) return data;
+    if (data && data.email && data.name) return data;
     return null;
   } catch {
     return null;
@@ -46,15 +34,12 @@ export function clearFocusAuth() {
 
 /**
  * Register a new Focus OS user with Supabase.
- * Creates a unique code and saves the user profile.
  */
 export async function registerFocusUser(name, email) {
   const config = getSupabaseConfig();
-  const code = generateCode();
   const profile = {
     name: name.trim(),
     email: email.trim().toLowerCase(),
-    unique_code: code,
     created_at: new Date().toISOString()
   };
 
@@ -70,32 +55,32 @@ export async function registerFocusUser(name, email) {
     }
   }
 
-  const authData = { name: profile.name, email: profile.email, code };
+  const authData = { name: profile.name, email: profile.email };
   saveAuth(authData);
   return authData;
 }
 
 /**
- * Validate a unique code against Supabase.
+ * Validate an email against Supabase focus_users table.
  * Falls back to localStorage if Supabase is unavailable.
  */
-export async function validateFocusCode(code) {
-  const normalized = code.trim().toUpperCase();
+export async function validateFocusEmail(email) {
+  const normalized = email.trim().toLowerCase();
 
   // Check localStorage first
   const local = checkFocusAuth();
-  if (local && local.code === normalized) return local;
+  if (local && local.email === normalized) return local;
 
   // Check Supabase
   const config = getSupabaseConfig();
   if (config.url && config.anonKey) {
     try {
       const rows = await supabaseFetch(
-        `focus_users?unique_code=eq.${encodeURIComponent(normalized)}&select=name,email,unique_code&limit=1`
+        `focus_users?email=eq.${encodeURIComponent(normalized)}&select=name,email&limit=1`
       );
       if (Array.isArray(rows) && rows.length > 0) {
         const user = rows[0];
-        const authData = { name: user.name, email: user.email, code: user.unique_code };
+        const authData = { name: user.name, email: user.email };
         saveAuth(authData);
         return authData;
       }
@@ -117,82 +102,64 @@ export function renderAuthGate(container, onSuccess) {
       <div data-animate="slide-right">
         <p class="eyebrow">Focus OS</p>
         <h1>Deep work, made simple.</h1>
-        <p class="lede">Enter your unique code to access the workspace, or create a new profile to get started.</p>
+        <p class="lede">Sign in with your email or create a profile to get started.</p>
       </div>
     </section>
 
     <section class="focus-auth-gate">
-      <div class="auth-card" id="auth-code-card">
-        <h2>Enter your code</h2>
-        <p>If you already have a Focus OS code, enter it below.</p>
-        <form data-code-form>
-          <input
-            name="code"
-            placeholder="XXXX-XXXX"
-            required
-            maxlength="9"
-            pattern="[A-Za-z0-9]{4}-?[A-Za-z0-9]{4}"
-            autocomplete="off"
-            spellcheck="false"
-            style="text-transform: uppercase; letter-spacing: 0.12em; text-align: center"
-          >
-          <button class="primary-link" type="submit">Unlock</button>
+      <div class="auth-card" id="auth-login-card">
+        <h2>Welcome back</h2>
+        <p>Enter your email to continue.</p>
+        <form data-login-form>
+          <input name="email" type="email" placeholder="your@email.com" required autocomplete="email">
+          <button class="primary-link" type="submit">Continue</button>
         </form>
-        <p class="auth-status" data-code-status></p>
-        <p class="auth-toggle">Don't have a code? <button type="button" class="text-link" data-show-register>Create a profile</button></p>
+        <p class="auth-status" data-login-status></p>
+        <p class="auth-toggle">New here? <button type="button" class="text-link" data-show-register>Create a profile</button></p>
       </div>
 
       <div class="auth-card is-hidden" id="auth-register-card">
         <h2>Create your profile</h2>
-        <p>We'll generate a unique code for you.</p>
+        <p>Your email is all you need to sign in next time.</p>
         <form data-register-form>
           <input name="name" placeholder="Your name" required autocomplete="name">
-          <input name="email" type="email" placeholder="Email address" required autocomplete="email">
-          <button class="primary-link" type="submit">Get my code</button>
+          <input name="email" type="email" placeholder="your@email.com" required autocomplete="email">
+          <button class="primary-link" type="submit">Get started</button>
         </form>
         <p class="auth-status" data-register-status></p>
-        <p class="auth-toggle">Already have a code? <button type="button" class="text-link" data-show-code>Enter it here</button></p>
-      </div>
-
-      <div class="auth-card is-hidden" id="auth-success-card">
-        <h2>Welcome!</h2>
-        <p>Your unique Focus OS code is:</p>
-        <div class="auth-code-display" data-generated-code></div>
-        <p><strong>Save this code!</strong> You'll need it to access Focus OS on any device.</p>
-        <button class="primary-link" type="button" data-continue-btn>Continue to Focus OS</button>
+        <p class="auth-toggle">Already have an account? <button type="button" class="text-link" data-show-login>Sign in</button></p>
       </div>
     </section>
   `;
 
-  const codeCard = container.querySelector("#auth-code-card");
+  const loginCard = container.querySelector("#auth-login-card");
   const registerCard = container.querySelector("#auth-register-card");
-  const successCard = container.querySelector("#auth-success-card");
 
   container.querySelector("[data-show-register]").addEventListener("click", () => {
-    codeCard.classList.add("is-hidden");
+    loginCard.classList.add("is-hidden");
     registerCard.classList.remove("is-hidden");
   });
 
-  container.querySelector("[data-show-code]").addEventListener("click", () => {
+  container.querySelector("[data-show-login]").addEventListener("click", () => {
     registerCard.classList.add("is-hidden");
-    codeCard.classList.remove("is-hidden");
+    loginCard.classList.remove("is-hidden");
   });
 
-  // Code validation form
-  container.querySelector("[data-code-form]").addEventListener("submit", async (event) => {
+  // Email login form
+  container.querySelector("[data-login-form]").addEventListener("submit", async (event) => {
     event.preventDefault();
-    const status = container.querySelector("[data-code-status]");
-    const code = new FormData(event.currentTarget).get("code").toString().trim();
-    status.textContent = "Validating...";
+    const status = container.querySelector("[data-login-status]");
+    const email = new FormData(event.currentTarget).get("email").toString().trim();
+    status.textContent = "Checking...";
     status.className = "auth-status";
 
-    const result = await validateFocusCode(code);
+    const result = await validateFocusEmail(email);
     if (result) {
       status.textContent = `Welcome back, ${result.name}!`;
       status.className = "auth-status is-success";
       setTimeout(() => onSuccess(result), 600);
     } else {
-      status.textContent = "Invalid code. Please check and try again.";
+      status.textContent = "No account found. Create a profile first.";
       status.className = "auth-status is-error";
     }
   });
@@ -215,14 +182,8 @@ export function renderAuthGate(container, onSuccess) {
     status.className = "auth-status";
 
     const result = await registerFocusUser(name, email);
-    registerCard.classList.add("is-hidden");
-    successCard.classList.remove("is-hidden");
-    container.querySelector("[data-generated-code]").textContent = result.code;
-  });
-
-  // Continue button
-  container.querySelector("[data-continue-btn]").addEventListener("click", () => {
-    const auth = checkFocusAuth();
-    if (auth) onSuccess(auth);
+    status.textContent = `Welcome, ${result.name}! Redirecting...`;
+    status.className = "auth-status is-success";
+    setTimeout(() => onSuccess(result), 800);
   });
 }

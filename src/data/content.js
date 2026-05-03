@@ -31,7 +31,7 @@ export const profile = {
   semester: "6th semester, currently giving end-sem exams",
   location: "Greater Noida, India",
   phone: "+91 8603829005",
-  email: "tech.geek.sameer@gmail.com",
+  email: "hello@sam18.xyz",
   resumeUrl: "/assets/mohammad-sameer-resume.pdf",
   avatarAlt: "Abstract neural console artwork for Mohammad Sameer",
   summary:
@@ -43,7 +43,7 @@ export const profile = {
     "President, Technova"
   ],
   socials: [
-    { label: "Email", href: "mailto:tech.geek.sameer@gmail.com" },
+    { label: "Email", href: "mailto:hello@sam18.xyz" },
     { label: "LinkedIn", href: "https://linkedin.com/in/connect-to-sam-xyz" },
     { label: "GitHub", href: "https://github.com/sam0786-xyz" },
     { label: "Resume", href: "/assets/mohammad-sameer-resume.pdf" }

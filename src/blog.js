@@ -1,3 +1,4 @@
+import { bootLoader, dismissLoader } from "./loader.js";
 import { bootTheme } from "./theme.js";
 import { initSiteContent } from "./content-store.js";
 import { bootInteractions } from "./animations.js";
@@ -19,8 +20,10 @@ function renderPage() {
   `;
 }
 
+bootLoader();
 await initSiteContent();
 mountShell("blog");
 bootTheme();
 renderPage();
 bootInteractions(document.querySelector("#blog-root"));
+dismissLoader();

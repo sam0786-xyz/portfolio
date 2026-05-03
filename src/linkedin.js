@@ -1,3 +1,4 @@
+import { bootLoader, dismissLoader } from "./loader.js";
 import { bootInteractions } from "./animations.js";
 import { getSiteContent, initSiteContent } from "./content-store.js";
 import { escapeHtml, mountShell, renderLinkedInCards } from "./render.js";
@@ -48,7 +49,9 @@ function renderPage() {
   bootInteractions(document.querySelector("#linkedin-root"));
 }
 
+bootLoader();
 await initSiteContent();
 mountShell("linkedin");
 bootTheme();
 renderPage();
+dismissLoader();

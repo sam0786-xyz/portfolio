@@ -1,3 +1,4 @@
+import { bootLoader, dismissLoader } from "./loader.js";
 import { bootInteractions } from "./animations.js";
 import { getSiteContent, initSiteContent } from "./content-store.js";
 import { bootTheme } from "./theme.js";
@@ -9,7 +10,8 @@ import {
   renderContactLinks,
   renderLinkedInCards,
   renderPills,
-  icon
+  icon,
+  skillIcon
 } from "./render.js";
 
 function heroContactIcon(link) {
@@ -187,7 +189,7 @@ function renderHome() {
               (skill) => `
                 <article class="skill-panel airy-panel" data-skill-card="${skill.group.toLowerCase()} ${skill.items.join(" ").toLowerCase()}" data-animate="fade-up">
                   <h3>${escapeHtml(skill.group)}</h3>
-                  <div class="tag-row">${skill.items.map(item => `<span class="pill">${icon("check")}&nbsp;${escapeHtml(item)}</span>`).join("")}</div>
+                  <div class="skill-icon-grid">${skill.items.map(item => `<div class="skill-icon-card">${skillIcon(item)}<span>${escapeHtml(item)}</span></div>`).join("")}</div>
                 </article>
               `
             )
@@ -217,32 +219,53 @@ function renderHome() {
         </div>
       </section>
 
-      <section class="section education-flow" id="education">
+      <section class="section" id="education">
         <div class="section-header" data-animate="fade-up">
           <div>
             <p class="eyebrow">Education</p>
-            <h2>Background and leadership.</h2>
+            <h2>Academic background.</h2>
           </div>
         </div>
-        <div class="masonry-lite">
+        <div class="education-cards">
           ${education
             .map(
               (item) => `
-                <article class="airy-panel" data-animate="fade-up">
-                  <p class="eyebrow">${escapeHtml(item.period)}</p>
-                  <h3>${escapeHtml(item.degree)}</h3>
-                  <p>${escapeHtml(item.school)} / ${escapeHtml(item.location)}</p>
+                <article class="edu-card" data-animate="fade-up">
+                  <div class="edu-icon">
+                    <svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c0 2 3 3 6 3s6-1 6-3v-5"></path></svg>
+                  </div>
+                  <div>
+                    <p class="eyebrow">${escapeHtml(item.period)}</p>
+                    <h3>${escapeHtml(item.degree)}</h3>
+                    <p>${escapeHtml(item.school)} / ${escapeHtml(item.location)}</p>
+                  </div>
                 </article>
               `
             )
             .join("")}
+        </div>
+      </section>
+
+      <section class="section" id="leadership">
+        <div class="section-header" data-animate="fade-up">
+          <div>
+            <p class="eyebrow">Leadership</p>
+            <h2>Community roles.</h2>
+          </div>
+        </div>
+        <div class="leadership-grid">
           ${responsibilities
             .map(
               (item) => `
-                <article class="airy-panel" data-animate="fade-up">
-                  <p class="eyebrow">${escapeHtml(item.period)}</p>
-                  <h3>${escapeHtml(item.title)}</h3>
-                  <p>${escapeHtml(item.summary)}</p>
+                <article class="leadership-card" data-animate="fade-up">
+                  <div class="leadership-icon">
+                    <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                  </div>
+                  <div>
+                    <p class="eyebrow">${escapeHtml(item.period)}</p>
+                    <h3>${escapeHtml(item.title)}</h3>
+                    <p>${escapeHtml(item.summary)}</p>
+                  </div>
                 </article>
               `
             )
@@ -324,7 +347,9 @@ function setupHomeInteractions(projects) {
   });
 }
 
+bootLoader();
 await initSiteContent();
 mountShell("home");
 bootTheme();
 renderHome();
+dismissLoader();
