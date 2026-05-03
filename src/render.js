@@ -49,7 +49,7 @@ export function mountShell(active) {
         <span class="brand-sigil">MS</span>
         <span>
           <strong>Mohammad Sameer</strong>
-          <small>AI/ML Research OS</small>
+          <small>AI/ML Engineer</small>
         </span>
       </a>
       <nav class="site-nav" aria-label="Primary navigation">
@@ -75,8 +75,8 @@ export function mountShell(active) {
   if (footer) {
     footer.innerHTML = `
       <div>
-        <strong>${profile.name}</strong>
-        <p>${profile.education}</p>
+        <strong>© ${new Date().getFullYear()} ${profile.name}</strong>
+        <p>Built with curiosity and code.</p>
       </div>
       <div class="footer-links">
         ${profile.socials

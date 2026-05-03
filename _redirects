@@ -1,0 +1,8 @@
+# Netlify _redirects
+# Ensure clean URLs work for the static multi-page portfolio
+/cms    /cms/index.html   200
+/focus  /focus/index.html 200
+/blog   /blog/index.html  200
+/certificates /certificates/index.html 200
+/linkedin /linkedin/index.html 200
+/studio /studio/index.html 200

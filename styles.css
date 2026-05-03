@@ -2117,6 +2117,100 @@ h3 {
   min-height: 24px;
 }
 
+/* Focus OS Auth Gate */
+.focus-auth-gate {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  max-width: 480px;
+  margin: 0 auto 70px;
+}
+
+.auth-card {
+  display: grid;
+  gap: 16px;
+  padding: clamp(24px, 5vw, 42px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--teal), transparent 86%), transparent),
+    var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.auth-card.is-hidden {
+  display: none;
+}
+
+.auth-card h2 {
+  font-size: clamp(1.6rem, 5vw, 2.4rem);
+}
+
+.auth-card p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.auth-card form {
+  display: grid;
+  gap: 12px;
+}
+
+.auth-card input {
+  min-height: 46px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-solid);
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.auth-card .primary-link {
+  border: 0;
+  cursor: pointer;
+}
+
+.auth-code-display {
+  padding: 18px;
+  border: 2px dashed var(--teal);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--teal), transparent 90%);
+  color: var(--teal);
+  font-family: var(--mono);
+  font-size: 2rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-align: center;
+}
+
+.auth-status {
+  min-height: 24px;
+  font-size: 0.9rem;
+  transition: color 0.2s;
+}
+
+.auth-status.is-success {
+  color: var(--green);
+}
+
+.auth-status.is-error {
+  color: var(--rose);
+}
+
+.auth-toggle {
+  font-size: 0.88rem;
+}
+
+.auth-toggle .text-link {
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: inherit;
+}
+
 @keyframes spin-slow {
   to {
     transform: rotate(360deg);
@@ -2292,9 +2386,28 @@ h3 {
   max-width: 100%;
   overflow-wrap: normal;
   word-break: keep-all;
-  white-space: nowrap;
+  white-space: normal;
   font-size: 6.9rem;
   letter-spacing: 0;
+  line-height: 0.92;
+}
+
+.hero-firstname {
+  display: block;
+  font-weight: 300;
+  font-size: 0.52em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.hero-lastname {
+  display: block;
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--teal), var(--violet));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 @media (max-width: 1180px) {

@@ -94,7 +94,7 @@ function renderHome() {
             ${renderHeroContacts(profile)}
           </div>
           <p class="eyebrow">AI portfolio / research OS</p>
-          <h1 id="hero-title" class="hero-name">${escapeHtml(profile.name)}</h1>
+          <h1 id="hero-title" class="hero-name"><span class="hero-firstname">Mohammad</span><br><span class="hero-lastname">Sameer</span></h1>
           <p class="lede">
             ${escapeHtml(profile.role)} at ${escapeHtml(profile.company)}. ${escapeHtml(profile.summary)}
           </p>
@@ -110,9 +110,9 @@ function renderHome() {
           <figure class="console-visual">
             <img src="/assets/neural-console.png" alt="${escapeHtml(profile.avatarAlt)}">
             <figcaption class="console-overlay">
-              <span>sameer.session: active</span>
-              <span>stack: RAG / FastAPI / cloud / LLM apps</span>
-              <span>portfolio: projects / writing / credentials</span>
+              <span>domain: AI/ML Engineer | GenAI</span>
+              <span>stack: Cloud | Data Science | LLM Apps</span>
+              <span>status: building & shipping</span>
             </figcaption>
           </figure>
         </div>
@@ -274,15 +274,6 @@ function renderHome() {
         <div class="linkedin-grid">${renderLinkedInCards(true, { embed: false })}</div>
       </section>
 
-
-
-      <section class="section contact-band" id="contact" data-animate="fade-up">
-        <div>
-          <p class="eyebrow">Contact</p>
-          <h2>Direct links and resume access.</h2>
-        </div>
-        <div class="inline-actions">${renderContactLinks()}</div>
-      </section>
     </div>
   `;
   setupHomeInteractions(safeProjects);

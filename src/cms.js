@@ -236,8 +236,9 @@ function setupCmsEvents() {
   });
 
   document.querySelector("[data-admin-logout]").addEventListener("click", async () => {
-    await fetch("/api/admin/logout", { method: "POST" });
-    window.location.href = "/cms/";
+    localStorage.removeItem("sameer-cms-auth-v1");
+    try { await fetch("/api/admin/logout", { method: "POST" }); } catch {}
+    window.location.href = "/cms/login.html";
   });
 
   document.querySelector("[data-import-cms]").addEventListener("change", (event) => {
@@ -285,10 +286,42 @@ function setupCmsEvents() {
   });
 }
 
-const sessionResponse = await fetch("/api/admin/session", { cache: "no-store" }).catch(() => null);
-const session = sessionResponse?.ok ? await sessionResponse.json() : { authenticated: false };
-if (!session.authenticated) {
-  window.location.href = "/cms/";
+const CMS_AUTH_KEY = "sameer-cms-auth-v1";
+
+function checkClientAuth() {
+  try {
+    const raw = localStorage.getItem(CMS_AUTH_KEY);
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    // Expire after 8 hours
+    if (data.authenticated && Date.now() - data.timestamp < 1000 * 60 * 60 * 8) return true;
+    localStorage.removeItem(CMS_AUTH_KEY);
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+let authenticated = false;
+
+// Try server session first (local dev server)
+try {
+  const sessionResponse = await fetch("/api/admin/session", { cache: "no-store" });
+  if (sessionResponse.ok) {
+    const session = await sessionResponse.json();
+    authenticated = session.authenticated === true;
+  }
+} catch {
+  // Server unavailable (Netlify) — fall through
+}
+
+// Fallback: check client-side auth token
+if (!authenticated) {
+  authenticated = checkClientAuth();
+}
+
+if (!authenticated) {
+  window.location.href = "/cms/login.html";
   throw new Error("Admin login required.");
 }
 

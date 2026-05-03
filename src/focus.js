@@ -10,6 +10,7 @@ import {
 } from "./focus-store.js";
 import { escapeHtml, mountShell, renderPills } from "./render.js";
 import { bootTheme } from "./theme.js";
+import { checkFocusAuth, clearFocusAuth, renderAuthGate } from "./focus-auth.js";
 
 let state;
 let timer = {
@@ -96,8 +97,8 @@ function renderFocus() {
       <canvas class="focus-canvas" data-neural-canvas aria-hidden="true"></canvas>
       <div data-animate="slide-right">
         <p class="eyebrow">Focus OS</p>
-        <h1>Pomodoro, tasks, calendar, and streaks in one workspace.</h1>
-        <p class="lede">A local-first productivity layer for building AI projects without losing the rhythm of deep work.</p>
+        <h1>Deep work, made simple.</h1>
+        <p class="lede">A minimal productivity workspace to stay focused and ship faster.</p>
       </div>
       <aside class="streak-panel" data-animate="slide-left">
         <span class="streak-flame" aria-hidden="true"></span>
@@ -368,9 +369,23 @@ function setupEvents() {
 }
 
 await initSiteContent();
-state = await loadFocusState();
-timer.remaining = state.settings.focusMinutes * 60;
-timer.total = timer.remaining;
 mountShell("focus");
 bootTheme();
-renderFocus();
+
+const focusRoot = document.querySelector("#focus-root");
+const auth = checkFocusAuth();
+
+if (auth) {
+  state = await loadFocusState();
+  timer.remaining = state.settings.focusMinutes * 60;
+  timer.total = timer.remaining;
+  renderFocus();
+} else {
+  renderAuthGate(focusRoot, async () => {
+    state = await loadFocusState();
+    timer.remaining = state.settings.focusMinutes * 60;
+    timer.total = timer.remaining;
+    renderFocus();
+  });
+  bootInteractions(focusRoot);
+}
