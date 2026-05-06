@@ -31,7 +31,7 @@ A modern, dependency-free portfolio website built with vanilla JavaScript, HTML,
 
 ## Project Structure
 
-```
+```text
 ├── server.mjs              # Node.js HTTP server (static files + API routes)
 ├── Dockerfile              # Cloud Run container config
 ├── package.json            # Scripts (start, dev, check)
