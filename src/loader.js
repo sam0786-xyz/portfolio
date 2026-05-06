@@ -8,6 +8,7 @@ const LOADER_ID = "app-loader";
 const MIN_DISPLAY_MS = 1200;
 let stopAnimation = null;
 let removalTimeout = null;
+let dotsInterval = null;
 let bootTime = 0;
 
 function createLoaderDOM() {
@@ -20,10 +21,18 @@ function createLoaderDOM() {
     <canvas id="loader-canvas"></canvas>
     <div class="loader-brand">
       <span class="loader-sigil">MS</span>
-      <span class="loader-text">Initializing neural workspace<span class="loader-dots"></span></span>
+      <span class="loader-text">Initializing neural workspace<span class="loader-dots"><span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></span></span>
     </div>
   `;
   document.body.prepend(loader);
+
+  // JS-driven dot cycling (cross-browser safe)
+  let dotStep = 0;
+  const dots = loader.querySelectorAll(".dot");
+  dotsInterval = setInterval(() => {
+    dotStep = (dotStep + 1) % 4;
+    dots.forEach((d, i) => { d.style.opacity = i < dotStep ? "1" : "0"; });
+  }, 400);
 }
 
 function animateLoader() {
@@ -136,6 +145,7 @@ export function bootLoader() {
 
 function fadeAndRemove() {
   if (stopAnimation) stopAnimation();
+  if (dotsInterval) { clearInterval(dotsInterval); dotsInterval = null; }
   const loader = document.getElementById(LOADER_ID);
   if (!loader) return;
   loader.classList.add("is-done");

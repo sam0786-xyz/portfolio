@@ -530,8 +530,15 @@ function setupEvents() {
   document.querySelector("[data-settings-form]").addEventListener("submit", async e => {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
-    state.settings = { focusMinutes: Number(f.get("focusMinutes")), shortBreakMinutes: Number(f.get("shortBreakMinutes")), longBreakMinutes: Number(f.get("longBreakMinutes")), longBreakInterval: Number(f.get("longBreakInterval")) };
+    const clamp = (v, min, max) => Math.max(min, Math.min(max, Math.round(v) || min));
+    state.settings = {
+      focusMinutes: clamp(Number(f.get("focusMinutes")), 1, 180),
+      shortBreakMinutes: clamp(Number(f.get("shortBreakMinutes")), 1, 180),
+      longBreakMinutes: clamp(Number(f.get("longBreakMinutes")), 1, 180),
+      longBreakInterval: clamp(Number(f.get("longBreakInterval")), 1, 10)
+    };
     await persist(); resetTimer(timer.mode);
+    document.querySelector("[data-settings-dropdown]")?.classList.remove("is-open");
   });
 
   document.querySelector("[data-task-form]").addEventListener("submit", async e => {
