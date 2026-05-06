@@ -1746,20 +1746,19 @@ h3 {
   animation: flame-dance 1.6s ease-in-out infinite;
 }
 
-.focus-timer-section,
-.focus-workspace {
-  display: grid;
-  gap: 18px;
-}
-
 .focus-timer-section {
-  max-width: 600px;
-  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(320px, 1fr) minmax(300px, 1fr);
+  gap: 18px;
+  align-items: start;
 }
 
-.focus-workspace {
-  grid-template-columns: minmax(320px, 0.88fr) minmax(360px, 1.12fr);
+.focus-calendar-section {
   margin-top: 18px;
+}
+
+.focus-calendar-section .calendar-panel {
+  width: 100%;
 }
 
 .timer-card,
@@ -2249,7 +2248,6 @@ h3 {
   .project-showcase,
   .split-section,
   .focus-timer-section,
-  .focus-workspace,
   .contact-band {
     grid-template-columns: 1fr;
   }

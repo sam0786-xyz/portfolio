@@ -413,9 +413,6 @@ function renderFocus() {
           <button class="secondary-link" type="button" data-complete>Complete</button>
         </div>
       </article>
-    </section>
-
-    <section class="focus-workspace">
       <article class="task-panel" data-animate="slide-right">
         <div class="section-header compact-header"><div>
           <p class="eyebrow">Task queue</p>
@@ -430,7 +427,10 @@ function renderFocus() {
         </form>
         <div class="task-list" data-task-list></div>
       </article>
-      <article class="calendar-panel" data-animate="slide-left">
+    </section>
+
+    <section class="focus-calendar-section">
+      <article class="calendar-panel" data-animate="fade-up">
         <div class="calendar-top">
           <button class="tool-button" type="button" data-calendar-prev>Prev</button>
           <h2 data-calendar-title></h2>
