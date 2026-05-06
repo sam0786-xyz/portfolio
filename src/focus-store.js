@@ -4,10 +4,10 @@ const FOCUS_KEY = "sameer-focus-os-v1";
 
 export const defaultFocusState = {
   settings: {
-    focusMinutes: 25,
-    shortBreakMinutes: 5,
-    longBreakMinutes: 15,
-    longBreakInterval: 4
+    focusMinutes: 50,
+    shortBreakMinutes: 10,
+    longBreakMinutes: 30,
+    longBreakInterval: 3
   },
   tasks: [],
   sessions: [],

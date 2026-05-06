@@ -5,7 +5,7 @@
  */
 
 const LOADER_ID = "app-loader";
-const MIN_DISPLAY_MS = 1800;
+const MIN_DISPLAY_MS = 1200;
 let stopAnimation = null;
 let removalTimeout = null;
 let bootTime = 0;
@@ -15,6 +15,7 @@ function createLoaderDOM() {
   if (existing) existing.remove();
   const loader = document.createElement("div");
   loader.id = LOADER_ID;
+  loader.style.background = "#0a0a0a";
   loader.innerHTML = `
     <canvas id="loader-canvas"></canvas>
     <div class="loader-brand">
@@ -127,7 +128,7 @@ export function bootLoader() {
   if (removalTimeout != null) { clearTimeout(removalTimeout); removalTimeout = null; }
   bootTime = Date.now();
   createLoaderDOM();
-  animateLoader();
+  requestAnimationFrame(() => animateLoader());
 
   // Safety: auto-dismiss after 6s in case dismissLoader is never called
   removalTimeout = setTimeout(() => dismissLoader(), 6000);
