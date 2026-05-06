@@ -381,8 +381,20 @@ function renderFocus() {
       </aside>
     </section>
 
-    <section class="focus-layout">
+    <section class="focus-timer-section">
       <article class="timer-card" data-timer-card data-animate="fade-up">
+        <button class="timer-gear" type="button" data-gear-toggle title="Settings" aria-label="Timer settings">
+          <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+        </button>
+        <div class="timer-settings-dropdown" data-settings-dropdown>
+          <form class="settings-grid" data-settings-form>
+            ${numberField("focusMinutes", "Focus (min)", state.settings.focusMinutes)}
+            ${numberField("shortBreakMinutes", "Short break", state.settings.shortBreakMinutes)}
+            ${numberField("longBreakMinutes", "Long break", state.settings.longBreakMinutes)}
+            ${numberField("longBreakInterval", "Long break every", state.settings.longBreakInterval)}
+            <button class="primary-link" type="submit">Save</button>
+          </form>
+        </div>
         <div class="mode-switch">
           ${Object.keys(modeLabels).map(mode => `<button type="button" class="${timer.mode === mode ? "is-active" : ""}" data-mode="${mode}">${modeLabels[mode]}</button>`).join("")}
         </div>
@@ -400,16 +412,6 @@ function renderFocus() {
           <button class="secondary-link" type="button" data-reset>Reset</button>
           <button class="secondary-link" type="button" data-complete>Complete</button>
         </div>
-      </article>
-      <article class="settings-panel" data-animate="fade-up">
-        <p class="eyebrow">Customize sessions</p>
-        <form class="settings-grid" data-settings-form>
-          ${numberField("focusMinutes", "Focus (min)", state.settings.focusMinutes)}
-          ${numberField("shortBreakMinutes", "Short break", state.settings.shortBreakMinutes)}
-          ${numberField("longBreakMinutes", "Long break", state.settings.longBreakMinutes)}
-          ${numberField("longBreakInterval", "Long break every", state.settings.longBreakInterval)}
-          <button class="primary-link" type="submit">Save timing</button>
-        </form>
       </article>
     </section>
 
@@ -443,8 +445,16 @@ function renderFocus() {
       <article><p class="eyebrow">Total</p><strong>${totalFocus}</strong><span>sessions logged</span></article>
       <article><p class="eyebrow">Open</p><strong>${openTasks}</strong><span>tasks remaining</span></article>
     </section>
+
+    <section class="productivity-dashboard" data-animate="fade-up">
+      <div class="section-header compact-header"><div>
+        <p class="eyebrow">Productivity DNA</p>
+        <h2>Your hidden habits.</h2>
+      </div></div>
+      <div class="dashboard-grid" data-dashboard></div>
+    </section>
   `;
-  renderTimer(); renderTasks(); renderCalendar(); setupEvents();
+  renderTimer(); renderTasks(); renderCalendar(); renderDashboard(); setupEvents();
   bootInteractions(document.querySelector("#focus-root"));
 }
 
@@ -541,6 +551,129 @@ function setupEvents() {
 
   document.querySelector("[data-calendar-prev]").addEventListener("click", () => { calendarDate.setMonth(calendarDate.getMonth() - 1); renderCalendar(); });
   document.querySelector("[data-calendar-next]").addEventListener("click", () => { calendarDate.setMonth(calendarDate.getMonth() + 1); renderCalendar(); });
+
+  // Gear toggle
+  document.querySelector("[data-gear-toggle]").addEventListener("click", () => {
+    document.querySelector("[data-settings-dropdown]").classList.toggle("is-open");
+  });
+}
+
+/* ═══ Productivity Dashboard ═══ */
+
+function computeInsights() {
+  const focusSessions = state.sessions.filter(s => s.mode === "focus");
+  const totalSessions = focusSessions.length;
+  const totalMinutes = focusSessions.reduce((sum, s) => sum + (s.durationMinutes || 0), 0);
+  const totalHours = (totalMinutes / 60).toFixed(1);
+
+  // Best focus hour
+  const hourCounts = new Array(24).fill(0);
+  focusSessions.forEach(s => {
+    const h = new Date(s.completedAt).getHours();
+    hourCounts[h]++;
+  });
+  const peakHour = hourCounts.indexOf(Math.max(...hourCounts));
+  const peakHourLabel = totalSessions > 0 ? formatHour(peakHour) : "—";
+
+  // Most productive day of week
+  const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const dayCounts = new Array(7).fill(0);
+  focusSessions.forEach(s => { dayCounts[new Date(s.completedAt).getDay()]++; });
+  const peakDay = dayCounts.indexOf(Math.max(...dayCounts));
+  const peakDayLabel = totalSessions > 0 ? dayNames[peakDay] : "—";
+
+  // Average sessions per active day
+  const activeDays = new Set(focusSessions.map(s => todayKey(new Date(s.completedAt)))).size;
+  const avgPerDay = activeDays > 0 ? (totalSessions / activeDays).toFixed(1) : "0";
+
+  // Task completion rate
+  const totalTasks = state.tasks.length;
+  const doneTasks = state.tasks.filter(t => t.status === "done").length;
+  const completionRate = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
+
+  // Current week sessions vs average
+  const now = new Date();
+  const weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay());
+  const thisWeekSessions = focusSessions.filter(s => new Date(s.completedAt) >= weekStart).length;
+
+  // Longest streak
+  const streak = calculateStreak(state.sessions);
+
+  // Session intensity pattern (last 7 days)
+  const last7 = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const key = todayKey(d);
+    const count = focusSessions.filter(s => todayKey(new Date(s.completedAt)) === key).length;
+    last7.push({ day: d.toLocaleDateString("en", { weekday: "short" }), count });
+  }
+  const maxLast7 = Math.max(1, ...last7.map(d => d.count));
+
+  return { totalHours, totalSessions, peakHourLabel, peakDayLabel, avgPerDay, completionRate, thisWeekSessions, streak, last7, maxLast7, activeDays };
+}
+
+function formatHour(h) {
+  if (h === 0) return "12 AM";
+  if (h === 12) return "12 PM";
+  return h < 12 ? `${h} AM` : `${h - 12} PM`;
+}
+
+function renderDashboard() {
+  const el = document.querySelector("[data-dashboard]");
+  if (!el) return;
+  const d = computeInsights();
+
+  el.innerHTML = `
+    <div class="dash-card">
+      <span class="dash-icon">🕐</span>
+      <strong>${d.peakHourLabel}</strong>
+      <p>Peak focus hour</p>
+      <small>You're most productive around this time</small>
+    </div>
+    <div class="dash-card">
+      <span class="dash-icon">📅</span>
+      <strong>${d.peakDayLabel}</strong>
+      <p>Strongest day</p>
+      <small>Your best day for deep work</small>
+    </div>
+    <div class="dash-card">
+      <span class="dash-icon">⚡</span>
+      <strong>${d.totalHours}h</strong>
+      <p>Total focus time</p>
+      <small>${d.totalSessions} sessions across ${d.activeDays} days</small>
+    </div>
+    <div class="dash-card">
+      <span class="dash-icon">📊</span>
+      <strong>${d.avgPerDay}</strong>
+      <p>Avg sessions/day</p>
+      <small>On days you actually focused</small>
+    </div>
+    <div class="dash-card">
+      <span class="dash-icon">✅</span>
+      <strong>${d.completionRate}%</strong>
+      <p>Task completion</p>
+      <small>${d.completionRate >= 80 ? "Machine-level consistency" : d.completionRate >= 50 ? "Room to improve" : "Start finishing what you start"}</small>
+    </div>
+    <div class="dash-card">
+      <span class="dash-icon">🔥</span>
+      <strong>${d.streak} days</strong>
+      <p>Current streak</p>
+      <small>${d.streak >= 7 ? "You're unstoppable" : d.streak >= 3 ? "Building momentum" : "Keep showing up"}</small>
+    </div>
+    <div class="dash-card dash-card-wide">
+      <span class="dash-icon">📈</span>
+      <p class="dash-chart-title">Last 7 days</p>
+      <div class="dash-bars">
+        ${d.last7.map(day => `
+          <div class="dash-bar-col">
+            <div class="dash-bar" style="height:${Math.max(4, (day.count / d.maxLast7) * 100)}%"></div>
+            <span>${day.day}</span>
+          </div>
+        `).join("")}
+      </div>
+      <small>${d.thisWeekSessions} sessions this week</small>
+    </div>
+  `;
 }
 
 /* ═══ Boot ═══ */
