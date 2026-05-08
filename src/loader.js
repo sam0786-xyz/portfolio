@@ -29,6 +29,7 @@ function createLoaderDOM() {
   // JS-driven dot cycling (cross-browser safe)
   let dotStep = 0;
   const dots = loader.querySelectorAll(".dot");
+  if (dotsInterval) { clearInterval(dotsInterval); dotsInterval = null; }
   dotsInterval = setInterval(() => {
     dotStep = (dotStep + 1) % 4;
     dots.forEach((d, i) => { d.style.opacity = i < dotStep ? "1" : "0"; });
