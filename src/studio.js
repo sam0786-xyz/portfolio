@@ -107,9 +107,27 @@ function command(name, value = null) {
   scheduleSave();
 }
 
-function insertHtml(html) {
+let savedRange = null;
+
+function saveSelection() {
+  const sel = window.getSelection();
+  if (sel.rangeCount > 0 && editor.contains(sel.anchorNode)) {
+    savedRange = sel.getRangeAt(0).cloneRange();
+  }
+}
+
+function restoreSelection() {
+  if (!savedRange) return;
   editor.focus();
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(savedRange);
+}
+
+function insertHtml(html) {
+  restoreSelection();
   document.execCommand("insertHTML", false, html);
+  savedRange = null;
   syncPreview();
   scheduleSave();
 }
@@ -255,6 +273,7 @@ function setMode(mode) {
 }
 
 function openModal(title, bodyHtml, onConfirm, onMount = () => {}) {
+  saveSelection();
   const backdrop = document.createElement("div");
   backdrop.className = "modal-backdrop";
   backdrop.innerHTML = `
