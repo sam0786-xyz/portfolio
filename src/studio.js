@@ -107,9 +107,27 @@ function command(name, value = null) {
   scheduleSave();
 }
 
-function insertHtml(html) {
+let savedRange = null;
+
+function saveSelection() {
+  const sel = window.getSelection();
+  if (sel.rangeCount > 0 && editor.contains(sel.anchorNode)) {
+    savedRange = sel.getRangeAt(0).cloneRange();
+  }
+}
+
+function restoreSelection() {
+  if (!savedRange) return;
   editor.focus();
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(savedRange);
+}
+
+function insertHtml(html) {
+  restoreSelection();
   document.execCommand("insertHTML", false, html);
+  savedRange = null;
   syncPreview();
   scheduleSave();
 }
@@ -166,12 +184,11 @@ function renderStudio() {
         <button class="tool-button" type="button" title="Image" data-tool="image">Image</button>
         <span class="toolbar-divider"></span>
         <button class="tool-button" type="button" title="Math block" data-tool="math">Math</button>
-        <button class="tool-button" type="button" title="Mermaid diagram" data-tool="mermaid">Mermaid</button>
-        <button class="tool-button" type="button" title="Legacy diagram" data-tool="diagram">Diagram</button>
+        <button class="tool-button" type="button" title="Diagram (Mermaid)" data-tool="diagram">Diagram</button>
         <button class="tool-button" type="button" title="Equation plot" data-tool="plot">Plot</button>
         <button class="tool-button" type="button" title="Freehand drawing" data-tool="draw">Draw</button>
         <span class="toolbar-divider"></span>
-        <button class="tool-button" type="button" title="Add citation" data-tool="cite">Cite</button>
+        <button class="tool-button" type="button" title="Add source/reference" data-tool="source">Source</button>
       </div>
 
       <div class="studio-body">
@@ -256,6 +273,7 @@ function setMode(mode) {
 }
 
 function openModal(title, bodyHtml, onConfirm, onMount = () => {}) {
+  saveSelection();
   const backdrop = document.createElement("div");
   backdrop.className = "modal-backdrop";
   backdrop.innerHTML = `
@@ -315,101 +333,8 @@ function openMathTool() {
   );
 }
 
-function parseDiagram(source) {
-  const lines = source
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .filter((line) => !line.toLowerCase().startsWith("graph "));
-  const labels = new Map();
-  const edges = [];
 
-  for (const line of lines) {
-    const match = line.match(/^([A-Za-z0-9_]+)(?:\[(.*?)\])?\s*[-=]*>\s*([A-Za-z0-9_]+)(?:\[(.*?)\])?/);
-    if (match) {
-      const [, from, fromLabel, to, toLabel] = match;
-      labels.set(from, fromLabel || from);
-      labels.set(to, toLabel || to);
-      edges.push([from, to]);
-    }
-  }
 
-  if (!labels.size) {
-    labels.set("A", "Idea");
-    labels.set("B", "Prototype");
-    labels.set("C", "Evaluate");
-    edges.push(["A", "B"], ["B", "C"]);
-  }
-
-  return { labels, edges };
-}
-
-function renderDiagram(source) {
-  const { labels, edges } = parseDiagram(source);
-  const nodes = Array.from(labels.entries());
-  const width = 720;
-  const height = Math.max(260, nodes.length * 92);
-  const positions = new Map(nodes.map(([id], index) => [id, { x: width / 2, y: 48 + index * 86 }]));
-  const edgeSvg = edges
-    .map(([from, to]) => {
-      const a = positions.get(from);
-      const b = positions.get(to);
-      if (!a || !b) return "";
-      return `<path d="M ${a.x} ${a.y + 26} C ${a.x} ${a.y + 54}, ${b.x} ${b.y - 54}, ${b.x} ${b.y - 26}" fill="none" stroke="currentColor" stroke-width="2" opacity="0.42" marker-end="url(#arrow)"/>`;
-    })
-    .join("");
-  const nodeSvg = nodes
-    .map(([id, label]) => {
-      const point = positions.get(id);
-      return `
-        <g transform="translate(${point.x - 130} ${point.y - 28})">
-          <rect width="260" height="56" rx="8" fill="var(--panel-solid)" stroke="var(--line-strong)"/>
-          <text x="130" y="35" text-anchor="middle" fill="var(--text)" font-size="15" font-family="Inter, sans-serif">${escapeHtml(label)}</text>
-        </g>
-      `;
-    })
-    .join("");
-
-  return `
-    <svg class="diagram-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="Generated diagram">
-      <defs>
-        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-          <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"></path>
-        </marker>
-      </defs>
-      ${edgeSvg}
-      ${nodeSvg}
-    </svg>
-  `;
-}
-
-function renderDiagramFigure(source) {
-  return `
-    <figure class="diagram-block" data-diagram="${escapeHtml(source)}">
-      ${renderDiagram(source)}
-      <figcaption>Confirmed diagram from text syntax</figcaption>
-    </figure>
-  `;
-}
-
-function openDiagramTool() {
-  const initial = "graph TD\nIdea[AI idea] --> Prototype[Prototype]\nPrototype --> Evaluate[Evaluate]\nEvaluate --> Explain[Explain]";
-  openModal(
-    "Diagram",
-    `
-      <textarea data-diagram-source>${escapeHtml(initial)}</textarea>
-      <div class="preview-box" data-diagram-preview>${renderDiagram(initial)}</div>
-    `,
-    (modal) => insertHtml(renderDiagramFigure(modal.querySelector("[data-diagram-source]").value)),
-    (modal) => {
-      const textarea = modal.querySelector("[data-diagram-source]");
-      const previewBox = modal.querySelector("[data-diagram-preview]");
-      textarea.addEventListener("input", () => {
-        previewBox.innerHTML = renderDiagram(textarea.value);
-      });
-    }
-  );
-}
 
 function compileExpression(expression) {
   const clean = expression.trim().replace(/^y\s*=\s*/i, "");
@@ -609,19 +534,7 @@ function setupDrawingCanvas(modal) {
   });
 }
 
-let citeCounter = 0;
-
-function resyncCiteCounter() {
-  const existing = editor ? editor.querySelectorAll(".citation-item[id]") : [];
-  let max = 0;
-  existing.forEach(el => {
-    const m = el.id.match(/^cite-(\d+)$/);
-    if (m) max = Math.max(max, parseInt(m[1], 10));
-  });
-  citeCounter = max;
-}
-
-function openMermaidTool() {
+function openDiagramTool() {
   const initial = `graph TD
     A[Data Collection] --> B[Preprocessing]
     B --> C[Model Training]
@@ -629,9 +542,9 @@ function openMermaidTool() {
     D --> E[Deployment]
     D -->|Iterate| B`;
   openModal(
-    "Mermaid diagram",
+    "Diagram (Mermaid)",
     `
-      <p class="modal-hint">Write <a href="https://mermaid.js.org/syntax/flowchart.html" target="_blank" rel="noreferrer">Mermaid syntax</a> — flowcharts, sequence, class, ER, gantt, etc.</p>
+      <p class="modal-hint">Paste any <a href="https://mermaid.js.org/intro/" target="_blank" rel="noreferrer">Mermaid</a> code — flowcharts, sequence, timeline, ER, gantt, pie, mindmap, etc.</p>
       <textarea data-mermaid-source>${escapeHtml(initial)}</textarea>
     `,
     (modal) => {
@@ -641,54 +554,44 @@ function openMermaidTool() {
   );
 }
 
-function openCiteTool() {
+function openSourceTool() {
   openModal(
-    "Add citation",
+    "Add source",
     `
-      <label>Author(s) <input data-cite-author placeholder="Vaswani et al."></label>
-      <label>Title <input data-cite-title placeholder="Attention Is All You Need"></label>
-      <label>URL <input data-cite-url placeholder="https://arxiv.org/abs/1706.03762"></label>
-      <label>Year <input data-cite-year placeholder="2017"></label>
+      <p class="modal-hint">Add a resource or reference you used while writing.</p>
+      <label>Title <input data-src-title placeholder="Attention Is All You Need — Vaswani et al."></label>
+      <label>URL <input data-src-url placeholder="https://arxiv.org/abs/1706.03762"></label>
     `,
     (modal) => {
-      resyncCiteCounter();
-      citeCounter++;
-      const author = modal.querySelector("[data-cite-author]").value.trim() || "Unknown";
-      const title = modal.querySelector("[data-cite-title]").value.trim() || "Untitled";
-      const rawUrl = modal.querySelector("[data-cite-url]").value.trim();
-      const year = modal.querySelector("[data-cite-year]").value.trim() || "";
+      const title = modal.querySelector("[data-src-title]").value.trim();
+      const rawUrl = modal.querySelector("[data-src-url]").value.trim();
+      if (!title && !rawUrl) return;
 
-      // Validate URL scheme (only http/https)
       let safeUrl = "";
       if (rawUrl) {
         try {
           const parsed = new URL(rawUrl);
           if (parsed.protocol === "http:" || parsed.protocol === "https:") safeUrl = parsed.href;
-        } catch { /* invalid URL — skip href */ }
+        } catch { /* invalid URL */ }
       }
 
-      // Insert inline reference
-      insertHtml(`<sup class="cite-ref"><a href="#cite-${citeCounter}">[${citeCounter}]</a></sup>`);
-
-      // Ensure citations footer exists, then append
-      let footer = editor.querySelector(".citations");
-      if (!footer) {
-        editor.insertAdjacentHTML("beforeend", `<footer class="citations"><h3>References</h3><ol class="citation-list"></ol></footer>`);
-        footer = editor.querySelector(".citations");
+      // Ensure sources section exists
+      let section = editor.querySelector(".sources-section");
+      if (!section) {
+        editor.insertAdjacentHTML("beforeend", `<footer class="sources-section"><h3>Sources</h3><ul class="sources-list"></ul></footer>`);
+        section = editor.querySelector(".sources-section");
       }
-      const ol = footer.querySelector(".citation-list");
+      const ul = section.querySelector(".sources-list");
       const li = document.createElement("li");
-      li.id = `cite-${citeCounter}`;
-      li.className = "citation-item";
-      // Build content safely
-      let citationHtml = `${escapeHtml(author)}${year ? ` (${escapeHtml(year)})` : ""}. <em>${escapeHtml(title)}</em>.`;
-      if (safeUrl) {
-        citationHtml += ` <a href="${escapeHtml(safeUrl)}" target="_blank" rel="noreferrer">${escapeHtml(safeUrl)}</a>`;
-      } else if (rawUrl) {
-        citationHtml += ` ${escapeHtml(rawUrl)}`;
+      li.className = "source-item";
+      if (safeUrl && title) {
+        li.innerHTML = `<a href="${escapeHtml(safeUrl)}" target="_blank" rel="noreferrer">${escapeHtml(title)}</a>`;
+      } else if (safeUrl) {
+        li.innerHTML = `<a href="${escapeHtml(safeUrl)}" target="_blank" rel="noreferrer">${escapeHtml(safeUrl)}</a>`;
+      } else {
+        li.textContent = title;
       }
-      li.innerHTML = citationHtml;
-      ol.appendChild(li);
+      ul.appendChild(li);
       syncPreview();
       scheduleSave();
     }
@@ -798,11 +701,10 @@ function setupEvents() {
       if (tool === "table") insertTable();
       if (tool === "image") insertImage();
       if (tool === "math") openMathTool();
-      if (tool === "mermaid") openMermaidTool();
       if (tool === "diagram") openDiagramTool();
       if (tool === "plot") openPlotTool();
       if (tool === "draw") openDrawTool();
-      if (tool === "cite") openCiteTool();
+      if (tool === "source") openSourceTool();
     });
   });
 
@@ -834,7 +736,6 @@ function setupEvents() {
         editor.innerHTML = imported.html;
         titleInput.value = imported.title || defaultDraft.title;
         if (tagsInput) tagsInput.value = imported.tags || "AI/ML, Field Note";
-        resyncCiteCounter();
         syncPreview();
         await writeDraft(currentDraft());
         setStatus("Imported draft saved in the protected workspace");
@@ -861,7 +762,6 @@ async function hydrateDraft() {
   titleInput.value = draft.title || defaultDraft.title;
   editor.innerHTML = draft.html || defaultDraft.html;
   if (tagsInput) tagsInput.value = draft.tags || "AI/ML, Field Note";
-  resyncCiteCounter();
   syncPreview();
   setStatus(draft.updatedAt ? `Protected draft restored from ${new Date(draft.updatedAt).toLocaleString()}` : "Protected draft ready");
 }

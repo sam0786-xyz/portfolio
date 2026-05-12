@@ -46,28 +46,7 @@ function shareButtons(post) {
   `;
 }
 
-/* ═══ Citation footnotes — add backlinks ═══ */
 
-function processCitations(container) {
-  const refs = container.querySelectorAll(".cite-ref a");
-  refs.forEach((a, i) => {
-    const id = `cite-ref-${i}`;
-    a.id = id;
-    // Find matching citation item and add backlink
-    const targetId = a.getAttribute("href")?.replace("#", "");
-    if (targetId) {
-      const target = container.querySelector(`#${targetId}`);
-      if (target) {
-        const back = document.createElement("a");
-        back.href = `#${id}`;
-        back.className = "cite-back";
-        back.textContent = "↩";
-        back.title = "Back to text";
-        target.appendChild(back);
-      }
-    }
-  });
-}
 
 /* ═══ Load Mermaid from CDN ═══ */
 
@@ -190,8 +169,6 @@ function renderPost() {
   const sidebar = root.querySelector("[data-article-sidebar]");
   sidebar.innerHTML = buildToc(body);
 
-  // Process citations
-  processCitations(body);
 
   // Reactions
   renderBlogReactions(body, post.slug);
