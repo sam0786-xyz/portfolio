@@ -965,6 +965,13 @@ h3 {
   background: color-mix(in srgb, var(--panel-solid), transparent 18%);
 }
 
+.studio-toolbar {
+  position: sticky;
+  top: 90px;
+  z-index: 100;
+  backdrop-filter: blur(8px);
+}
+
 .studio-topbar {
   justify-content: space-between;
 }
@@ -1042,8 +1049,7 @@ h3 {
 }
 
 .studio-body {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
+  display: block;
   min-height: 650px;
 }
 

@@ -168,7 +168,9 @@ function renderStudio() {
           <button type="button" class="is-active" data-mode="editor">Editor</button>
           <button type="button" data-mode="preview">Preview</button>
         </div>
+        </div>
         <div class="inline-actions studio-actions">
+          <span data-save-status style="font-size: 0.8rem; color: var(--muted); margin-right: 12px;">Loading protected draft...</span>
           <button class="primary-link" type="button" data-publish-blog>Save to CMS blog</button>
           <button class="secondary-link" type="button" data-export="json">Export JSON</button>
           <button class="secondary-link" type="button" data-export="mdx">Export MDX</button>
@@ -209,7 +211,9 @@ function renderStudio() {
         <button class="tool-button" type="button" title="Equation plot" data-tool="plot">Plot</button>
         <button class="tool-button" type="button" title="Freehand drawing" data-tool="draw">Draw</button>
         <span class="toolbar-divider"></span>
+        <span class="toolbar-divider"></span>
         <button class="tool-button" type="button" title="Add source/reference" data-tool="source">Source</button>
+        <button class="tool-button" style="margin-left: auto;" type="button" title="Info" data-tool="info">ℹ️</button>
       </div>
 
       <div class="studio-body">
@@ -219,21 +223,6 @@ function renderStudio() {
         <section class="preview-pane is-hidden" data-pane="preview">
           <article class="preview-surface article-body" data-preview></article>
         </section>
-        <aside class="studio-side" aria-label="Draft details">
-          <div class="side-panel">
-            <p class="eyebrow">Draft state</p>
-            <h3>Draft state</h3>
-            <p data-save-status>Loading protected draft...</p>
-          </div>
-          <div class="side-panel">
-            <p class="eyebrow">Blocks</p>
-            <p>Text, tables, math, diagrams, plots, images, and drawings.</p>
-          </div>
-          <div class="side-panel">
-            <p class="eyebrow">Publish path</p>
-            <p>Save the current draft into CMS blog content, then refine it from the admin JSON editor when needed.</p>
-          </div>
-        </aside>
       </div>
     </section>
   `;
@@ -584,6 +573,9 @@ function openDiagramTool() {
 }
 
 function openSourceTool() {
+  const selection = window.getSelection();
+  const range = selection && selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+
   openModal(
     "Add source",
     `
@@ -607,23 +599,52 @@ function openSourceTool() {
       // Ensure sources section exists
       let section = editor.querySelector(".sources-section");
       if (!section) {
-        editor.insertAdjacentHTML("beforeend", `<footer class="sources-section"><h3>Sources</h3><ul class="sources-list"></ul></footer>`);
+        editor.insertAdjacentHTML("beforeend", `<footer class="sources-section"><h3>Sources</h3><ul class="sources-list"></ul></footer><p><br></p>`);
         section = editor.querySelector(".sources-section");
       }
+      
       const ul = section.querySelector(".sources-list");
+      if (!ul) return;
+
+      const sourceIndex = ul.children.length + 1;
+      
+      // Inline citation insertion
+      if (range && document.contains(range.commonAncestorContainer) && editor.contains(range.commonAncestorContainer)) {
+        selection.removeAllRanges();
+        selection.addRange(range);
+        const citeHtml = `<sup data-cite="[${sourceIndex}]"><a href="#sources">[${sourceIndex}]</a></sup>`;
+        insertHtml(citeHtml);
+      }
+
       const li = document.createElement("li");
       li.className = "source-item";
       if (safeUrl && title) {
-        li.innerHTML = `<a href="${escapeHtml(safeUrl)}" target="_blank" rel="noreferrer">${escapeHtml(title)}</a>`;
+        li.innerHTML = `[${sourceIndex}] <a href="${escapeHtml(safeUrl)}" target="_blank" rel="noreferrer">${escapeHtml(title)}</a>`;
       } else if (safeUrl) {
-        li.innerHTML = `<a href="${escapeHtml(safeUrl)}" target="_blank" rel="noreferrer">${escapeHtml(safeUrl)}</a>`;
+        li.innerHTML = `[${sourceIndex}] <a href="${escapeHtml(safeUrl)}" target="_blank" rel="noreferrer">${escapeHtml(safeUrl)}</a>`;
       } else {
-        li.textContent = title;
+        li.textContent = `[${sourceIndex}] ${title}`;
       }
       ul.appendChild(li);
       syncPreview();
       scheduleSave();
     }
+  );
+}
+
+function openInfoTool() {
+  openModal(
+    "How to use the Studio",
+    `
+      <div style="font-size: 0.9rem; line-height: 1.5; color: var(--text);">
+        <p><strong>Writing & Formatting:</strong> Select text and use the toolbar to format. The editor supports rich text seamlessly.</p>
+        <p><strong>Diagrams (Mermaid):</strong> You can paste Mermaid code directly into the editor, highlight it, and click the <strong>Diagram</strong> tool to render it.</p>
+        <p><strong>Sources:</strong> Highlight a word or phrase and click <strong>Source</strong>. An inline citation like <sup>[1]</sup> will be added at your cursor, and the full source will be appended to the bottom.</p>
+        <p><strong>Blocks:</strong> Add equations, code blocks, images, tables, or hand-drawn sketches using the toolbar options.</p>
+        <p><strong>Publishing:</strong> Click "Save to CMS blog" to make your draft available in the public blog section.</p>
+      </div>
+    `,
+    () => {}
   );
 }
 
@@ -734,6 +755,7 @@ function setupEvents() {
       if (tool === "plot") openPlotTool();
       if (tool === "draw") openDrawTool();
       if (tool === "source") openSourceTool();
+      if (tool === "info") openInfoTool();
     });
   });
 
