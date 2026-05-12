@@ -3459,55 +3459,38 @@ h3 {
   transform: translateY(-2px);
 }
 
-/* ═══ Citation Footnotes ═══ */
+/* ═══ Sources Section ═══ */
 
-.cite-ref {
-  font-size: 0.75em;
-  line-height: 1;
-}
-
-.cite-ref a {
-  color: var(--teal);
-  text-decoration: none;
-  font-weight: 700;
-}
-
-.cite-ref a:hover { text-decoration: underline; }
-
-.citations {
+.sources-section {
   margin-top: 3em;
   padding-top: 1.5em;
   border-top: 1px solid var(--line);
 }
 
-.citations h3 {
+.sources-section h3 {
   font-size: 1rem;
   margin-bottom: 12px;
 }
 
-.citation-list {
+.sources-list {
   padding-left: 20px;
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   color: var(--muted);
 }
 
-.citation-item {
-  margin-bottom: 8px;
+.source-item {
+  margin-bottom: 6px;
   line-height: 1.6;
-  scroll-margin-top: 80px;
 }
 
-.citation-item a {
+.source-item a {
   color: var(--teal);
+  text-decoration: none;
   word-break: break-all;
 }
 
-.cite-back {
-  display: inline-block;
-  margin-left: 6px;
-  color: var(--teal);
-  text-decoration: none;
-  font-size: 0.8em;
+.source-item a:hover {
+  text-decoration: underline;
 }
 
 /* ═══ Blog Filter Bar ═══ */
