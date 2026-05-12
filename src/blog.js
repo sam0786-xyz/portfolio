@@ -2,7 +2,7 @@ import { bootLoader, dismissLoader } from "./loader.js";
 import { bootTheme } from "./theme.js";
 import { initSiteContent, getSiteContent } from "./content-store.js";
 import { bootInteractions } from "./animations.js";
-import { mountShell, renderBlogCard } from "./render.js";
+import { escapeHtml, mountShell, renderBlogCard } from "./render.js";
 
 let activeTag = "All";
 let searchQuery = "";
@@ -32,7 +32,10 @@ function renderTagBar() {
         <input class="blog-search" type="search" placeholder="Search posts..." data-blog-search aria-label="Search blog posts">
       </div>
       <div class="blog-tags" role="tablist" aria-label="Filter by tag">
-        ${tags.map(tag => `<button class="blog-tag-btn ${tag === activeTag ? "is-active" : ""}" type="button" role="tab" aria-selected="${tag === activeTag}" data-tag="${tag}">${tag}</button>`).join("")}
+        ${tags.map(tag => {
+          const safe = escapeHtml(tag);
+          return `<button class="blog-tag-btn ${tag === activeTag ? "is-active" : ""}" type="button" role="tab" aria-selected="${tag === activeTag}" data-tag="${safe}">${safe}</button>`;
+        }).join("")}
       </div>
     </div>
   `;
@@ -61,8 +64,9 @@ function renderPage() {
       </div>
     </section>
     ${renderTagBar()}
-    <section class="blog-grid" data-blog-grid aria-label="Blog posts">${getFilteredPosts().map(renderBlogCard).join("")}</section>
+    <section class="blog-grid" data-blog-grid aria-label="Blog posts"></section>
   `;
+  renderGrid();
   setupFilterEvents();
 }
 

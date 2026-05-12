@@ -3552,8 +3552,11 @@ h3 {
 }
 
 .blog-search:focus {
-  outline: none;
   border-color: var(--teal);
+}
+
+.blog-search:focus:not(:focus-visible) {
+  outline: none;
 }
 
 .blog-tags {

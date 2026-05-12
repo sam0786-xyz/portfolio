@@ -92,14 +92,23 @@ async function renderMermaidBlocks(container) {
 async function highlightCode(container) {
   const codeBlocks = container.querySelectorAll("pre code");
   if (!codeBlocks.length) return;
-  // Load Prism CSS + JS from CDN
-  if (!document.querySelector('link[href*="prism"]')) {
-    const theme = document.documentElement.dataset.theme === "dark" ? "prism-tomorrow" : "prism";
-    const link = document.createElement("link");
+
+  // Resolve theme-appropriate stylesheet
+  const getThemeName = () => document.documentElement.dataset.theme === "dark" ? "prism-tomorrow" : "prism";
+  let link = document.querySelector("link[data-prism-theme]");
+  if (!link) {
+    link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = `https://cdn.jsdelivr.net/npm/prismjs@1/themes/${theme}.min.css`;
+    link.dataset.prismTheme = "";
+    link.href = `https://cdn.jsdelivr.net/npm/prismjs@1/themes/${getThemeName()}.min.css`;
     document.head.appendChild(link);
+
+    // Watch for theme toggles and update the stylesheet
+    new MutationObserver(() => {
+      link.href = `https://cdn.jsdelivr.net/npm/prismjs@1/themes/${getThemeName()}.min.css`;
+    }).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
   }
+
   try {
     const Prism = window.Prism || (await import("https://cdn.jsdelivr.net/npm/prismjs@1/prism.min.js").then(() => window.Prism));
     if (Prism) Prism.highlightAllUnder(container);

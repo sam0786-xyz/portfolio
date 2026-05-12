@@ -20,6 +20,7 @@ const defaultDraft = {
 let editor;
 let preview;
 let titleInput;
+let tagsInput;
 let statusNode;
 let saveTimer;
 let activeMode = "editor";
@@ -76,6 +77,7 @@ function currentDraft() {
   return {
     title: titleInput.value.trim() || "Untitled AI field note",
     html: editor.innerHTML,
+    tags: tagsInput ? tagsInput.value.trim() : "AI/ML, Field Note",
     updatedAt: new Date().toISOString()
   };
 }
@@ -609,6 +611,16 @@ function setupDrawingCanvas(modal) {
 
 let citeCounter = 0;
 
+function resyncCiteCounter() {
+  const existing = editor ? editor.querySelectorAll(".citation-item[id]") : [];
+  let max = 0;
+  existing.forEach(el => {
+    const m = el.id.match(/^cite-(\d+)$/);
+    if (m) max = Math.max(max, parseInt(m[1], 10));
+  });
+  citeCounter = max;
+}
+
 function openMermaidTool() {
   const initial = `graph TD
     A[Data Collection] --> B[Preprocessing]
@@ -639,11 +651,21 @@ function openCiteTool() {
       <label>Year <input data-cite-year placeholder="2017"></label>
     `,
     (modal) => {
+      resyncCiteCounter();
       citeCounter++;
       const author = modal.querySelector("[data-cite-author]").value.trim() || "Unknown";
       const title = modal.querySelector("[data-cite-title]").value.trim() || "Untitled";
-      const url = modal.querySelector("[data-cite-url]").value.trim();
+      const rawUrl = modal.querySelector("[data-cite-url]").value.trim();
       const year = modal.querySelector("[data-cite-year]").value.trim() || "";
+
+      // Validate URL scheme (only http/https)
+      let safeUrl = "";
+      if (rawUrl) {
+        try {
+          const parsed = new URL(rawUrl);
+          if (parsed.protocol === "http:" || parsed.protocol === "https:") safeUrl = parsed.href;
+        } catch { /* invalid URL — skip href */ }
+      }
 
       // Insert inline reference
       insertHtml(`<sup class="cite-ref"><a href="#cite-${citeCounter}">[${citeCounter}]</a></sup>`);
@@ -658,7 +680,14 @@ function openCiteTool() {
       const li = document.createElement("li");
       li.id = `cite-${citeCounter}`;
       li.className = "citation-item";
-      li.innerHTML = `${escapeHtml(author)}${year ? ` (${escapeHtml(year)})` : ""}. <em>${escapeHtml(title)}</em>.${url ? ` <a href="${escapeHtml(url)}" target="_blank" rel="noreferrer">${escapeHtml(url)}</a>` : ""}`;
+      // Build content safely
+      let citationHtml = `${escapeHtml(author)}${year ? ` (${escapeHtml(year)})` : ""}. <em>${escapeHtml(title)}</em>.`;
+      if (safeUrl) {
+        citationHtml += ` <a href="${escapeHtml(safeUrl)}" target="_blank" rel="noreferrer">${escapeHtml(safeUrl)}</a>`;
+      } else if (rawUrl) {
+        citationHtml += ` ${escapeHtml(rawUrl)}`;
+      }
+      li.innerHTML = citationHtml;
       ol.appendChild(li);
       syncPreview();
       scheduleSave();
@@ -745,6 +774,7 @@ function setupEvents() {
   editor = document.querySelector("[data-editor]");
   preview = document.querySelector("[data-preview]");
   titleInput = document.querySelector("[data-title-input]");
+  tagsInput = document.querySelector("[data-tags-input]");
   statusNode = document.querySelector("[data-save-status]");
 
   document.querySelectorAll("[data-mode]").forEach((button) => {
@@ -802,6 +832,8 @@ function setupEvents() {
         if (typeof imported.html !== "string") throw new Error("Draft HTML missing");
         editor.innerHTML = imported.html;
         titleInput.value = imported.title || defaultDraft.title;
+        if (tagsInput) tagsInput.value = imported.tags || "AI/ML, Field Note";
+        resyncCiteCounter();
         syncPreview();
         await writeDraft(currentDraft());
         setStatus("Imported draft saved in the protected workspace");
@@ -820,12 +852,15 @@ function setupEvents() {
     syncPreview();
     scheduleSave();
   });
+  if (tagsInput) tagsInput.addEventListener("input", scheduleSave);
 }
 
 async function hydrateDraft() {
   const draft = (await readDraft()) || defaultDraft;
   titleInput.value = draft.title || defaultDraft.title;
   editor.innerHTML = draft.html || defaultDraft.html;
+  if (tagsInput) tagsInput.value = draft.tags || "AI/ML, Field Note";
+  resyncCiteCounter();
   syncPreview();
   setStatus(draft.updatedAt ? `Protected draft restored from ${new Date(draft.updatedAt).toLocaleString()}` : "Protected draft ready");
 }
