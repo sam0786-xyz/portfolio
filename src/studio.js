@@ -98,6 +98,27 @@ function syncPreview() {
     <h1>${escapeHtml(titleInput.value.trim() || "Untitled AI field note")}</h1>
     ${editor.innerHTML}
   `;
+  renderPreviewMermaid();
+}
+
+let mermaidPromise = null;
+async function renderPreviewMermaid() {
+  const blocks = preview.querySelectorAll("pre.mermaid");
+  if (!blocks.length) return;
+  
+  if (!mermaidPromise) {
+    mermaidPromise = import("https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs").then(m => {
+      m.default.initialize({ startOnLoad: false, theme: "base" });
+      return m.default;
+    });
+  }
+  
+  try {
+    const mermaid = await mermaidPromise;
+    await mermaid.run({ nodes: blocks });
+  } catch (e) {
+    console.warn("Mermaid preview render failed:", e);
+  }
 }
 
 function command(name, value = null) {
@@ -535,6 +556,14 @@ function setupDrawingCanvas(modal) {
 }
 
 function openDiagramTool() {
+  const selection = window.getSelection();
+  const selectedText = selection && selection.rangeCount > 0 ? selection.toString().trim() : "";
+  
+  if (selectedText) {
+    insertHtml(`<pre class="mermaid">\n${escapeHtml(selectedText)}\n</pre><p><br></p>`);
+    return;
+  }
+
   const initial = `graph TD
     A[Data Collection] --> B[Preprocessing]
     B --> C[Model Training]
