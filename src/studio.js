@@ -138,6 +138,12 @@ function renderStudio() {
         </div>
       </div>
 
+      <div class="studio-meta-bar">
+        <label class="studio-tags-label">Tags
+          <input class="studio-tags-input" data-tags-input placeholder="AI/ML, RAG, Tutorial" value="AI/ML, Field Note">
+        </label>
+      </div>
+
       <div class="studio-toolbar" aria-label="Editor tools">
         <select class="studio-select" data-block aria-label="Block style">
           <option value="p">Text</option>
@@ -151,13 +157,19 @@ function renderStudio() {
         <button class="tool-button" type="button" title="Quote" data-command="formatBlock" data-value="blockquote">Quote</button>
         <button class="tool-button" type="button" title="Bulleted list" data-command="insertUnorderedList">List</button>
         <button class="tool-button" type="button" title="Numbered list" data-command="insertOrderedList">1 2</button>
+        <span class="toolbar-divider"></span>
+        <button class="tool-button" type="button" title="Horizontal rule" data-tool="hr">HR</button>
         <button class="tool-button" type="button" title="Code block" data-tool="code">Code</button>
         <button class="tool-button" type="button" title="Table" data-tool="table">Table</button>
         <button class="tool-button" type="button" title="Image" data-tool="image">Image</button>
+        <span class="toolbar-divider"></span>
         <button class="tool-button" type="button" title="Math block" data-tool="math">Math</button>
-        <button class="tool-button" type="button" title="Diagram" data-tool="diagram">Diagram</button>
+        <button class="tool-button" type="button" title="Mermaid diagram" data-tool="mermaid">Mermaid</button>
+        <button class="tool-button" type="button" title="Legacy diagram" data-tool="diagram">Diagram</button>
         <button class="tool-button" type="button" title="Equation plot" data-tool="plot">Plot</button>
         <button class="tool-button" type="button" title="Freehand drawing" data-tool="draw">Draw</button>
+        <span class="toolbar-divider"></span>
+        <button class="tool-button" type="button" title="Add citation" data-tool="cite">Cite</button>
       </div>
 
       <div class="studio-body">
@@ -206,12 +218,15 @@ async function publishDraftToCms() {
   const draft = currentDraft();
   const slug = slugify(draft.title);
   const plain = draft.html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  const tagsInput = document.querySelector("[data-tags-input]");
+  const tagsRaw = tagsInput ? tagsInput.value : "AI/ML, Field Note";
+  const tags = tagsRaw.split(",").map(t => t.trim()).filter(Boolean);
   const post = {
     slug,
     title: draft.title,
     excerpt: plain.slice(0, 180) || "AI/ML field note from Mohammad Sameer's writing studio.",
     date: new Date().toISOString().slice(0, 10),
-    tags: ["AI/ML", "Field Note"],
+    tags,
     cover: "/assets/neural-console.png",
     readingTime: estimateReadingTime(draft.html),
     body: draft.html
@@ -592,6 +607,65 @@ function setupDrawingCanvas(modal) {
   });
 }
 
+let citeCounter = 0;
+
+function openMermaidTool() {
+  const initial = `graph TD
+    A[Data Collection] --> B[Preprocessing]
+    B --> C[Model Training]
+    C --> D[Evaluation]
+    D --> E[Deployment]
+    D -->|Iterate| B`;
+  openModal(
+    "Mermaid diagram",
+    `
+      <p class="modal-hint">Write <a href="https://mermaid.js.org/syntax/flowchart.html" target="_blank" rel="noreferrer">Mermaid syntax</a> — flowcharts, sequence, class, ER, gantt, etc.</p>
+      <textarea data-mermaid-source>${escapeHtml(initial)}</textarea>
+    `,
+    (modal) => {
+      const code = modal.querySelector("[data-mermaid-source]").value.trim();
+      insertHtml(`<pre class="mermaid">${escapeHtml(code)}</pre>`);
+    }
+  );
+}
+
+function openCiteTool() {
+  openModal(
+    "Add citation",
+    `
+      <label>Author(s) <input data-cite-author placeholder="Vaswani et al."></label>
+      <label>Title <input data-cite-title placeholder="Attention Is All You Need"></label>
+      <label>URL <input data-cite-url placeholder="https://arxiv.org/abs/1706.03762"></label>
+      <label>Year <input data-cite-year placeholder="2017"></label>
+    `,
+    (modal) => {
+      citeCounter++;
+      const author = modal.querySelector("[data-cite-author]").value.trim() || "Unknown";
+      const title = modal.querySelector("[data-cite-title]").value.trim() || "Untitled";
+      const url = modal.querySelector("[data-cite-url]").value.trim();
+      const year = modal.querySelector("[data-cite-year]").value.trim() || "";
+
+      // Insert inline reference
+      insertHtml(`<sup class="cite-ref"><a href="#cite-${citeCounter}">[${citeCounter}]</a></sup>`);
+
+      // Ensure citations footer exists, then append
+      let footer = editor.querySelector(".citations");
+      if (!footer) {
+        editor.insertAdjacentHTML("beforeend", `<footer class="citations"><h3>References</h3><ol class="citation-list"></ol></footer>`);
+        footer = editor.querySelector(".citations");
+      }
+      const ol = footer.querySelector(".citation-list");
+      const li = document.createElement("li");
+      li.id = `cite-${citeCounter}`;
+      li.className = "citation-item";
+      li.innerHTML = `${escapeHtml(author)}${year ? ` (${escapeHtml(year)})` : ""}. <em>${escapeHtml(title)}</em>.${url ? ` <a href="${escapeHtml(url)}" target="_blank" rel="noreferrer">${escapeHtml(url)}</a>` : ""}`;
+      ol.appendChild(li);
+      syncPreview();
+      scheduleSave();
+    }
+  );
+}
+
 function insertCodeBlock() {
   openModal(
     "Code block",
@@ -688,13 +762,16 @@ function setupEvents() {
   document.querySelectorAll("[data-tool]").forEach((button) => {
     button.addEventListener("click", () => {
       const tool = button.dataset.tool;
+      if (tool === "hr") insertHtml("<hr>");
       if (tool === "code") insertCodeBlock();
       if (tool === "table") insertTable();
       if (tool === "image") insertImage();
       if (tool === "math") openMathTool();
+      if (tool === "mermaid") openMermaidTool();
       if (tool === "diagram") openDiagramTool();
       if (tool === "plot") openPlotTool();
       if (tool === "draw") openDrawTool();
+      if (tool === "cite") openCiteTool();
     });
   });
 
