@@ -3585,7 +3585,7 @@ h3 {
 .blog-tag-btn.is-active {
   background: var(--teal);
   border-color: var(--teal);
-  color: #000;
+  color: var(--bg);
 }
 
 /* ═══ Mermaid Override ═══ */

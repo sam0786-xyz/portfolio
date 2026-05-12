@@ -767,7 +767,8 @@ function htmlToMdx(html) {
     else if (tag === "table") lines.push(nodeText(child));
     else lines.push(nodeText(child));
   }
-  return `---\ntitle: "${titleInput.value.trim() || "Untitled AI field note"}"\ndate: "${new Date().toISOString().slice(0, 10)}"\ntags: ["AI", "ML"]\n---\n\n${lines.filter(Boolean).join("\n\n")}\n`;
+  const mdxTags = (tagsInput ? tagsInput.value : "AI/ML, Field Note").split(",").map(t => `"${t.trim()}"`).join(", ");
+  return `---\ntitle: "${titleInput.value.trim() || "Untitled AI field note"}"\ndate: "${new Date().toISOString().slice(0, 10)}"\ntags: [${mdxTags}]\n---\n\n${lines.filter(Boolean).join("\n\n")}\n`;
 }
 
 function setupEvents() {
