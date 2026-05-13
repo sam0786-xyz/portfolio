@@ -124,7 +124,7 @@ export function mountShell(active) {
     footer.innerHTML = `
       <div>
         <strong>© ${new Date().getFullYear()} ${profile.name}</strong>
-        <p>Built with curiosity and AI agents.</p>
+        <p>AI/ML Engineer | GenAI | Cloud | Data Science</p>
       </div>
       <div class="footer-links">
         ${profile.socials
@@ -185,7 +185,7 @@ export function renderCertificates(featuredOnly = false) {
 
 export function renderBlogCard(post) {
   return `
-    <article class="blog-card">
+    <article class="blog-card" data-animate="fade-up">
       <img src="${post.cover}" alt="" loading="lazy">
       <div>
         <p class="eyebrow">${new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(new Date(post.date))} / ${post.readingTime}</p>

@@ -7,7 +7,6 @@ import {
   mountShell,
   renderBlogCards,
   renderCertificateCard,
-  renderContactLinks,
   renderLinkedInCards,
   renderPills,
   icon,
@@ -81,7 +80,7 @@ function renderHeroContacts(profile) {
 }
 
 function renderHome() {
-  const { certificates, education, experience, profile, projects, responsibilities, skills, stats } = getSiteContent();
+  const { certificates, education, experience, profile, projects, responsibilities, skills } = getSiteContent();
   const safeProjects = projects.length
     ? projects
     : [{ title: "Project placeholder", type: "Placeholder", status: "Draft", summary: "Projects will appear here.", impact: "Impact details will appear here.", tags: ["Placeholder"], href: "#" }];
@@ -98,8 +97,9 @@ function renderHome() {
           </div>
           <p class="eyebrow">AI portfolio / research OS</p>
           <h1 id="hero-title" class="hero-name">Mohammad<br>Sameer</h1>
+          <p class="hero-positioning">AI/ML Engineer | GenAI | Cloud | Data Science</p>
           <p class="lede">
-            ${escapeHtml(profile.role)} at ${escapeHtml(profile.company)}. ${escapeHtml(profile.summary)}
+            ${escapeHtml(profile.role)} at ${escapeHtml(profile.company)}. I design practical AI systems, production interfaces, and learning notes around real engineering work.
           </p>
           <div class="hero-actions">
             <a class="primary-link" href="${profile.resumeUrl}" download>${icon("download")} Download resume</a>
@@ -110,28 +110,29 @@ function renderHome() {
         </div>
 
         <div class="hero-stage" data-animate="slide-left">
-          <figure class="console-visual">
-            <img src="/assets/neural-console.png" alt="${escapeHtml(profile.avatarAlt)}">
-            <figcaption class="console-overlay">
-              <span>domain: AI/ML Engineer | GenAI</span>
-              <span>stack: Cloud | Data Science | LLM Apps</span>
-              <span>status: building & shipping</span>
-            </figcaption>
-          </figure>
+          <div class="ai-workbench" aria-label="${escapeHtml(profile.avatarAlt)}">
+            <canvas class="workbench-canvas" data-neural-canvas aria-hidden="true"></canvas>
+            <div class="workbench-header">
+              <span>sameer.ai</span>
+              <span>live workbench</span>
+            </div>
+            <div class="model-node primary">
+              <small>current vector</small>
+              <strong>GenAI systems</strong>
+            </div>
+            <div class="model-node">
+              <small>cloud layer</small>
+              <strong>FastAPI / Supabase / AWS</strong>
+            </div>
+            <div class="model-node">
+              <small>learning loop</small>
+              <strong>Data Science + ML</strong>
+            </div>
+            <div class="signal-grid" aria-hidden="true">
+              ${["RAG", "LLM", "API", "MLOps", "SQL", "UX"].map((item) => `<span>${item}</span>`).join("")}
+            </div>
+          </div>
         </div>
-      </section>
-
-      <section class="impact-strip" aria-label="Portfolio metrics">
-        ${stats
-          .map(
-            (stat) => `
-              <div class="metric" data-animate="fade-up">
-                <strong>${escapeHtml(stat.value)}</strong>
-                <span>${escapeHtml(stat.label)}</span>
-              </div>
-            `
-          )
-          .join("")}
       </section>
 
       <section class="section editorial-band" id="projects">
@@ -161,11 +162,11 @@ function renderHome() {
         </div>
       </section>
 
-      <section class="section editorial-band" id="writing">
+      <section class="section editorial-band writing-lab" id="writing">
         <div class="section-header" data-animate="fade-up">
           <div>
             <p class="eyebrow">Blog</p>
-            <h2>Notes and essays.</h2>
+            <h2>Read the thinking behind the builds.</h2>
           </div>
           <a class="secondary-link" href="/blog/">${icon("arrow")} Read all posts</a>
         </div>
@@ -224,7 +225,7 @@ function renderHome() {
         <div class="section-header" data-animate="fade-up">
           <div>
             <p class="eyebrow">Education</p>
-            <h2>Academic background.</h2>
+            <h2>Education timeline.</h2>
           </div>
         </div>
         <div class="education-cards">
@@ -287,14 +288,7 @@ function renderHome() {
         </div>
       </section>
 
-      <section class="section" id="linkedin">
-        <div class="section-header" data-animate="fade-up">
-          <div>
-            <p class="eyebrow">LinkedIn</p>
-            <h2>Recent posts.</h2>
-          </div>
-          <a class="secondary-link" href="/linkedin/">${icon("arrow")} View all posts</a>
-        </div>
+      <section class="section linkedin-posts-only" id="linkedin" aria-label="LinkedIn posts">
         <div class="linkedin-grid">${renderLinkedInCards(true, { embed: false })}</div>
       </section>
 
