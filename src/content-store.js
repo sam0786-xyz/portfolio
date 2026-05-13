@@ -12,7 +12,7 @@ import {
   stats
 } from "./data/content.js";
 
-const CONTENT_KEY = "sameer-site-content-v3";
+const CONTENT_KEY = "sameer-site-content-v4";
 let contentCache = null;
 
 export function defaultSiteContent() {
@@ -123,5 +123,16 @@ function mergeContent(base, override) {
   ]) {
     next[key] = Array.isArray(override[key]) ? override[key] : base[key];
   }
+  next.education = mergeEducation(base.education, next.education);
   return next;
+}
+
+function mergeEducation(baseEducation, overrideEducation) {
+  const result = Array.isArray(overrideEducation) ? [...overrideEducation] : [];
+  const seen = new Set(result.map((item) => `${item.school || ""}|${item.degree || ""}`.toLowerCase()));
+  for (const item of baseEducation || []) {
+    const key = `${item.school || ""}|${item.degree || ""}`.toLowerCase();
+    if (!seen.has(key)) result.push(item);
+  }
+  return result;
 }

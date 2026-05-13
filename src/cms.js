@@ -14,7 +14,6 @@ let content;
 let statusNode;
 
 const editableArrays = [
-  "stats",
   "skills",
   "experience",
   "projects",

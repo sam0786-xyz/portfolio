@@ -21,7 +21,9 @@ function createLoaderDOM() {
     <canvas id="loader-canvas"></canvas>
     <div class="loader-brand">
       <span class="loader-sigil">MS</span>
-      <span class="loader-text">Initializing neural workspace<span class="loader-dots"><span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></span></span>
+      <span class="loader-line"></span>
+      <span class="loader-text">Rendering portfolio system<span class="loader-dots"><span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></span></span>
+      <span class="loader-subtext">AI/ML | GenAI | Cloud | Data Science</span>
     </div>
   `;
   document.body.prepend(loader);
@@ -51,7 +53,7 @@ function animateLoader() {
 
   function initNodes() {
     nodes = [];
-    const count = Math.min(Math.floor((width * height) / 12000), 60);
+    const count = Math.min(Math.floor((width * height) / 10500), 78);
     for (let i = 0; i < count; i++) {
       nodes.push({
         x: Math.random() * width,
@@ -76,8 +78,8 @@ function animateLoader() {
         const dy = nodes[i].y - nodes[j].y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist < 160) {
-          const alpha = (1 - dist / 160) * 0.25;
-          ctx.strokeStyle = `rgba(82, 199, 184, ${alpha})`;
+          const alpha = (1 - dist / 160) * 0.22;
+          ctx.strokeStyle = `rgba(98, 211, 195, ${alpha})`;
           ctx.lineWidth = 0.6;
           ctx.beginPath();
           ctx.moveTo(nodes[i].x, nodes[i].y);
@@ -92,7 +94,7 @@ function animateLoader() {
       const glow = 0.4 + Math.sin(node.pulse) * 0.3;
       ctx.beginPath();
       ctx.arc(node.x, node.y, node.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(82, 199, 184, ${glow})`;
+      ctx.fillStyle = node.r > 2.8 ? `rgba(238, 184, 74, ${glow})` : `rgba(98, 211, 195, ${glow})`;
       ctx.fill();
       const toCenterX = (cx - node.x) * 0.0004;
       const toCenterY = (cy - node.y) * 0.0004;

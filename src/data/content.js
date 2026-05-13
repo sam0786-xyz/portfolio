@@ -50,12 +50,7 @@ export const profile = {
   ]
 };
 
-export const stats = [
-  { label: "Students impacted", value: "800+" },
-  { label: "QR scans handled", value: "5K+" },
-  { label: "Technova members", value: "70+" },
-  { label: "Technical domains", value: "8" }
-];
+export const stats = [];
 
 export const skills = [
   {
@@ -127,6 +122,12 @@ export const education = [
     location: "Greater Noida, Uttar Pradesh, India",
     degree: "Bachelor of Technology in Computer Science (AI & ML Specialization)",
     period: "Aug 2023 - May 2027"
+  },
+  {
+    school: "Good Samaritan School",
+    location: "Jasola, New Delhi",
+    degree: "Science with Mathematics",
+    period: "Apr 2022 - Apr 2023"
   }
 ];
 
@@ -245,4 +246,4 @@ export const linkedinPosts = [
   }
 ];
 
-export const siteContentVersion = 3;
+export const siteContentVersion = 4;
