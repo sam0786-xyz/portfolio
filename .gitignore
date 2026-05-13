@@ -1,4 +1,5 @@
 node_modules/
+.session-secret
 *.json.bak
 gen-lang-client-*.json
 .env

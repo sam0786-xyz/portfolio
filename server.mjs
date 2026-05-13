@@ -1,7 +1,7 @@
 import { createHmac, pbkdf2Sync, randomBytes, timingSafeEqual } from "node:crypto";
 import { createServer } from "node:http";
 import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { extname, join, normalize, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -13,9 +13,8 @@ const host = process.env.HOST || env.HOST || "0.0.0.0";
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || env.ADMIN_USERNAME || "sam.xyz";
 const DEFAULT_ADMIN_HASH = "pbkdf2_sha256$210000$sameer-portfolio-admin-v1$b115dfcb8e54c1fd2464402b766df7431626cf77a0a6fee32254d1d686e9d94b";
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || env.ADMIN_PASSWORD_HASH || DEFAULT_ADMIN_HASH;
-const SESSION_SECRET = process.env.SESSION_SECRET || env.SESSION_SECRET || randomBytes(32).toString("hex");
+const SESSION_SECRET = loadSessionSecret();
 const SESSION_TTL_MS = 1000 * 60 * 60 * 8;
-const sessions = new Map();
 const loginAttempts = new Map();
 
 const SUPABASE_URL = process.env.SUPABASE_URL || env.SUPABASE_URL || env.Supabase_URL || "https://rygkdlltqpdnkohelqnb.supabase.co";
@@ -57,6 +56,27 @@ function loadEnv(paths) {
   return result;
 }
 
+function loadSessionSecret() {
+  if (process.env.SESSION_SECRET) return process.env.SESSION_SECRET;
+  if (env.SESSION_SECRET) return env.SESSION_SECRET;
+  const isProd = (process.env.NODE_ENV || env.NODE_ENV || "").toLowerCase() === "production";
+  if (isProd) {
+    console.error("FATAL: SESSION_SECRET is required in production. Set it via environment variable or .env file.");
+    process.exit(1);
+  }
+  // Dev-only fallback: read or generate a persistent local secret
+  const secretPath = join(root, ".session-secret");
+  try {
+    const stored = readFileSync(secretPath, "utf8").trim();
+    if (stored.length >= 32) return stored;
+  } catch { /* file doesn't exist yet */ }
+  const generated = randomBytes(32).toString("hex");
+  try {
+    writeFileSync(secretPath, generated + "\n", { mode: 0o600 });
+  } catch { /* read-only fs, use ephemeral secret */ }
+  return generated;
+}
+
 function json(response, status, payload, extraHeaders = {}) {
   response.writeHead(status, {
     "content-type": "application/json; charset=utf-8",
@@ -90,29 +110,35 @@ function parseCookies(request) {
   );
 }
 
-function signSession(id) {
-  return createHmac("sha256", SESSION_SECRET).update(id).digest("hex");
+function signSession(payload) {
+  return createHmac("sha256", SESSION_SECRET).update(payload).digest("hex");
 }
 
-function makeSessionCookie(id) {
-  return `sameer_admin=${id}.${signSession(id)}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${SESSION_TTL_MS / 1000}`;
+function makeSessionCookie() {
+  const expiresAt = Date.now() + SESSION_TTL_MS;
+  const payload = `${ADMIN_USERNAME}|${expiresAt}`;
+  return `sameer_admin=${payload}.${signSession(payload)}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${SESSION_TTL_MS / 1000}`;
 }
 
 function clearSessionCookie() {
-  return "sameer_admin=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0";
+  return "sameer_admin=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0";
 }
 
 function getSession(request) {
   const raw = parseCookies(request).sameer_admin;
   if (!raw || !raw.includes(".")) return null;
-  const [id, signature] = raw.split(".");
-  if (signature !== signSession(id)) return null;
-  const session = sessions.get(id);
-  if (!session || session.expiresAt < Date.now()) {
-    sessions.delete(id);
-    return null;
-  }
-  return session;
+  const lastDot = raw.lastIndexOf(".");
+  const payload = raw.slice(0, lastDot);
+  const signature = raw.slice(lastDot + 1);
+  
+  const expected = Buffer.from(signSession(payload), "hex");
+  const received = Buffer.from(signature, "hex");
+  if (expected.length !== received.length || !timingSafeEqual(expected, received)) return null;
+  
+  const [username, expiresAt] = payload.split("|");
+  if (username !== ADMIN_USERNAME || Number(expiresAt) < Date.now()) return null;
+  
+  return { username, expiresAt: Number(expiresAt) };
 }
 
 function requireAdmin(request, response) {
@@ -212,15 +238,11 @@ async function handleApi(request, response) {
       json(response, 401, { ok: false, error: "Invalid admin credentials." });
       return true;
     }
-    const id = randomBytes(24).toString("hex");
-    sessions.set(id, { username: ADMIN_USERNAME, expiresAt: Date.now() + SESSION_TTL_MS });
-    json(response, 200, { ok: true }, { "set-cookie": makeSessionCookie(id) });
+    json(response, 200, { ok: true }, { "set-cookie": makeSessionCookie() });
     return true;
   }
 
   if (url === "/api/admin/logout" && request.method === "POST") {
-    const raw = parseCookies(request).sameer_admin;
-    if (raw?.includes(".")) sessions.delete(raw.split(".")[0]);
     json(response, 200, { ok: true }, { "set-cookie": clearSessionCookie() });
     return true;
   }
