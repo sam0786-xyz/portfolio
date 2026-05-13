@@ -59,6 +59,12 @@ function loadEnv(paths) {
 function loadSessionSecret() {
   if (process.env.SESSION_SECRET) return process.env.SESSION_SECRET;
   if (env.SESSION_SECRET) return env.SESSION_SECRET;
+  const isProd = (process.env.NODE_ENV || env.NODE_ENV || "").toLowerCase() === "production";
+  if (isProd) {
+    console.error("FATAL: SESSION_SECRET is required in production. Set it via environment variable or .env file.");
+    process.exit(1);
+  }
+  // Dev-only fallback: read or generate a persistent local secret
   const secretPath = join(root, ".session-secret");
   try {
     const stored = readFileSync(secretPath, "utf8").trim();
@@ -125,7 +131,9 @@ function getSession(request) {
   const payload = raw.slice(0, lastDot);
   const signature = raw.slice(lastDot + 1);
   
-  if (signature !== signSession(payload)) return null;
+  const expected = Buffer.from(signSession(payload), "hex");
+  const received = Buffer.from(signature, "hex");
+  if (expected.length !== received.length || !timingSafeEqual(expected, received)) return null;
   
   const [username, expiresAt] = payload.split("|");
   if (username !== ADMIN_USERNAME || Number(expiresAt) < Date.now()) return null;
