@@ -1,7 +1,7 @@
 import { createHmac, pbkdf2Sync, randomBytes, timingSafeEqual } from "node:crypto";
 import { createServer } from "node:http";
 import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { extname, join, normalize, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -13,7 +13,7 @@ const host = process.env.HOST || env.HOST || "0.0.0.0";
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || env.ADMIN_USERNAME || "sam.xyz";
 const DEFAULT_ADMIN_HASH = "pbkdf2_sha256$210000$sameer-portfolio-admin-v1$b115dfcb8e54c1fd2464402b766df7431626cf77a0a6fee32254d1d686e9d94b";
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || env.ADMIN_PASSWORD_HASH || DEFAULT_ADMIN_HASH;
-const SESSION_SECRET = process.env.SESSION_SECRET || env.SESSION_SECRET || ADMIN_PASSWORD_HASH;
+const SESSION_SECRET = loadSessionSecret();
 const SESSION_TTL_MS = 1000 * 60 * 60 * 8;
 const loginAttempts = new Map();
 
@@ -56,6 +56,21 @@ function loadEnv(paths) {
   return result;
 }
 
+function loadSessionSecret() {
+  if (process.env.SESSION_SECRET) return process.env.SESSION_SECRET;
+  if (env.SESSION_SECRET) return env.SESSION_SECRET;
+  const secretPath = join(root, ".session-secret");
+  try {
+    const stored = readFileSync(secretPath, "utf8").trim();
+    if (stored.length >= 32) return stored;
+  } catch { /* file doesn't exist yet */ }
+  const generated = randomBytes(32).toString("hex");
+  try {
+    writeFileSync(secretPath, generated + "\n", { mode: 0o600 });
+  } catch { /* read-only fs, use ephemeral secret */ }
+  return generated;
+}
+
 function json(response, status, payload, extraHeaders = {}) {
   response.writeHead(status, {
     "content-type": "application/json; charset=utf-8",
@@ -96,11 +111,11 @@ function signSession(payload) {
 function makeSessionCookie() {
   const expiresAt = Date.now() + SESSION_TTL_MS;
   const payload = `${ADMIN_USERNAME}|${expiresAt}`;
-  return `sameer_admin=${payload}.${signSession(payload)}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${SESSION_TTL_MS / 1000}`;
+  return `sameer_admin=${payload}.${signSession(payload)}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${SESSION_TTL_MS / 1000}`;
 }
 
 function clearSessionCookie() {
-  return "sameer_admin=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0";
+  return "sameer_admin=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0";
 }
 
 function getSession(request) {
