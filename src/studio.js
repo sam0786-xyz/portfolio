@@ -45,6 +45,7 @@ let tagsInput;
 let statusNode;
 let wordCountNode;
 let saveTimer;
+let previewTimer;
 let activeMode = "split";
 let mermaidPromise = null;
 
@@ -398,6 +399,16 @@ function scheduleSave() {
   }, 450);
 }
 
+function isPreviewVisible() {
+  return activeMode === "preview" || activeMode === "split";
+}
+
+function schedulePreviewSync() {
+  if (!isPreviewVisible()) return;
+  window.clearTimeout(previewTimer);
+  previewTimer = window.setTimeout(() => syncPreview(), 600);
+}
+
 function renderStudio() {
   document.querySelector("#studio-root").innerHTML = `
     <section class="page-hero studio-hero">
@@ -481,7 +492,7 @@ function setMode(mode) {
   });
   body.classList.toggle("is-editor-only", mode === "editor");
   body.classList.toggle("is-preview-only", mode === "preview");
-  syncPreview();
+  if (mode === "preview" || mode === "split") syncPreview();
 }
 
 function selectedText(fallback = "") {
@@ -494,7 +505,6 @@ function replaceSelection(value, selectStart = 0, selectLength = 0) {
   editor.setRangeText(value, start, end, "end");
   editor.focus();
   if (selectLength) editor.setSelectionRange(start + selectStart, start + selectStart + selectLength);
-  syncPreview();
   scheduleSave();
 }
 
@@ -983,15 +993,15 @@ function setupEvents() {
   });
 
   editor.addEventListener("input", () => {
-    syncPreview();
+    schedulePreviewSync();
     scheduleSave();
   });
   titleInput.addEventListener("input", () => {
-    syncPreview();
+    schedulePreviewSync();
     scheduleSave();
   });
   tagsInput.addEventListener("input", () => {
-    syncPreview();
+    schedulePreviewSync();
     scheduleSave();
   });
 }
