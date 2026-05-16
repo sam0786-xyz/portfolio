@@ -304,6 +304,24 @@ async function resolveFile(urlPath) {
   const direct = resolvePath(urlPath);
   if (!direct) return null;
 
+  // Serve the blog post template for any /blog/{slug}/ path without a physical directory
+  const cleanUrl = decodeURIComponent(urlPath.split("?")[0]).replace(/^\/+/, "");
+  const blogMatch = cleanUrl.match(/^blog\/([a-z0-9][a-z0-9-]*)\/?$/i);
+  if (blogMatch) {
+    // Prefer a physical directory first (e.g. blog/genai-field-notes/index.html)
+    try {
+      const nested = join(direct, "index.html");
+      await stat(nested);
+      return nested;
+    } catch {}
+    // Fall back to the shared blog post template
+    const template = join(root, "blog", "genai-field-notes", "index.html");
+    try {
+      await stat(template);
+      return template;
+    } catch {}
+  }
+
   try {
     const info = await stat(direct);
     if (info.isFile()) return direct;
@@ -319,17 +337,6 @@ async function resolveFile(urlPath) {
     try {
       await stat(html);
       return html;
-    } catch {}
-  }
-
-  // Serve the blog post template for any /blog/{slug}/ path
-  const cleanUrl = decodeURIComponent(urlPath.split("?")[0]).replace(/^\/+/, "");
-  const blogMatch = cleanUrl.match(/^blog\/([a-z0-9][a-z0-9-]*)\/?$/i);
-  if (blogMatch) {
-    const template = join(root, "blog", "genai-field-notes", "index.html");
-    try {
-      await stat(template);
-      return template;
     } catch {}
   }
 
