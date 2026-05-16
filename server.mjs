@@ -322,6 +322,17 @@ async function resolveFile(urlPath) {
     } catch {}
   }
 
+  // Serve the blog post template for any /blog/{slug}/ path
+  const cleanUrl = decodeURIComponent(urlPath.split("?")[0]).replace(/^\/+/, "");
+  const blogMatch = cleanUrl.match(/^blog\/([a-z0-9][a-z0-9-]*)\/?$/i);
+  if (blogMatch) {
+    const template = join(root, "blog", "genai-field-notes", "index.html");
+    try {
+      await stat(template);
+      return template;
+    } catch {}
+  }
+
   return null;
 }
 

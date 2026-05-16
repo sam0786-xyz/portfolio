@@ -481,7 +481,7 @@ function setMode(mode) {
   });
   body.classList.toggle("is-editor-only", mode === "editor");
   body.classList.toggle("is-preview-only", mode === "preview");
-  syncPreview();
+  if (mode === "preview") syncPreview();
 }
 
 function selectedText(fallback = "") {
@@ -494,7 +494,6 @@ function replaceSelection(value, selectStart = 0, selectLength = 0) {
   editor.setRangeText(value, start, end, "end");
   editor.focus();
   if (selectLength) editor.setSelectionRange(start + selectStart, start + selectStart + selectLength);
-  syncPreview();
   scheduleSave();
 }
 
@@ -983,15 +982,12 @@ function setupEvents() {
   });
 
   editor.addEventListener("input", () => {
-    syncPreview();
     scheduleSave();
   });
   titleInput.addEventListener("input", () => {
-    syncPreview();
     scheduleSave();
   });
   tagsInput.addEventListener("input", () => {
-    syncPreview();
     scheduleSave();
   });
 }
