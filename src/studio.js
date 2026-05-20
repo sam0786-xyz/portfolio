@@ -57,7 +57,7 @@ let originalPostSlug = "";
 let currentPosts = [];
 let saveTimer;
 let previewTimer;
-let activeMode = "split";
+let activeMode = "editor";
 let mermaidPromise = null;
 
 function openDatabase() {
@@ -465,8 +465,8 @@ function renderStudio() {
         <div class="studio-topbar">
           <input class="studio-title" data-title-input value="${escapeHtml(blank.title)}" aria-label="Post title">
           <div class="segmented" aria-label="Studio view mode">
-            <button type="button" class="is-active" data-mode="split">Split</button>
-            <button type="button" data-mode="editor">Markdown</button>
+            <button type="button" data-mode="split">Split</button>
+            <button type="button" class="is-active" data-mode="editor">Markdown</button>
             <button type="button" data-mode="preview">Preview</button>
           </div>
           <div class="inline-actions studio-actions">
@@ -474,42 +474,53 @@ function renderStudio() {
             <span class="studio-word-count" data-word-count>0 words</span>
             <button class="primary-link" type="button" data-save-post>${icon("spark")} Save post</button>
             <button class="secondary-link" type="button" data-toggle-published>Publish</button>
-            <button class="secondary-link" type="button" data-export="json">JSON</button>
-            <button class="secondary-link" type="button" data-export="mdx">MDX</button>
-            <label class="file-label">
-              Import
-              <input type="file" accept="application/json" data-import>
-            </label>
           </div>
         </div>
 
-        <div class="studio-meta-bar">
-          <label>
-            Slug
-            <input class="studio-tags-input" data-slug-input placeholder="genai-field-notes" value="${escapeHtml(blank.slug)}">
-          </label>
-          <label>
-            Date
-            <input class="studio-tags-input" type="date" data-date-input value="${escapeHtml(blank.date)}">
-          </label>
-          <label class="studio-tags-label">
-            Tags
-            <input class="studio-tags-input" data-tags-input placeholder="AI/ML, RAG, Tutorial" value="${escapeHtml(blank.tags.join(", "))}">
-          </label>
-          <label>
-            Cover URL
-            <input class="studio-tags-input" data-cover-input placeholder="/assets/neural-console.png" value="${escapeHtml(blank.cover)}">
-          </label>
-          <label class="studio-published-toggle">
-            <input type="checkbox" data-published-input>
-            Published
-          </label>
-        </div>
+        <details class="studio-meta-details" style="margin-bottom: 12px; border: 1px solid var(--line); border-radius: var(--radius); background: color-mix(in srgb, var(--panel-solid), transparent 30%);">
+          <summary style="padding: 10px 14px; font-weight: 700; cursor: pointer; user-select: none; font-size: 0.88rem; color: var(--teal); background: color-mix(in srgb, var(--panel), transparent 40%); display: flex; align-items: center; gap: 8px;">
+            <span>Settings & Metadata</span>
+          </summary>
+          <div class="studio-meta-content" style="padding: 14px; display: grid; gap: 12px;">
+            <div class="studio-meta-bar">
+              <label>
+                Slug
+                <input class="studio-tags-input" data-slug-input placeholder="genai-field-notes" value="${escapeHtml(blank.slug)}">
+              </label>
+              <label>
+                Date
+                <input class="studio-tags-input" type="date" data-date-input value="${escapeHtml(blank.date)}">
+              </label>
+              <label class="studio-tags-label">
+                Tags
+                <input class="studio-tags-input" data-tags-input placeholder="AI/ML, RAG, Tutorial" value="${escapeHtml(blank.tags.join(", "))}">
+              </label>
+              <label>
+                Cover URL
+                <input class="studio-tags-input" data-cover-input placeholder="/assets/neural-console.png" value="${escapeHtml(blank.cover)}">
+              </label>
+              <label class="studio-published-toggle">
+                <input type="checkbox" data-published-input>
+                Published
+              </label>
+            </div>
 
-        <label class="studio-excerpt-label">
-          Excerpt
-          <textarea class="studio-excerpt-input" data-excerpt-input placeholder="Write the promise of this post.">${escapeHtml(blank.excerpt)}</textarea>
-        </label>
+            <label class="studio-excerpt-label" style="margin-top: 10px; display: grid; gap: 6px;">
+              Excerpt
+              <textarea class="studio-excerpt-input" data-excerpt-input placeholder="Write the promise of this post.">${escapeHtml(blank.excerpt)}</textarea>
+            </label>
+
+            <div class="studio-meta-actions" style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; border-top: 1px solid var(--line); padding-top: 12px;">
+              <span style="font-size: 0.72rem; color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; font-family: var(--font);">Developer Tools:</span>
+              <button class="secondary-link font-mono" type="button" data-export="json" style="margin: 0; padding: 6px 12px; font-size: 0.8rem; height: 36px; display: inline-flex; align-items: center;">Export JSON</button>
+              <button class="secondary-link font-mono" type="button" data-export="mdx" style="margin: 0; padding: 6px 12px; font-size: 0.8rem; height: 36px; display: inline-flex; align-items: center;">Export MDX</button>
+              <label class="file-label font-mono" style="margin: 0; padding: 6px 12px; font-size: 0.8rem; height: 36px; border: 1px solid var(--line); border-radius: var(--radius); background: color-mix(in srgb, var(--panel), transparent 40%); font-weight: bold; cursor: pointer; display: inline-flex; align-items: center;">
+                Import JSON
+                <input type="file" accept="application/json" data-import style="display: none;">
+              </label>
+            </div>
+          </div>
+        </details>
 
         <div class="studio-toolbar" aria-label="Markdown tools">
           <select class="studio-select" data-block aria-label="Insert block style">
@@ -980,17 +991,52 @@ function renderPostList() {
     const haystack = `${post.title} ${post.slug} ${(post.tags || []).join(" ")}`.toLowerCase();
     return !query || haystack.includes(query);
   });
-  postListNode.innerHTML = posts.length
-    ? posts.map((post) => `
-        <button class="studio-post-row ${post.slug === originalPostSlug ? "is-active" : ""}" type="button" data-load-post="${escapeHtml(post.slug)}">
-          <span>
-            <strong>${escapeHtml(post.title)}</strong>
-            <small>${escapeHtml(post.slug)} / ${escapeHtml(post.date || "No date")}</small>
-          </span>
-          <em class="${post.published === false ? "is-draft" : ""}">${post.published === false ? "Draft" : "Live"}</em>
-        </button>
-      `).join("")
-    : `<div class="empty-state studio-empty"><h3>No posts found</h3><p>Create a new field note or adjust the search.</p></div>`;
+
+  const drafts = posts.filter((post) => post.published === false);
+  const published = posts.filter((post) => post.published !== false);
+
+  if (!posts.length) {
+    postListNode.innerHTML = `<div class="empty-state studio-empty"><h3>No posts found</h3><p>Create a new field note or adjust the search.</p></div>`;
+    return;
+  }
+
+  let html = "";
+
+  html += `
+    <div class="studio-list-section" style="margin-bottom: 1.5rem;">
+      <h3 style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--amber); margin-bottom: 8px; font-weight: 700;">Drafts (New)</h3>
+      <div style="display: grid; gap: 8px;">
+        ${drafts.length ? drafts.map((post) => `
+          <button class="studio-post-row ${post.slug === originalPostSlug ? "is-active" : ""}" type="button" data-load-post="${escapeHtml(post.slug)}">
+            <span>
+              <strong>${escapeHtml(post.title)}</strong>
+              <small>${escapeHtml(post.slug)} / ${escapeHtml(post.date || "No date")}</small>
+            </span>
+            <em class="is-draft">Draft</em>
+          </button>
+        `).join("") : `<div style="padding: 10px; font-size: 0.8rem; color: var(--muted); border: 1px dashed var(--line); border-radius: var(--radius); text-align: center;">No active drafts.</div>`}
+      </div>
+    </div>
+  `;
+
+  html += `
+    <div class="studio-list-section">
+      <h3 style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--teal); margin-bottom: 8px; font-weight: 700;">Published (Done)</h3>
+      <div style="display: grid; gap: 8px;">
+        ${published.length ? published.map((post) => `
+          <button class="studio-post-row ${post.slug === originalPostSlug ? "is-active" : ""}" type="button" data-load-post="${escapeHtml(post.slug)}">
+            <span>
+              <strong>${escapeHtml(post.title)}</strong>
+              <small>${escapeHtml(post.slug)} / ${escapeHtml(post.date || "No date")}</small>
+            </span>
+            <em>Live</em>
+          </button>
+        `).join("") : `<div style="padding: 10px; font-size: 0.8rem; color: var(--muted); border: 1px dashed var(--line); border-radius: var(--radius); text-align: center;">No published posts yet.</div>`}
+      </div>
+    </div>
+  `;
+
+  postListNode.innerHTML = html;
 }
 
 function updatePublishControls() {
@@ -1243,14 +1289,26 @@ function setupEvents() {
 }
 
 async function hydrateStudio() {
+  const hash = window.location.hash.slice(1);
+  const params = new URLSearchParams(window.location.search);
+  const preferredSlug = hash || params.get("post") || params.get("slug") || originalPostSlug;
+
   try {
-    await refreshPosts();
+    await refreshPosts(preferredSlug);
   } catch (error) {
     setStatus(`Post list unavailable: ${error.message}`);
     const fallback = getSiteContent().blogPosts?.[0] || blankBlogPost();
     await loadPost(fallback, { skipDraft: false, unsaved: false });
   }
   updatePublishControls();
+
+  window.addEventListener("hashchange", async () => {
+    const nextSlug = window.location.hash.slice(1);
+    if (nextSlug && nextSlug !== originalPostSlug) {
+      const matched = currentPosts.find((post) => post.slug === nextSlug);
+      if (matched) await loadPost(matched);
+    }
+  });
 }
 
 const sessionResponse = await fetch("/api/admin/session", { cache: "no-store" }).catch(() => null);

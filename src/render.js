@@ -204,11 +204,12 @@ export function renderBlogCards() {
 }
 
 export function renderLinkedInCard(post, options = {}) {
-  const showEmbed = options.embed !== false && post.embedHtml;
+  const wantEmbed = options.embed !== false;
+  const hasEmbed = wantEmbed && post.embedHtml;
   return `
-    <article class="linkedin-card" data-animate="fade-up">
+    <article class="linkedin-card ${hasEmbed ? "has-embed" : ""}" data-animate="fade-up">
       ${
-        showEmbed
+        hasEmbed
           ? `<div class="linkedin-embed">${post.embedHtml}</div>`
           : `
             <div class="linkedin-fallback">

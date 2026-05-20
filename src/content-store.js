@@ -12,7 +12,7 @@ import {
   stats
 } from "./data/content.js";
 
-const CONTENT_KEY = "sameer-site-content-v4";
+const CONTENT_KEY = "sameer-site-content-v6";
 let contentCache = null;
 
 export function defaultSiteContent() {

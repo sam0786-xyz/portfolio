@@ -110,26 +110,28 @@ function renderHome() {
         </div>
 
         <div class="hero-stage" data-animate="slide-left">
-          <div class="ai-workbench" aria-label="${escapeHtml(profile.avatarAlt)}">
-            <canvas class="workbench-canvas" data-neural-canvas aria-hidden="true"></canvas>
-            <div class="workbench-header">
-              <span>sameer.ai</span>
-              <span>live workbench</span>
+          <div class="ai-workbench sleek-terminal" aria-label="Terminal window">
+            <div class="terminal-header">
+              <div class="terminal-dots"><span></span><span></span><span></span></div>
+              <div class="terminal-title">agent.py — sameer.ai</div>
             </div>
-            <div class="model-node primary">
-              <small>current vector</small>
-              <strong>GenAI systems</strong>
-            </div>
-            <div class="model-node">
-              <small>cloud layer</small>
-              <strong>FastAPI / Supabase / AWS</strong>
-            </div>
-            <div class="model-node">
-              <small>learning loop</small>
-              <strong>Data Science + ML</strong>
-            </div>
-            <div class="signal-grid" aria-hidden="true">
-              ${["RAG", "LLM", "API", "MLOps", "SQL", "UX"].map((item) => `<span>${item}</span>`).join("")}
+            <div class="terminal-body font-mono">
+              <div class="line"><span class="keyword">import</span> <span class="variable">torch</span></div>
+              <div class="line"><span class="keyword">from</span> <span class="variable">transformers</span> <span class="keyword">import</span> <span class="variable">AutoModelForCausalLM</span></div>
+              <br>
+              <div class="line"><span class="keyword">class</span> <span class="entity">Agent</span>:</div>
+              <div class="line">    <span class="keyword">def</span> <span class="entity">__init__</span>(<span class="variable">self</span>):</div>
+              <div class="line">        <span class="variable">self</span>.device = <span class="string">"cuda"</span> <span class="keyword">if</span> torch.cuda.is_available() <span class="keyword">else</span> <span class="string">"cpu"</span></div>
+              <div class="line">        <span class="variable">self</span>.model = AutoModelForCausalLM.from_pretrained(</div>
+              <div class="line">            <span class="string">"sameer-ai/core-v1"</span>,</div>
+              <div class="line">            device_map=<span class="string">"auto"</span></div>
+              <div class="line">        )</div>
+              <br>
+              <div class="line">    <span class="keyword">def</span> <span class="entity">generate</span>(<span class="variable">self</span>, <span class="variable">prompt</span>: <span class="keyword">str</span>) -> <span class="keyword">str</span>:</div>
+              <div class="line">        <span class="comment"># Initialize generation sequence</span></div>
+              <div class="line">        <span class="keyword">return</span> <span class="variable">self</span>.model.predict(prompt)</div>
+              <br>
+              <div class="line"><span class="comment"># System ready. Waiting for input...<span class="cursor">_</span></span></div>
             </div>
           </div>
         </div>
@@ -228,18 +230,20 @@ function renderHome() {
             <h2>Education timeline.</h2>
           </div>
         </div>
-        <div class="education-cards">
+        <div class="edu-timeline">
+          <div class="edu-timeline-line" aria-hidden="true"></div>
           ${education
             .map(
-              (item) => `
-                <article class="edu-card" data-animate="fade-up">
-                  <div class="edu-icon">
-                    <svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c0 2 3 3 6 3s6-1 6-3v-5"></path></svg>
+              (item, index) => `
+                <article class="edu-timeline-item" data-animate="fade-up">
+                  <div class="edu-timeline-marker">
+                    <div class="edu-timeline-dot ${index === 0 ? "is-current" : ""}"></div>
                   </div>
-                  <div>
-                    <p class="eyebrow">${escapeHtml(item.period)}</p>
+                  <div class="edu-timeline-content">
+                    <span class="edu-timeline-period">${escapeHtml(item.period)}</span>
                     <h3>${escapeHtml(item.degree)}</h3>
-                    <p>${escapeHtml(item.school)} / ${escapeHtml(item.location)}</p>
+                    <p class="edu-timeline-school">${escapeHtml(item.school)}</p>
+                    <p class="edu-timeline-location">📍 ${escapeHtml(item.location)}</p>
                   </div>
                 </article>
               `
@@ -255,16 +259,17 @@ function renderHome() {
             <h2>Community roles.</h2>
           </div>
         </div>
-        <div class="leadership-grid">
+        <div class="leadership-roles">
           ${responsibilities
             .map(
-              (item) => `
-                <article class="leadership-card" data-animate="fade-up">
-                  <div class="leadership-icon">
-                    <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                  </div>
-                  <div>
-                    <p class="eyebrow">${escapeHtml(item.period)}</p>
+              (item, index) => `
+                <article class="leadership-role" data-animate="fade-up" style="--role-accent: var(--${index % 2 === 0 ? "violet" : "teal"});">
+                  <div class="leadership-role-accent" aria-hidden="true"></div>
+                  <div class="leadership-role-body">
+                    <div class="leadership-role-header">
+                      <span class="leadership-role-badge">${item.period.includes("Present") ? "🟢 Active" : "Completed"}</span>
+                      <span class="leadership-role-period">${escapeHtml(item.period)}</span>
+                    </div>
                     <h3>${escapeHtml(item.title)}</h3>
                     <p>${escapeHtml(item.summary)}</p>
                   </div>
@@ -289,7 +294,7 @@ function renderHome() {
       </section>
 
       <section class="section linkedin-posts-only" id="linkedin" aria-label="LinkedIn posts">
-        <div class="linkedin-grid">${renderLinkedInCards(true, { embed: false })}</div>
+        <div class="linkedin-grid">${renderLinkedInCards(true, { embed: true })}</div>
       </section>
 
     </div>

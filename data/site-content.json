@@ -8,7 +8,7 @@
     "semester": "6th semester, currently giving end-sem exams",
     "location": "Greater Noida, India",
     "phone": "+91 8603829005",
-    "email": "tech.geek.sameer@gmail.com",
+    "email": "hello@sam18.xyz",
     "resumeUrl": "/assets/mohammad-sameer-resume.pdf",
     "avatarAlt": "Abstract neural console artwork for Mohammad Sameer",
     "summary": "AI and Machine Learning engineer building production-ready GenAI applications with RAG, FastAPI, LangChain, cloud backends, and practical product workflows.",
@@ -21,7 +21,7 @@
     "socials": [
       {
         "label": "Email",
-        "href": "mailto:tech.geek.sameer@gmail.com"
+        "href": "mailto:hello@sam18.xyz"
       },
       {
         "label": "LinkedIn",
@@ -157,7 +157,7 @@
         "AI Zoned"
       ],
       "featured": true,
-      "embedHtml": ""
+      "embedHtml": "<iframe src=\"https://www.linkedin.com/embed/feed/update/urn:li:share:7462624438782664704\" height=\"1298\" width=\"504\" frameborder=\"0\" allowfullscreen=\"\" title=\"Embedded post\"></iframe>"
     },
     {
       "id": "linkedin-certifications",
@@ -171,7 +171,7 @@
         "Prompt Engineering"
       ],
       "featured": true,
-      "embedHtml": ""
+      "embedHtml": "<iframe src=\"https://www.linkedin.com/embed/feed/update/urn:li:ugcPost:7379187344001851392\" height=\"920\" width=\"504\" frameborder=\"0\" allowfullscreen=\"\" title=\"Embedded post\"></iframe>"
     },
     {
       "id": "technova-leadership",
@@ -185,7 +185,7 @@
         "Community"
       ],
       "featured": true,
-      "embedHtml": ""
+      "embedHtml": "<iframe src=\"https://www.linkedin.com/embed/feed/update/urn:li:ugcPost:7449161652526161920\" height=\"1256\" width=\"504\" frameborder=\"0\" allowfullscreen=\"\" title=\"Embedded post\"></iframe>"
     }
   ],
   "education": [
@@ -212,6 +212,11 @@
       "title": "Volunteer, MLOps.Community - Delhi NCR",
       "period": "Mar 2025 - Present",
       "summary": "Supporting event execution and community coordination."
+    },
+    {
+      "title": "Club Lead of Techprenuer Club under Technova Society",
+      "period": "August 2024 - September 2025",
+      "summary": "Led the Techprenuer Club under the Technova Society at Sharda University."
     }
   ],
   "certificates": [
