@@ -39,6 +39,17 @@ export function setupMagneticButtons(root = document) {
   });
 }
 
+export function setupSignalHover(root = document) {
+  if (window.matchMedia("(pointer: coarse), (prefers-reduced-motion: reduce)").matches) return;
+  root.querySelectorAll(".blog-card, .credential-card, .project-spotlight, .timeline-card, .skill-panel, .linkedin-card, .cms-panel, .studio-post-row").forEach((card) => {
+    card.addEventListener("pointermove", (event) => {
+      const rect = card.getBoundingClientRect();
+      card.style.setProperty("--signal-x", `${event.clientX - rect.left}px`);
+      card.style.setProperty("--signal-y", `${event.clientY - rect.top}px`);
+    });
+  });
+}
+
 export function setupNeuralCanvas(canvas) {
   if (!canvas) return;
   const context = canvas.getContext("2d");
@@ -125,5 +136,6 @@ export function setupNeuralCanvas(canvas) {
 export function bootInteractions(root = document) {
   setupScrollAnimations(root);
   setupMagneticButtons(root);
+  setupSignalHover(root);
   root.querySelectorAll("[data-neural-canvas]").forEach(setupNeuralCanvas);
 }

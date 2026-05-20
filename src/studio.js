@@ -1,11 +1,12 @@
 import { bootTheme } from "./theme.js";
-import { getSiteContent, initSiteContent, saveSiteContent } from "./content-store.js";
+import { getSiteContent, initSiteContent } from "./content-store.js";
 import { bootInteractions } from "./animations.js";
 import { escapeHtml, icon, mountShell, renderPills } from "./render.js";
+import { blankBlogPost, deleteBlogPost, listBlogPosts, saveBlogPost, slugify as postSlugify } from "./blog-admin-store.js";
 
 const DB_NAME = "sameer-admin-writing-studio";
 const STORE = "drafts";
-const DRAFT_ID = "admin-draft";
+const DRAFT_PREFIX = "admin-draft:";
 
 const defaultMarkdown = `# Untitled AI field note
 
@@ -41,9 +42,19 @@ const defaultDraft = {
 let editor;
 let preview;
 let titleInput;
+let slugInput;
+let excerptInput;
+let dateInput;
+let coverInput;
+let publishedInput;
 let tagsInput;
 let statusNode;
 let wordCountNode;
+let postListNode;
+let postSearchInput;
+let selectedPostSlug = "";
+let originalPostSlug = "";
+let currentPosts = [];
 let saveTimer;
 let previewTimer;
 let activeMode = "split";
@@ -64,24 +75,30 @@ function openDatabase() {
   });
 }
 
-async function readDraft() {
+function draftStorageId(slug = selectedPostSlug || "new") {
+  return `${DRAFT_PREFIX}${slug || "new"}`;
+}
+
+async function readDraft(slug = selectedPostSlug || "new") {
+  const id = draftStorageId(slug);
   try {
     const db = await openDatabase();
     return await new Promise((resolve, reject) => {
       const transaction = db.transaction(STORE, "readonly");
-      const request = transaction.objectStore(STORE).get(DRAFT_ID);
+      const request = transaction.objectStore(STORE).get(id);
       request.onerror = () => reject(request.error);
       request.onsuccess = () => resolve(request.result || null);
     });
   } catch {
-    const raw = localStorage.getItem(DRAFT_ID);
+    const raw = localStorage.getItem(id);
     return raw ? JSON.parse(raw) : null;
   }
 }
 
-async function writeDraft(draft) {
-  const payload = { ...draft, id: DRAFT_ID, updatedAt: new Date().toISOString() };
-  localStorage.setItem(DRAFT_ID, JSON.stringify(payload));
+async function writeDraft(draft, slug = selectedPostSlug || "new") {
+  const id = draftStorageId(slug);
+  const payload = { ...draft, id, updatedAt: new Date().toISOString() };
+  localStorage.setItem(id, JSON.stringify(payload));
   try {
     const db = await openDatabase();
     await new Promise((resolve, reject) => {
@@ -340,11 +357,20 @@ function estimateReadingTime(markdown) {
 
 function currentDraft() {
   const markdown = editor.value;
+  const title = titleInput.value.trim() || "Untitled AI field note";
+  const body = markdownToHtml(markdown);
   return {
-    title: titleInput.value.trim() || "Untitled AI field note",
+    slug: postSlugify(slugInput.value || title),
+    title,
+    excerpt: excerptInput.value.trim() || stripMarkdown(markdown).slice(0, 180) || "AI/ML field note from Mohammad Sameer's writing studio.",
+    date: dateInput.value || new Date().toISOString().slice(0, 10),
+    cover: coverInput.value.trim() || "/assets/neural-console.png",
     tags: tagsInput.value.trim() || "AI/ML, Field Note",
     markdown,
-    html: markdownToHtml(markdown),
+    body,
+    html: body,
+    published: Boolean(publishedInput.checked),
+    readingTime: estimateReadingTime(markdown),
     updatedAt: new Date().toISOString()
   };
 }
@@ -410,75 +436,116 @@ function schedulePreviewSync() {
 }
 
 function renderStudio() {
+  const blank = blankBlogPost();
   document.querySelector("#studio-root").innerHTML = `
     <section class="page-hero studio-hero">
       <p class="eyebrow">Admin writing studio</p>
-      <h1>Obsidian-style writing for public AI notes.</h1>
-      <p class="lede">Markdown source, live preview, diagrams, equations, sketches, sources, and CMS publishing in one focused workspace.</p>
+      <h1>Command center for public field notes.</h1>
+      <p class="lede">Create, edit, publish, and retire blog posts with Markdown source, rich technical inserts, and a production preview in one focused workspace.</p>
     </section>
 
     <section class="studio-shell studio-pro" aria-label="Blog writing studio">
-      <div class="studio-topbar">
-        <input class="studio-title" data-title-input value="${escapeHtml(defaultDraft.title)}" aria-label="Draft title">
-        <div class="segmented" aria-label="Studio view mode">
-          <button type="button" class="is-active" data-mode="split">Split</button>
-          <button type="button" data-mode="editor">Markdown</button>
-          <button type="button" data-mode="preview">Preview</button>
+      <aside class="studio-library" aria-label="Blog post manager">
+        <div class="studio-library-header">
+          <div>
+            <p class="eyebrow">Post registry</p>
+            <h2>Blog posts</h2>
+          </div>
+          <button class="tool-button" type="button" title="Create post" data-new-post>+</button>
         </div>
-        <div class="inline-actions studio-actions">
-          <span class="studio-save-status" data-save-status>Loading draft...</span>
-          <span class="studio-word-count" data-word-count>0 words</span>
-          <button class="primary-link" type="button" data-publish-blog>${icon("spark")} Publish</button>
-          <button class="secondary-link" type="button" data-export="json">JSON</button>
-          <button class="secondary-link" type="button" data-export="mdx">MDX</button>
-          <label class="file-label">
-            Import
-            <input type="file" accept="application/json" data-import>
+        <input class="studio-post-search" data-post-search type="search" placeholder="Search title, slug, tag" aria-label="Search posts">
+        <div class="studio-post-list" data-post-list></div>
+        <div class="studio-library-actions">
+          <button class="secondary-link" type="button" data-duplicate-post>Duplicate</button>
+          <button class="secondary-link danger-link" type="button" data-delete-post>Delete</button>
+        </div>
+      </aside>
+
+      <div class="studio-workspace">
+        <div class="studio-topbar">
+          <input class="studio-title" data-title-input value="${escapeHtml(blank.title)}" aria-label="Post title">
+          <div class="segmented" aria-label="Studio view mode">
+            <button type="button" class="is-active" data-mode="split">Split</button>
+            <button type="button" data-mode="editor">Markdown</button>
+            <button type="button" data-mode="preview">Preview</button>
+          </div>
+          <div class="inline-actions studio-actions">
+            <span class="studio-save-status" data-save-status>Loading posts...</span>
+            <span class="studio-word-count" data-word-count>0 words</span>
+            <button class="primary-link" type="button" data-save-post>${icon("spark")} Save post</button>
+            <button class="secondary-link" type="button" data-toggle-published>Publish</button>
+            <button class="secondary-link" type="button" data-export="json">JSON</button>
+            <button class="secondary-link" type="button" data-export="mdx">MDX</button>
+            <label class="file-label">
+              Import
+              <input type="file" accept="application/json" data-import>
+            </label>
+          </div>
+        </div>
+
+        <div class="studio-meta-bar">
+          <label>
+            Slug
+            <input class="studio-tags-input" data-slug-input placeholder="genai-field-notes" value="${escapeHtml(blank.slug)}">
+          </label>
+          <label>
+            Date
+            <input class="studio-tags-input" type="date" data-date-input value="${escapeHtml(blank.date)}">
+          </label>
+          <label class="studio-tags-label">
+            Tags
+            <input class="studio-tags-input" data-tags-input placeholder="AI/ML, RAG, Tutorial" value="${escapeHtml(blank.tags.join(", "))}">
+          </label>
+          <label>
+            Cover URL
+            <input class="studio-tags-input" data-cover-input placeholder="/assets/neural-console.png" value="${escapeHtml(blank.cover)}">
+          </label>
+          <label class="studio-published-toggle">
+            <input type="checkbox" data-published-input>
+            Published
           </label>
         </div>
-      </div>
 
-      <div class="studio-meta-bar">
-        <label class="studio-tags-label">
-          Tags
-          <input class="studio-tags-input" data-tags-input placeholder="AI/ML, RAG, Tutorial" value="${escapeHtml(defaultDraft.tags)}">
+        <label class="studio-excerpt-label">
+          Excerpt
+          <textarea class="studio-excerpt-input" data-excerpt-input placeholder="Write the promise of this post.">${escapeHtml(blank.excerpt)}</textarea>
         </label>
-      </div>
 
-      <div class="studio-toolbar" aria-label="Markdown tools">
-        <select class="studio-select" data-block aria-label="Insert block style">
-          <option value="">Block</option>
-          <option value="h1">H1</option>
-          <option value="h2">H2</option>
-          <option value="h3">H3</option>
-          <option value="quote">Quote</option>
-          <option value="ul">List</option>
-          <option value="ol">Numbered</option>
-        </select>
-        <button class="tool-button" type="button" title="Bold" data-wrap="bold">B</button>
-        <button class="tool-button" type="button" title="Italic" data-wrap="italic">I</button>
-        <button class="tool-button" type="button" title="Inline code" data-wrap="code">Code</button>
-        <span class="toolbar-divider"></span>
-        <button class="tool-button" type="button" title="Horizontal rule" data-tool="hr">HR</button>
-        <button class="tool-button" type="button" title="Code fence" data-tool="code">Fence</button>
-        <button class="tool-button" type="button" title="Table" data-tool="table">Table</button>
-        <button class="tool-button" type="button" title="Image" data-tool="image">Image</button>
-        <span class="toolbar-divider"></span>
-        <button class="tool-button" type="button" title="Math block" data-tool="math">Math</button>
-        <button class="tool-button" type="button" title="Mermaid diagram" data-tool="diagram">Diagram</button>
-        <button class="tool-button" type="button" title="Equation plot" data-tool="plot">Plot</button>
-        <button class="tool-button" type="button" title="Freehand drawing" data-tool="draw">Draw</button>
-        <button class="tool-button" type="button" title="Source citation" data-tool="source">Source</button>
-        <button class="tool-button" type="button" title="Studio help" data-tool="info">?</button>
-      </div>
+        <div class="studio-toolbar" aria-label="Markdown tools">
+          <select class="studio-select" data-block aria-label="Insert block style">
+            <option value="">Block</option>
+            <option value="h1">H1</option>
+            <option value="h2">H2</option>
+            <option value="h3">H3</option>
+            <option value="quote">Quote</option>
+            <option value="ul">List</option>
+            <option value="ol">Numbered</option>
+          </select>
+          <button class="tool-button" type="button" title="Bold" data-wrap="bold">B</button>
+          <button class="tool-button" type="button" title="Italic" data-wrap="italic">I</button>
+          <button class="tool-button" type="button" title="Inline code" data-wrap="code">Code</button>
+          <span class="toolbar-divider"></span>
+          <button class="tool-button" type="button" title="Horizontal rule" data-tool="hr">HR</button>
+          <button class="tool-button" type="button" title="Code fence" data-tool="code">Fence</button>
+          <button class="tool-button" type="button" title="Table" data-tool="table">Table</button>
+          <button class="tool-button" type="button" title="Image" data-tool="image">Image</button>
+          <span class="toolbar-divider"></span>
+          <button class="tool-button" type="button" title="Math block" data-tool="math">Math</button>
+          <button class="tool-button" type="button" title="Mermaid diagram" data-tool="diagram">Diagram</button>
+          <button class="tool-button" type="button" title="Equation plot" data-tool="plot">Plot</button>
+          <button class="tool-button" type="button" title="Freehand drawing" data-tool="draw">Draw</button>
+          <button class="tool-button" type="button" title="Source citation" data-tool="source">Source</button>
+          <button class="tool-button" type="button" title="Studio help" data-tool="info">?</button>
+        </div>
 
-      <div class="studio-body" data-studio-body>
-        <section class="editor-pane" data-pane="editor" aria-label="Markdown editor">
-          <textarea class="editor-surface markdown-editor" data-editor spellcheck="true" aria-label="Markdown source"></textarea>
-        </section>
-        <section class="preview-pane" data-pane="preview" aria-label="Rendered preview">
-          <div class="preview-surface" data-preview></div>
-        </section>
+        <div class="studio-body" data-studio-body>
+          <section class="editor-pane" data-pane="editor" aria-label="Markdown editor">
+            <textarea class="editor-surface markdown-editor" data-editor spellcheck="true" aria-label="Markdown source"></textarea>
+          </section>
+          <section class="preview-pane" data-pane="preview" aria-label="Rendered preview">
+            <div class="preview-surface" data-preview></div>
+          </section>
+        </div>
       </div>
     </section>
   `;
@@ -867,43 +934,6 @@ function openInfoTool() {
   );
 }
 
-async function publishDraftToCms() {
-  const draft = currentDraft();
-  const slug = slugify(draft.title);
-  const plain = stripMarkdown(draft.markdown);
-  const tags = draft.tags.split(",").map((tag) => tag.trim()).filter(Boolean);
-  const post = {
-    slug,
-    title: draft.title,
-    excerpt: plain.slice(0, 180) || "AI/ML field note from Mohammad Sameer's writing studio.",
-    date: new Date().toISOString().slice(0, 10),
-    tags,
-    cover: "/assets/neural-console.png",
-    readingTime: estimateReadingTime(draft.markdown),
-    body: draft.html
-  };
-  const content = getSiteContent();
-  const blogPosts = Array.isArray(content.blogPosts) ? [...content.blogPosts] : [];
-  const existingIndex = blogPosts.findIndex((item) => item.slug === slug);
-  if (existingIndex >= 0) {
-    blogPosts[existingIndex] = { ...blogPosts[existingIndex], ...post };
-  } else {
-    blogPosts.unshift(post);
-  }
-  const saved = await saveSiteContent({ ...content, blogPosts });
-  await writeDraft(draft);
-  setStatus(saved ? "Published to CMS blog content." : "Saved in browser. Admin server persistence is unavailable.");
-}
-
-function slugify(value) {
-  return String(value || "untitled-field-note")
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "")
-    .slice(0, 72) || "untitled-field-note";
-}
-
 function downloadBlob(filename, type, body) {
   const link = document.createElement("a");
   link.href = URL.createObjectURL(new Blob([body], { type }));
@@ -912,13 +942,210 @@ function downloadBlob(filename, type, body) {
   window.setTimeout(() => URL.revokeObjectURL(link.href), 800);
 }
 
+function tagsArray(value = tagsInput?.value || "") {
+  return String(value)
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+}
+
+function uniqueSlug(base, current = originalPostSlug) {
+  const cleanBase = postSlugify(base);
+  const used = new Set(currentPosts.filter((post) => post.slug !== current).map((post) => post.slug));
+  if (!used.has(cleanBase)) return cleanBase;
+  let index = 2;
+  while (used.has(`${cleanBase}-${index}`)) index += 1;
+  return `${cleanBase}-${index}`;
+}
+
+function postAsDraft(post) {
+  const fallbackMarkdown = post.markdown || stripMarkdown(post.body || "") || defaultMarkdown;
+  return {
+    ...post,
+    slug: post.slug || postSlugify(post.title),
+    title: post.title || defaultDraft.title,
+    excerpt: post.excerpt || "Draft a concise promise for the reader.",
+    date: (post.date || new Date().toISOString()).slice(0, 10),
+    cover: post.cover || "/assets/neural-console.png",
+    tags: Array.isArray(post.tags) ? post.tags.join(", ") : post.tags || defaultDraft.tags,
+    markdown: fallbackMarkdown,
+    published: post.published !== false
+  };
+}
+
+function renderPostList() {
+  if (!postListNode) return;
+  const query = (postSearchInput?.value || "").toLowerCase().trim();
+  const posts = currentPosts.filter((post) => {
+    const haystack = `${post.title} ${post.slug} ${(post.tags || []).join(" ")}`.toLowerCase();
+    return !query || haystack.includes(query);
+  });
+  postListNode.innerHTML = posts.length
+    ? posts.map((post) => `
+        <button class="studio-post-row ${post.slug === originalPostSlug ? "is-active" : ""}" type="button" data-load-post="${escapeHtml(post.slug)}">
+          <span>
+            <strong>${escapeHtml(post.title)}</strong>
+            <small>${escapeHtml(post.slug)} / ${escapeHtml(post.date || "No date")}</small>
+          </span>
+          <em class="${post.published === false ? "is-draft" : ""}">${post.published === false ? "Draft" : "Live"}</em>
+        </button>
+      `).join("")
+    : `<div class="empty-state studio-empty"><h3>No posts found</h3><p>Create a new field note or adjust the search.</p></div>`;
+}
+
+function updatePublishControls() {
+  const button = document.querySelector("[data-toggle-published]");
+  if (button) button.textContent = publishedInput?.checked ? "Unpublish" : "Publish";
+}
+
+async function loadPost(post, options = {}) {
+  const draftSlug = post.slug || "new";
+  const draft = options.skipDraft ? null : await readDraft(draftSlug);
+  const next = postAsDraft({ ...post, ...(draft || {}) });
+  selectedPostSlug = next.slug;
+  originalPostSlug = options.unsaved ? "" : post.slug || "";
+  titleInput.value = next.title;
+  slugInput.value = next.slug;
+  excerptInput.value = next.excerpt;
+  dateInput.value = next.date;
+  coverInput.value = next.cover;
+  tagsInput.value = next.tags;
+  publishedInput.checked = Boolean(next.published);
+  editor.value = next.markdown;
+  renderPostList();
+  updatePublishControls();
+  syncPreview();
+  setMode(activeMode);
+  setStatus(draft?.updatedAt ? `Restored draft ${new Date(draft.updatedAt).toLocaleString()}` : "Post loaded.");
+}
+
+async function loadBlankPost() {
+  const post = blankBlogPost();
+  post.slug = uniqueSlug(post.slug, "");
+  post.markdown = defaultMarkdown;
+  post.published = false;
+  await loadPost(post, { skipDraft: true, unsaved: true });
+  setStatus("New unsaved post ready.");
+}
+
+async function refreshPosts(preferredSlug = originalPostSlug) {
+  currentPosts = await listBlogPosts();
+  renderPostList();
+  const selected = currentPosts.find((post) => post.slug === preferredSlug) || currentPosts[0];
+  if (selected) await loadPost(selected);
+  else await loadBlankPost();
+}
+
+function currentPostPayload() {
+  const draft = currentDraft();
+  const slug = uniqueSlug(draft.slug || draft.title);
+  slugInput.value = slug;
+  return {
+    slug,
+    title: draft.title,
+    excerpt: draft.excerpt,
+    date: draft.date,
+    tags: tagsArray(draft.tags),
+    cover: draft.cover,
+    readingTime: estimateReadingTime(draft.markdown),
+    markdown: draft.markdown,
+    body: draft.body,
+    published: draft.published
+  };
+}
+
+async function persistCurrentPost(message = "Saving post...") {
+  setStatus(message);
+  const payload = currentPostPayload();
+  const priorSlug = originalPostSlug;
+  const result = await saveBlogPost(payload, originalPostSlug);
+  const saved = result.post;
+  selectedPostSlug = saved.slug;
+  originalPostSlug = saved.slug;
+  await writeDraft(currentDraft(), saved.slug);
+  currentPosts = currentPosts.filter((post) => post.slug !== priorSlug && post.slug !== saved.slug);
+  currentPosts.unshift(saved);
+  renderPostList();
+  updatePublishControls();
+  setStatus(result.source === "supabase" ? "Saved to Supabase and mirrored fallback JSON." : "Saved to fallback JSON. Supabase is unavailable.");
+}
+
+async function duplicateCurrentPost() {
+  const draft = currentDraft();
+  const title = `${draft.title} Copy`;
+  const post = {
+    ...draft,
+    slug: uniqueSlug(`${draft.slug || draft.title}-copy`, ""),
+    title,
+    published: false
+  };
+  await loadPost(post, { skipDraft: true, unsaved: true });
+  setStatus("Duplicated as an unsaved draft.");
+}
+
+async function deleteCurrentPost() {
+  if (!originalPostSlug) {
+    await loadBlankPost();
+    return;
+  }
+  const ok = window.confirm(`Delete "${titleInput.value.trim()}" permanently?`);
+  if (!ok) return;
+  setStatus("Deleting post...");
+  const result = await deleteBlogPost(originalPostSlug);
+  currentPosts = currentPosts.filter((post) => post.slug !== originalPostSlug);
+  renderPostList();
+  setStatus(result.source === "supabase" ? "Deleted from Supabase and fallback JSON." : "Deleted from fallback JSON.");
+  if (currentPosts[0]) await loadPost(currentPosts[0], { skipDraft: true });
+  else await loadBlankPost();
+}
+
 function setupEvents() {
   editor = document.querySelector("[data-editor]");
   preview = document.querySelector("[data-preview]");
   titleInput = document.querySelector("[data-title-input]");
+  slugInput = document.querySelector("[data-slug-input]");
+  excerptInput = document.querySelector("[data-excerpt-input]");
+  dateInput = document.querySelector("[data-date-input]");
+  coverInput = document.querySelector("[data-cover-input]");
+  publishedInput = document.querySelector("[data-published-input]");
   tagsInput = document.querySelector("[data-tags-input]");
   statusNode = document.querySelector("[data-save-status]");
   wordCountNode = document.querySelector("[data-word-count]");
+  postListNode = document.querySelector("[data-post-list]");
+  postSearchInput = document.querySelector("[data-post-search]");
+
+  postListNode.addEventListener("click", async (event) => {
+    const button = event.target.closest("[data-load-post]");
+    if (!button) return;
+    const post = currentPosts.find((item) => item.slug === button.dataset.loadPost);
+    if (post) await loadPost(post);
+  });
+
+  postSearchInput.addEventListener("input", renderPostList);
+
+  document.querySelector("[data-new-post]").addEventListener("click", () => {
+    loadBlankPost();
+  });
+
+  document.querySelector("[data-duplicate-post]").addEventListener("click", () => {
+    duplicateCurrentPost().catch((error) => setStatus(`Duplicate failed: ${error.message}`));
+  });
+
+  document.querySelector("[data-delete-post]").addEventListener("click", () => {
+    deleteCurrentPost().catch((error) => setStatus(`Delete failed: ${error.message}`));
+  });
+
+  document.querySelector("[data-save-post]").addEventListener("click", () => {
+    persistCurrentPost().catch((error) => setStatus(`Save failed: ${error.message}`));
+  });
+
+  document.querySelector("[data-toggle-published]").addEventListener("click", () => {
+    publishedInput.checked = !publishedInput.checked;
+    updatePublishControls();
+    persistCurrentPost(publishedInput.checked ? "Publishing post..." : "Unpublishing post...").catch((error) => {
+      setStatus(`Publish state failed: ${error.message}`);
+    });
+  });
 
   document.querySelectorAll("[data-mode]").forEach((button) => {
     button.addEventListener("click", () => setMode(button.dataset.mode));
@@ -955,20 +1182,12 @@ function setupEvents() {
   });
 
   document.querySelector('[data-export="json"]').addEventListener("click", () => {
-    downloadBlob("sameer-studio-draft.json", "application/json", JSON.stringify(currentDraft(), null, 2));
+    downloadBlob(`${currentDraft().slug}.json`, "application/json", JSON.stringify(currentPostPayload(), null, 2));
   });
 
   document.querySelector('[data-export="mdx"]').addEventListener("click", () => {
-    downloadBlob("sameer-studio-draft.mdx", "text/markdown", `---\ntitle: "${currentDraft().title}"\ndate: "${new Date().toISOString().slice(0, 10)}"\ntags: [${currentDraft().tags.split(",").map((tag) => `"${tag.trim()}"`).join(", ")}]\n---\n\n${editor.value}\n`);
-  });
-
-  document.querySelector("[data-publish-blog]").addEventListener("click", async () => {
-    try {
-      setStatus("Publishing to CMS blog...");
-      await publishDraftToCms();
-    } catch (error) {
-      setStatus(`Publish failed: ${error.message}`);
-    }
+    const draft = currentDraft();
+    downloadBlob(`${draft.slug}.mdx`, "text/markdown", `---\ntitle: "${draft.title}"\ndate: "${draft.date}"\ntags: [${tagsArray(draft.tags).map((tag) => `"${tag}"`).join(", ")}]\npublished: ${draft.published}\n---\n\n${editor.value}\n`);
   });
 
   document.querySelector("[data-import]").addEventListener("change", (event) => {
@@ -980,10 +1199,18 @@ function setupEvents() {
         const imported = JSON.parse(reader.result);
         if (typeof imported.markdown !== "string" && typeof imported.html !== "string") throw new Error("Draft content missing");
         titleInput.value = imported.title || defaultDraft.title;
-        tagsInput.value = imported.tags || defaultDraft.tags;
+        slugInput.value = postSlugify(imported.slug || imported.title || defaultDraft.title);
+        excerptInput.value = imported.excerpt || "Imported post draft.";
+        dateInput.value = imported.date || new Date().toISOString().slice(0, 10);
+        coverInput.value = imported.cover || "/assets/neural-console.png";
+        tagsInput.value = Array.isArray(imported.tags) ? imported.tags.join(", ") : imported.tags || defaultDraft.tags;
+        publishedInput.checked = Boolean(imported.published);
         editor.value = imported.markdown || stripMarkdown(imported.html);
         syncPreview();
-        await writeDraft(currentDraft());
+        originalPostSlug = "";
+        selectedPostSlug = slugInput.value;
+        await writeDraft(currentDraft(), selectedPostSlug);
+        updatePublishControls();
         setStatus("Imported draft saved.");
       } catch (error) {
         setStatus(`Import failed: ${error.message}`);
@@ -997,29 +1224,39 @@ function setupEvents() {
     scheduleSave();
   });
   titleInput.addEventListener("input", () => {
+    if (!originalPostSlug) slugInput.value = postSlugify(titleInput.value);
     schedulePreviewSync();
     scheduleSave();
   });
-  tagsInput.addEventListener("input", () => {
-    schedulePreviewSync();
-    scheduleSave();
+  [slugInput, excerptInput, dateInput, coverInput, tagsInput, publishedInput].forEach((input) => {
+    input.addEventListener("input", () => {
+      if (input === publishedInput) updatePublishControls();
+      schedulePreviewSync();
+      scheduleSave();
+    });
+    input.addEventListener("change", () => {
+      if (input === publishedInput) updatePublishControls();
+      schedulePreviewSync();
+      scheduleSave();
+    });
   });
 }
 
-async function hydrateDraft() {
-  const draft = (await readDraft()) || defaultDraft;
-  titleInput.value = draft.title || defaultDraft.title;
-  tagsInput.value = draft.tags || defaultDraft.tags;
-  editor.value = draft.markdown || stripMarkdown(draft.html) || defaultMarkdown;
-  syncPreview();
-  setStatus(draft.updatedAt ? `Restored ${new Date(draft.updatedAt).toLocaleString()}` : "Ready");
-  setMode(activeMode);
+async function hydrateStudio() {
+  try {
+    await refreshPosts();
+  } catch (error) {
+    setStatus(`Post list unavailable: ${error.message}`);
+    const fallback = getSiteContent().blogPosts?.[0] || blankBlogPost();
+    await loadPost(fallback, { skipDraft: false, unsaved: false });
+  }
+  updatePublishControls();
 }
 
 const sessionResponse = await fetch("/api/admin/session", { cache: "no-store" }).catch(() => null);
 const session = sessionResponse?.ok ? await sessionResponse.json() : { authenticated: false };
 if (!session.authenticated) {
-  window.location.href = "/cms/";
+  window.location.href = `/cms/login.html?next=${encodeURIComponent("/studio/")}`;
   throw new Error("Admin login required.");
 }
 
@@ -1028,5 +1265,5 @@ mountShell("studio");
 bootTheme();
 renderStudio();
 setupEvents();
-hydrateDraft();
+hydrateStudio();
 bootInteractions(document.querySelector("#studio-root"));

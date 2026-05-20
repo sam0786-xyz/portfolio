@@ -20,10 +20,18 @@ function createLoaderDOM() {
   loader.innerHTML = `
     <canvas id="loader-canvas"></canvas>
     <div class="loader-brand">
-      <span class="loader-sigil">MS</span>
+      <div class="loader-topline">
+        <span class="loader-sigil">MS</span>
+        <span class="loader-text">Booting portfolio interface<span class="loader-dots"><span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></span></span>
+      </div>
       <span class="loader-line"></span>
-      <span class="loader-text">Rendering portfolio system<span class="loader-dots"><span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></span></span>
-      <span class="loader-subtext">AI/ML | GenAI | Cloud | Data Science</span>
+      <div class="loader-status-grid" aria-hidden="true">
+        <span>content graph</span>
+        <span>motion system</span>
+        <span>signal canvas</span>
+      </div>
+      <div class="loader-progress" aria-hidden="true"><span></span></div>
+      <span class="loader-subtext">AI/ML / GenAI / Cloud / Data Science</span>
     </div>
   `;
   document.body.prepend(loader);
@@ -71,6 +79,30 @@ function animateLoader() {
     ctx.clearRect(0, 0, width, height);
     const cx = width / 2;
     const cy = height / 2;
+    const scanX = ((frame * 5) % (width + 220)) - 110;
+
+    ctx.fillStyle = "rgba(7, 9, 12, 0.36)";
+    ctx.fillRect(0, 0, width, height);
+    ctx.strokeStyle = "rgba(100, 244, 209, 0.07)";
+    ctx.lineWidth = 1;
+    for (let x = (frame % 58) - 58; x < width; x += 58) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, height);
+      ctx.stroke();
+    }
+    for (let y = 0; y < height; y += 58) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(width, y);
+      ctx.stroke();
+    }
+    const scan = ctx.createLinearGradient(scanX - 90, 0, scanX + 90, 0);
+    scan.addColorStop(0, "rgba(100, 244, 209, 0)");
+    scan.addColorStop(0.5, "rgba(100, 244, 209, 0.18)");
+    scan.addColorStop(1, "rgba(255, 93, 143, 0)");
+    ctx.fillStyle = scan;
+    ctx.fillRect(scanX - 90, 0, 180, height);
 
     for (let i = 0; i < nodes.length; i++) {
       for (let j = i + 1; j < nodes.length; j++) {
@@ -79,7 +111,7 @@ function animateLoader() {
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist < 160) {
           const alpha = (1 - dist / 160) * 0.22;
-          ctx.strokeStyle = `rgba(98, 211, 195, ${alpha})`;
+          ctx.strokeStyle = `rgba(100, 244, 209, ${alpha})`;
           ctx.lineWidth = 0.6;
           ctx.beginPath();
           ctx.moveTo(nodes[i].x, nodes[i].y);
@@ -94,7 +126,7 @@ function animateLoader() {
       const glow = 0.4 + Math.sin(node.pulse) * 0.3;
       ctx.beginPath();
       ctx.arc(node.x, node.y, node.r, 0, Math.PI * 2);
-      ctx.fillStyle = node.r > 2.8 ? `rgba(238, 184, 74, ${glow})` : `rgba(98, 211, 195, ${glow})`;
+      ctx.fillStyle = node.r > 2.8 ? `rgba(255, 200, 97, ${glow})` : `rgba(100, 244, 209, ${glow})`;
       ctx.fill();
       const toCenterX = (cx - node.x) * 0.0004;
       const toCenterY = (cy - node.y) * 0.0004;
@@ -108,12 +140,19 @@ function animateLoader() {
 
     const pulseR = 40 + Math.sin(frame * 0.04) * 12;
     const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, pulseR);
-    gradient.addColorStop(0, "rgba(82, 199, 184, 0.12)");
-    gradient.addColorStop(1, "rgba(82, 199, 184, 0)");
+    gradient.addColorStop(0, "rgba(100, 244, 209, 0.16)");
+    gradient.addColorStop(0.46, "rgba(255, 93, 143, 0.06)");
+    gradient.addColorStop(1, "rgba(100, 244, 209, 0)");
     ctx.beginPath();
     ctx.arc(cx, cy, pulseR, 0, Math.PI * 2);
     ctx.fillStyle = gradient;
     ctx.fill();
+
+    ctx.strokeStyle = "rgba(255, 200, 97, 0.26)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(cx, cy, pulseR + 22, frame * 0.02, frame * 0.02 + Math.PI * 1.1);
+    ctx.stroke();
 
     frame++;
     rafId = requestAnimationFrame(draw);

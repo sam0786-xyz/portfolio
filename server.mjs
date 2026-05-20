@@ -11,7 +11,7 @@ const port = Number(process.env.PORT || env.PORT || 8080);
 const host = process.env.HOST || env.HOST || "0.0.0.0";
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || env.ADMIN_USERNAME || "sam.xyz";
-const DEFAULT_ADMIN_HASH = "pbkdf2_sha256$210000$sameer-portfolio-admin-v1$b115dfcb8e54c1fd2464402b766df7431626cf77a0a6fee32254d1d686e9d94b";
+const DEFAULT_ADMIN_HASH = "pbkdf2_sha256$210000$sameer-portfolio-admin-v1$fe2ed834797469c62a4774d0ec580f12fb8f3dfdd5730e9d3ba95193354798de";
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || env.ADMIN_PASSWORD_HASH || DEFAULT_ADMIN_HASH;
 const SESSION_SECRET = loadSessionSecret();
 const SESSION_TTL_MS = 1000 * 60 * 60 * 8;
@@ -114,14 +114,22 @@ function signSession(payload) {
   return createHmac("sha256", SESSION_SECRET).update(payload).digest("hex");
 }
 
-function makeSessionCookie() {
-  const expiresAt = Date.now() + SESSION_TTL_MS;
-  const payload = `${ADMIN_USERNAME}|${expiresAt}`;
-  return `sameer_admin=${payload}.${signSession(payload)}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${SESSION_TTL_MS / 1000}`;
+function isSecureRequest(request) {
+  const forwardedProto = String(request.headers["x-forwarded-proto"] || "").split(",")[0].trim();
+  const nodeEnv = String(process.env.NODE_ENV || env.NODE_ENV || "").toLowerCase();
+  return forwardedProto === "https" || nodeEnv === "production";
 }
 
-function clearSessionCookie() {
-  return "sameer_admin=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0";
+function makeSessionCookie(request) {
+  const expiresAt = Date.now() + SESSION_TTL_MS;
+  const payload = `${ADMIN_USERNAME}|${expiresAt}`;
+  const secure = isSecureRequest(request) ? " Secure;" : "";
+  return `sameer_admin=${payload}.${signSession(payload)}; HttpOnly;${secure} SameSite=Lax; Path=/; Max-Age=${SESSION_TTL_MS / 1000}`;
+}
+
+function clearSessionCookie(request) {
+  const secure = isSecureRequest(request) ? " Secure;" : "";
+  return `sameer_admin=; HttpOnly;${secure} SameSite=Lax; Path=/; Max-Age=0`;
 }
 
 function getSession(request) {
@@ -174,6 +182,94 @@ function recordFailedLogin(request) {
   loginAttempts.set(key, attempt);
 }
 
+function slugify(value) {
+  return String(value || "untitled-field-note")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "")
+    .slice(0, 72) || "untitled-field-note";
+}
+
+function asTags(value) {
+  if (Array.isArray(value)) return value.map((tag) => String(tag).trim()).filter(Boolean);
+  return String(value || "")
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+}
+
+function stripMarkup(value) {
+  return String(value || "")
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/\$\$[\s\S]*?\$\$/g, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/[#>*_`[\]-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function estimateReadingTime(value) {
+  const words = stripMarkup(value).split(/\s+/).filter(Boolean).length;
+  return `${Math.max(1, Math.ceil(words / 220))} min read`;
+}
+
+function normalizeBlogPost(input = {}, existing = {}) {
+  const title = String(input.title ?? existing.title ?? "Untitled AI field note").trim() || "Untitled AI field note";
+  const markdown = String(input.markdown ?? existing.markdown ?? "");
+  const body = String(input.body ?? existing.body ?? (markdown ? `<p>${stripMarkup(markdown)}</p>` : "<p>Draft body pending.</p>"));
+  const excerptSource = input.excerpt ?? existing.excerpt ?? stripMarkup(markdown || body).slice(0, 180);
+  const explicitPublished = Object.prototype.hasOwnProperty.call(input, "published");
+  return {
+    slug: slugify(input.slug ?? existing.slug ?? title),
+    title,
+    excerpt: String(excerptSource || "AI/ML field note from Mohammad Sameer's writing studio.").trim(),
+    date: String(input.date ?? existing.date ?? new Date().toISOString().slice(0, 10)).slice(0, 10),
+    tags: asTags(input.tags ?? existing.tags ?? ["AI/ML", "Field Note"]),
+    cover: String(input.cover ?? existing.cover ?? "/assets/neural-console.png").trim() || "/assets/neural-console.png",
+    readingTime: String(input.readingTime ?? input.reading_time ?? existing.readingTime ?? existing.reading_time ?? estimateReadingTime(markdown || body)),
+    markdown,
+    body,
+    published: explicitPublished ? Boolean(input.published) : Boolean(existing.published ?? true),
+    createdAt: input.createdAt ?? input.created_at ?? existing.createdAt ?? existing.created_at ?? new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+}
+
+function blogRowToPost(row) {
+  return normalizeBlogPost({
+    slug: row.slug,
+    title: row.title,
+    excerpt: row.excerpt,
+    date: row.date,
+    tags: row.tags,
+    cover: row.cover,
+    readingTime: row.reading_time,
+    markdown: row.markdown,
+    body: row.body,
+    published: row.published,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  });
+}
+
+function blogPostToRow(post) {
+  return {
+    slug: post.slug,
+    title: post.title,
+    excerpt: post.excerpt,
+    date: post.date,
+    tags: post.tags,
+    cover: post.cover,
+    reading_time: post.readingTime,
+    markdown: post.markdown || "",
+    body: post.body,
+    published: post.published !== false,
+    created_at: post.createdAt,
+    updated_at: post.updatedAt
+  };
+}
+
 async function readSiteContent() {
   const remote = await supabaseFetch("site_content?id=eq.main&select=content", { method: "GET" });
   if (Array.isArray(remote) && remote[0]?.content) return remote[0].content;
@@ -194,29 +290,116 @@ async function writeSiteContent(content) {
   });
 }
 
+function sortBlogPosts(posts) {
+  return [...posts].sort((a, b) => {
+    const dateDelta = new Date(b.date || 0) - new Date(a.date || 0);
+    if (dateDelta) return dateDelta;
+    return new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0);
+  });
+}
+
+async function readBlogPosts(includeDrafts = false) {
+  const visibility = includeDrafts ? "" : "published=eq.true&";
+  const select = "slug,title,excerpt,date,tags,cover,reading_time,markdown,body,published,created_at,updated_at";
+  const remote = await supabaseFetch(`blog_posts?${visibility}select=${select}&order=date.desc&order=updated_at.desc`, { method: "GET" });
+  if (Array.isArray(remote) && remote.length) return remote.map(blogRowToPost);
+
+  const content = await readSiteContent();
+  const posts = Array.isArray(content?.blogPosts) ? content.blogPosts.map((post) => normalizeBlogPost(post)) : [];
+  return sortBlogPosts(includeDrafts ? posts : posts.filter((post) => post.published !== false));
+}
+
+async function mirrorBlogPosts(posts) {
+  const content = (await readSiteContent()) || { version: 4 };
+  content.blogPosts = sortBlogPosts(posts).map((post) => ({
+    slug: post.slug,
+    title: post.title,
+    excerpt: post.excerpt,
+    date: post.date,
+    tags: post.tags,
+    cover: post.cover,
+    readingTime: post.readingTime,
+    markdown: post.markdown || "",
+    body: post.body,
+    published: post.published !== false,
+    createdAt: post.createdAt,
+    updatedAt: post.updatedAt
+  }));
+  content.updatedAt = new Date().toISOString();
+  await writeSiteContent(content);
+}
+
+async function saveBlogPost(slug, payload) {
+  const posts = await readBlogPosts(true);
+  const existingIndex = slug ? posts.findIndex((post) => post.slug === slug) : -1;
+  const existing = existingIndex >= 0 ? posts[existingIndex] : {};
+  const post = normalizeBlogPost(payload, existing);
+  const collides = posts.some((item, index) => item.slug === post.slug && index !== existingIndex);
+  if (collides) {
+    const error = new Error("A post with this slug already exists.");
+    error.statusCode = 409;
+    throw error;
+  }
+
+  const remoteResult = await supabaseFetch(existingIndex >= 0 ? `blog_posts?slug=eq.${encodeURIComponent(slug)}` : "blog_posts", {
+    method: existingIndex >= 0 ? "PATCH" : "POST",
+    headers: { Prefer: "resolution=merge-duplicates,return=representation" },
+    body: JSON.stringify(blogPostToRow(post))
+  });
+
+  if (existingIndex >= 0) posts[existingIndex] = post;
+  else posts.unshift(post);
+  await mirrorBlogPosts(posts);
+  return { post, source: remoteResult ? "supabase" : "json" };
+}
+
+async function deleteBlogPost(slug) {
+  const posts = await readBlogPosts(true);
+  const next = posts.filter((post) => post.slug !== slug);
+  if (next.length === posts.length) {
+    const error = new Error("Blog post not found.");
+    error.statusCode = 404;
+    throw error;
+  }
+  const remoteResult = await supabaseFetch(`blog_posts?slug=eq.${encodeURIComponent(slug)}`, {
+    method: "DELETE",
+    headers: { Prefer: "return=minimal" }
+  });
+  await mirrorBlogPosts(next);
+  return { source: remoteResult ? "supabase" : "json" };
+}
+
 async function supabaseFetch(path, options = {}) {
   const key = SUPABASE_SERVICE_KEY || SUPABASE_ANON_KEY;
   if (!SUPABASE_URL || !key) return null;
-  const response = await fetch(`${SUPABASE_URL.replace(/\/$/, "")}/rest/v1/${path}`, {
-    ...options,
-    headers: {
-      apikey: key,
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
-      ...(options.headers || {})
-    }
-  });
-  if (!response.ok) return null;
-  if (response.status === 204) return null;
-  const text = await response.text();
-  return text ? JSON.parse(text) : null;
+  try {
+    const response = await fetch(`${SUPABASE_URL.replace(/\/$/, "")}/rest/v1/${path}`, {
+      ...options,
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+        ...(options.headers || {})
+      }
+    });
+    if (!response.ok) return null;
+    if (response.status === 204) return { ok: true };
+    const text = await response.text();
+    return text ? JSON.parse(text) : { ok: true };
+  } catch {
+    return null;
+  }
 }
 
 async function handleApi(request, response) {
   const url = request.url?.split("?")[0] || "";
 
   if (url === "/api/public-config" && request.method === "GET") {
-    json(response, 200, { supabaseConfigured: Boolean(SUPABASE_URL && (SUPABASE_SERVICE_KEY || SUPABASE_ANON_KEY)) });
+    json(response, 200, {
+      supabaseConfigured: Boolean(SUPABASE_URL && (SUPABASE_SERVICE_KEY || SUPABASE_ANON_KEY)),
+      supabaseUrl: SUPABASE_URL,
+      supabaseAnonKey: SUPABASE_ANON_KEY
+    });
     return true;
   }
 
@@ -238,12 +421,50 @@ async function handleApi(request, response) {
       json(response, 401, { ok: false, error: "Invalid admin credentials." });
       return true;
     }
-    json(response, 200, { ok: true }, { "set-cookie": makeSessionCookie() });
+    json(response, 200, { ok: true }, { "set-cookie": makeSessionCookie(request) });
     return true;
   }
 
   if (url === "/api/admin/logout" && request.method === "POST") {
-    json(response, 200, { ok: true }, { "set-cookie": clearSessionCookie() });
+    json(response, 200, { ok: true }, { "set-cookie": clearSessionCookie(request) });
+    return true;
+  }
+
+  if (url === "/api/blog-posts" && request.method === "GET") {
+    json(response, 200, { ok: true, posts: await readBlogPosts(Boolean(getSession(request))) });
+    return true;
+  }
+
+  const blogPostMatch = url.match(/^\/api\/blog-posts\/([^/]+)$/);
+  if (blogPostMatch && request.method === "GET") {
+    const slug = decodeURIComponent(blogPostMatch[1]);
+    const post = (await readBlogPosts(Boolean(getSession(request)))).find((item) => item.slug === slug);
+    if (!post) {
+      json(response, 404, { ok: false, error: "Blog post not found." });
+      return true;
+    }
+    json(response, 200, { ok: true, post });
+    return true;
+  }
+
+  if (url === "/api/blog-posts" && request.method === "POST") {
+    if (!requireAdmin(request, response)) return true;
+    const result = await saveBlogPost("", await readJsonBody(request));
+    json(response, 200, { ok: true, ...result });
+    return true;
+  }
+
+  if (blogPostMatch && request.method === "PATCH") {
+    if (!requireAdmin(request, response)) return true;
+    const result = await saveBlogPost(decodeURIComponent(blogPostMatch[1]), await readJsonBody(request));
+    json(response, 200, { ok: true, ...result });
+    return true;
+  }
+
+  if (blogPostMatch && request.method === "DELETE") {
+    if (!requireAdmin(request, response)) return true;
+    const result = await deleteBlogPost(decodeURIComponent(blogPostMatch[1]));
+    json(response, 200, { ok: true, ...result });
     return true;
   }
 
@@ -347,13 +568,13 @@ createServer(async (request, response) => {
   try {
     if (await handleApi(request, response)) return;
   } catch (error) {
-    json(response, 500, { ok: false, error: error.message });
+    json(response, error.statusCode || 500, { ok: false, error: error.message });
     return;
   }
 
   const url = request.url?.split("?")[0] || "/";
   const adminOnlyRoutes = new Set(["/cms", "/cms/", "/cms/index.html", "/studio", "/studio/", "/studio/index.html"]);
-  const targetUrl = adminOnlyRoutes.has(url) && !getSession(request) ? "/cms/login.html" : request.url || "/";
+  const targetUrl = adminOnlyRoutes.has(url) && !getSession(request) ? `/cms/login.html?next=${encodeURIComponent(url)}` : request.url || "/";
   const target = await resolveFile(targetUrl);
 
   if (!target) {
