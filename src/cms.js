@@ -336,11 +336,10 @@ function setupCmsEvents() {
   document.querySelectorAll("[data-toggle-publish]").forEach((button) => {
     button.addEventListener("click", async () => {
       const slug = button.dataset.togglePublish;
-      const next = readCms();
-      const post = next.blogPosts?.find((p) => p.slug === slug);
+      const post = content.blogPosts?.find((p) => p.slug === slug);
       if (post) {
         post.published = post.published === false ? true : false;
-        await persist(next);
+        await persist(content);
         renderCms();
         setupCmsEvents();
         setStatus(`"${post.title}" is now ${post.published ? "published" : "a draft"}.`);
@@ -355,9 +354,8 @@ function setupCmsEvents() {
       const post = content.blogPosts?.find((p) => p.slug === slug);
       if (!post) return;
       if (!confirm(`Delete "${post.title}"? This cannot be undone.`)) return;
-      const next = readCms();
-      next.blogPosts = (next.blogPosts || []).filter((p) => p.slug !== slug);
-      await persist(next);
+      content.blogPosts = (content.blogPosts || []).filter((p) => p.slug !== slug);
+      await persist(content);
       renderCms();
       setupCmsEvents();
       setStatus(`Deleted "${post.title}".`);

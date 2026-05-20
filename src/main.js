@@ -267,7 +267,7 @@ function renderHome() {
                   <div class="leadership-role-accent" aria-hidden="true"></div>
                   <div class="leadership-role-body">
                     <div class="leadership-role-header">
-                      <span class="leadership-role-badge">${item.period.includes("Present") ? "🟢 Active" : "Completed"}</span>
+                      <span class="leadership-role-badge">${item.period?.toLowerCase().includes("present") ? "🟢 Active" : "Completed"}</span>
                       <span class="leadership-role-period">${escapeHtml(item.period)}</span>
                     </div>
                     <h3>${escapeHtml(item.title)}</h3>

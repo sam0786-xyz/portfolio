@@ -4909,7 +4909,7 @@ li,
 }
 
 .studio-meta-details summary span {
-  font-family: var(--font);
+  font-family: var(--sans);
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;

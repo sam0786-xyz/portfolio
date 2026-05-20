@@ -1303,6 +1303,11 @@ async function hydrateStudio() {
   updatePublishControls();
 
   window.addEventListener("hashchange", async () => {
+    if (saveTimer) {
+      window.clearTimeout(saveTimer);
+      saveTimer = null;
+      await writeDraft(currentDraft());
+    }
     const nextSlug = window.location.hash.slice(1);
     if (nextSlug && nextSlug !== originalPostSlug) {
       const matched = currentPosts.find((post) => post.slug === nextSlug);
