@@ -20,8 +20,7 @@ const editableArrays = [
   "linkedinPosts",
   "education",
   "responsibilities",
-  "certificates",
-  "blogPosts"
+  "certificates"
 ];
 
 function renderCms() {
@@ -99,6 +98,16 @@ function renderCms() {
           </div>
         </section>
       </div>
+
+      <section class="cms-panel">
+        <p class="eyebrow">Writing operations</p>
+        <h3>Manage blog posts in the writing studio</h3>
+        <p>The studio now handles create, edit, publish, unpublish, duplicate, import, export, and delete flows for blog posts. CMS keeps the broader portfolio model here.</p>
+        <div class="inline-actions">
+          <a class="primary-link" href="/studio/">Open writing studio</a>
+          <a class="secondary-link" href="/blog/">Preview blog</a>
+        </div>
+      </section>
 
       <section class="cms-panel">
         <p class="eyebrow">Section editors</p>

@@ -16,6 +16,9 @@ async function sha256(text) {
 
 const form = document.querySelector("[data-admin-login]");
 const status = document.querySelector("[data-login-status]");
+const currentPath = window.location.pathname;
+const inferredNext = currentPath.startsWith("/studio") || currentPath === "/cms/" || currentPath === "/cms" ? currentPath : "/cms/";
+const nextUrl = new URLSearchParams(window.location.search).get("next") || inferredNext;
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -32,7 +35,7 @@ form.addEventListener("submit", async (event) => {
     const payload = await response.json();
     if (response.ok && payload.ok) {
       localStorage.setItem(CMS_AUTH_KEY, JSON.stringify({ authenticated: true, timestamp: Date.now() }));
-      window.location.href = "/cms/";
+      window.location.href = nextUrl.startsWith("/") ? nextUrl : "/cms/";
       return;
     }
     // If server explicitly rejected, don't fall through
@@ -50,7 +53,7 @@ form.addEventListener("submit", async (event) => {
 
   if (usernameOk && passwordHash === ADMIN_HASH) {
     localStorage.setItem(CMS_AUTH_KEY, JSON.stringify({ authenticated: true, timestamp: Date.now() }));
-    window.location.href = "/cms/";
+    window.location.href = nextUrl.startsWith("/") ? nextUrl : "/cms/";
   } else {
     status.textContent = "Invalid credentials.";
   }

@@ -58,6 +58,14 @@ export async function initSiteContent() {
     if (raw) content = mergeContent(content, JSON.parse(raw));
   } catch {}
 
+  try {
+    const response = await fetch(`/api/blog-posts?t=${Date.now()}`, { cache: "no-store" });
+    if (response.ok) {
+      const payload = await response.json();
+      if (Array.isArray(payload.posts)) content.blogPosts = payload.posts;
+    }
+  } catch {}
+
   contentCache = content;
   return contentCache;
 }

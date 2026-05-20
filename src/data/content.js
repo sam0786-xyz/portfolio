@@ -195,6 +195,20 @@ export const blogPosts = [
     tags: ["Generative AI", "Learning", "Portfolio"],
     cover: "/assets/neural-console.png",
     readingTime: "4 min read",
+    markdown: `Good AI work is not only about knowing the newest model. It is about learning how to turn uncertainty into experiments, experiments into interfaces, and interfaces into something a real person can trust.
+
+## The Workbench Mindset
+
+My current focus is building small, clear systems: prompts that can be inspected, outputs that can be evaluated, and product flows that keep humans in control.
+
+\`\`\`text
+observe -> prototype -> evaluate -> explain -> improve
+\`\`\`
+
+## What Matters Most
+
+I care about the full loop: understanding the problem, designing the interaction, building the prototype, measuring the impact, and communicating what the system can and cannot do.`,
+    published: true,
     body: `
       <p>Good AI work is not only about knowing the newest model. It is about learning how to turn uncertainty into experiments, experiments into interfaces, and interfaces into something a real person can trust.</p>
       <h2>The Workbench Mindset</h2>
