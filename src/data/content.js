@@ -141,6 +141,11 @@ export const responsibilities = [
     title: "Volunteer, MLOps.Community - Delhi NCR",
     period: "Mar 2025 - Present",
     summary: "Supporting event execution and community coordination."
+  },
+  {
+    title: "Club Lead of Techprenuer Club under Technova Society",
+    period: "August 2024 - September 2025",
+    summary: "Led the Techprenuer Club under the Technova Society at Sharda University."
   }
 ];
 
@@ -234,7 +239,7 @@ export const linkedinPosts = [
       "Public LinkedIn profile highlight for applied AI and generative systems work at AI Zoned, including RAG, LLM workflows, and backend implementation.",
     tags: ["Generative AI", "RAG", "AI Zoned"],
     featured: true,
-    embedHtml: ""
+    embedHtml: `<iframe src="https://www.linkedin.com/embed/feed/update/urn:li:share:7462624438782664704" height="1298" width="504" frameborder="0" allowfullscreen="" title="Embedded post"></iframe>`
   },
   {
     id: "linkedin-certifications",
@@ -245,7 +250,7 @@ export const linkedinPosts = [
       "Profile-visible certifications include Google Cloud Computing Foundations, Introduction to Generative AI, and Prompt Engineering.",
     tags: ["Google Cloud", "GenAI", "Prompt Engineering"],
     featured: true,
-    embedHtml: ""
+    embedHtml: `<iframe src="https://www.linkedin.com/embed/feed/update/urn:li:ugcPost:7379187344001851392" height="920" width="504" frameborder="0" allowfullscreen="" title="Embedded post"></iframe>`
   },
   {
     id: "technova-leadership",
@@ -256,7 +261,7 @@ export const linkedinPosts = [
       "Public profile highlight for Technova leadership, community work, and technical society execution across multiple domains.",
     tags: ["Technova", "Leadership", "Community"],
     featured: true,
-    embedHtml: ""
+    embedHtml: `<iframe src="https://www.linkedin.com/embed/feed/update/urn:li:ugcPost:7449161652526161920" height="1256" width="504" frameborder="0" allowfullscreen="" title="Embedded post"></iframe>`
   }
 ];
 

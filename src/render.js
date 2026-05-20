@@ -203,13 +203,43 @@ export function renderBlogCards() {
   return blogPosts.map(renderBlogCard).join("");
 }
 
+export function sanitizeLinkedInEmbed(embedHtml) {
+  if (!embedHtml) return "";
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(embedHtml, "text/html");
+    const iframe = doc.querySelector("iframe");
+    if (!iframe) return "";
+
+    if (doc.body.children.length !== 1 || doc.body.firstElementChild !== iframe) {
+      return "";
+    }
+
+    const src = iframe.getAttribute("src") || "";
+    const isTrustedLinkedIn = /^https:\/\/(www\.)?linkedin\.com\/embed\/feed\/update\/urn:li:(share|ugcPost|activity):\d+\/?(?:\?.*)?$/.test(src);
+    if (!isTrustedLinkedIn) return "";
+
+    const width = iframe.getAttribute("width") || "504";
+    const height = iframe.getAttribute("height") || "1000";
+    const frameborder = iframe.getAttribute("frameborder") || "0";
+    const allowfullscreen = iframe.hasAttribute("allowfullscreen") ? "allowfullscreen" : "";
+    const title = iframe.getAttribute("title") || "Embedded post";
+
+    return `<iframe src="${escapeHtml(src)}" width="${escapeHtml(width)}" height="${escapeHtml(height)}" frameborder="${escapeHtml(frameborder)}" ${allowfullscreen ? "allowfullscreen" : ""} title="${escapeHtml(title)}"></iframe>`;
+  } catch (e) {
+    return "";
+  }
+}
+
 export function renderLinkedInCard(post, options = {}) {
-  const showEmbed = options.embed !== false && post.embedHtml;
+  const wantEmbed = options.embed !== false;
+  const sanitizedEmbed = wantEmbed ? sanitizeLinkedInEmbed(post.embedHtml) : "";
+  const hasEmbed = !!sanitizedEmbed;
   return `
-    <article class="linkedin-card" data-animate="fade-up">
+    <article class="linkedin-card ${hasEmbed ? "has-embed" : ""}" data-animate="fade-up">
       ${
-        showEmbed
-          ? `<div class="linkedin-embed">${post.embedHtml}</div>`
+        hasEmbed
+          ? `<div class="linkedin-embed">${sanitizedEmbed}</div>`
           : `
             <div class="linkedin-fallback">
               <div class="linkedin-mark" aria-hidden="true">in</div>
