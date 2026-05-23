@@ -17,6 +17,7 @@ function getAllTags() {
 function getFilteredPosts() {
   const { blogPosts } = getSiteContent();
   return blogPosts.filter(p => {
+    if (p.published === false) return false;
     const matchesTag = activeTag === "All" || (p.tags || []).includes(activeTag);
     const matchesSearch = !searchQuery || p.title.toLowerCase().includes(searchQuery) || p.excerpt.toLowerCase().includes(searchQuery) || (p.tags || []).some(t => t.toLowerCase().includes(searchQuery));
     return matchesTag && matchesSearch;

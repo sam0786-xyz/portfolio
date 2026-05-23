@@ -200,7 +200,7 @@ export function renderBlogCard(post) {
 
 export function renderBlogCards() {
   const { blogPosts } = getSiteContent();
-  return blogPosts.map(renderBlogCard).join("");
+  return blogPosts.filter(p => p.published !== false).map(renderBlogCard).join("");
 }
 
 export function sanitizeLinkedInEmbed(embedHtml) {
