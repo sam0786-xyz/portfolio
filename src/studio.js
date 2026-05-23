@@ -1,6 +1,7 @@
 import { bootTheme } from "./theme.js";
 import { getSiteContent, initSiteContent } from "./content-store.js";
 import { bootInteractions } from "./animations.js";
+import { bootLoader, dismissLoader } from "./loader.js";
 import { escapeHtml, icon, mountShell, renderPills } from "./render.js";
 import { blankBlogPost, deleteBlogPost, listBlogPosts, saveBlogPost, slugify as postSlugify } from "./blog-admin-store.js";
 
@@ -59,6 +60,7 @@ let saveTimer;
 let previewTimer;
 let activeMode = "editor";
 let mermaidPromise = null;
+let studioView = "registry";
 
 function openDatabase() {
   return new Promise((resolve, reject) => {
@@ -436,33 +438,86 @@ function schedulePreviewSync() {
 }
 
 function renderStudio() {
-  const blank = blankBlogPost();
+  if (studioView === "writer") {
+    renderWriterView();
+  } else {
+    renderRegistryView();
+  }
+}
+
+function renderRegistryView() {
+  const query = "";
+  const drafts = currentPosts.filter(p => p.published === false);
+  const published = currentPosts.filter(p => p.published !== false);
+
   document.querySelector("#studio-root").innerHTML = `
     <section class="page-hero studio-hero">
       <p class="eyebrow">Admin writing studio</p>
-      <h1>Command center for public field notes.</h1>
-      <p class="lede">Create, edit, publish, and retire blog posts with Markdown source, rich technical inserts, and a production preview in one focused workspace.</p>
+      <h1>Post Registry</h1>
+      <p class="lede">Manage all your field notes. Create, edit, publish, or delete posts from one place.</p>
+      <div class="hero-actions">
+        <button class="primary-link" type="button" data-registry-new-post>${icon("spark")} Write New Post</button>
+        <a class="secondary-link" href="/cms/">Back to CMS</a>
+      </div>
     </section>
 
-    <section class="studio-shell studio-pro" aria-label="Blog writing studio">
-      <aside class="studio-library" aria-label="Blog post manager">
-        <div class="studio-library-header">
-          <div>
-            <p class="eyebrow">Post registry</p>
-            <h2>Blog posts</h2>
-          </div>
-          <button class="tool-button" type="button" title="Create post" data-new-post>+</button>
-        </div>
-        <input class="studio-post-search" data-post-search type="search" placeholder="Search title, slug, tag" aria-label="Search posts">
-        <div class="studio-post-list" data-post-list></div>
-        <div class="studio-library-actions">
-          <button class="secondary-link" type="button" data-duplicate-post>Duplicate</button>
-          <button class="secondary-link danger-link" type="button" data-delete-post>Delete</button>
-        </div>
-      </aside>
+    <section class="studio-registry" aria-label="Post Registry">
+      <div class="studio-registry-toolbar">
+        <input class="studio-registry-search" data-registry-search type="search" placeholder="Search by title, slug, or tag…" aria-label="Search posts">
+        <span class="studio-registry-count" data-registry-count>${currentPosts.length} post${currentPosts.length !== 1 ? "s" : ""}</span>
+      </div>
 
+      <div class="studio-registry-section">
+        <h3 class="studio-registry-section-title" style="color: var(--amber);">Drafts (${drafts.length})</h3>
+        <div class="studio-registry-table" data-registry-table-drafts>
+          ${drafts.length ? drafts.map(p => registryRow(p)).join("") : `<div class="studio-registry-empty">No drafts.</div>`}
+        </div>
+      </div>
+
+      <div class="studio-registry-section">
+        <h3 class="studio-registry-section-title" style="color: var(--teal);">Published (${published.length})</h3>
+        <div class="studio-registry-table" data-registry-table-published>
+          ${published.length ? published.map(p => registryRow(p)).join("") : `<div class="studio-registry-empty">No published posts yet.</div>`}
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function registryRow(p) {
+  const statusClass = p.published === false ? "is-draft" : "is-live";
+  const statusLabel = p.published === false ? "Draft" : "Live";
+  return `
+    <div class="studio-registry-row">
+      <div class="studio-registry-row-info">
+        <strong>${escapeHtml(p.title)}</strong>
+        <small>${escapeHtml(p.slug)} — ${escapeHtml(p.date || "No date")} — ${escapeHtml(p.readingTime || "")}</small>
+      </div>
+      <span class="cms-blog-status ${statusClass}">${statusLabel}</span>
+      <div class="studio-registry-row-actions">
+        <button class="cms-action-btn" type="button" data-registry-edit="${escapeHtml(p.slug)}" title="Edit">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          Edit
+        </button>
+        <button class="cms-action-btn" type="button" data-registry-toggle="${escapeHtml(p.slug)}" title="${p.published === false ? "Publish" : "Unpublish"}">
+          ${p.published === false ? "Publish" : "Unpublish"}
+        </button>
+        <button class="cms-action-btn cms-action-danger" type="button" data-registry-delete="${escapeHtml(p.slug)}" title="Delete">
+          Delete
+        </button>
+        ${p.published !== false ? `<a class="cms-action-btn" href="/blog/${escapeHtml(p.slug)}/" target="_blank" title="View live">View</a>` : ""}
+      </div>
+    </div>
+  `;
+}
+
+function renderWriterView() {
+  const blank = blankBlogPost();
+  document.querySelector("#studio-root").innerHTML = `
+    <section class="studio-shell studio-pro studio-fullwidth" aria-label="Blog writing studio">
       <div class="studio-workspace">
         <div class="studio-topbar">
+          <button class="secondary-link studio-back-btn" type="button" data-back-registry>← Registry</button>
           <input class="studio-title" data-title-input value="${escapeHtml(blank.title)}" aria-label="Post title">
           <div class="segmented" aria-label="Studio view mode">
             <button type="button" data-mode="split">Split</button>
@@ -470,7 +525,7 @@ function renderStudio() {
             <button type="button" data-mode="preview">Preview</button>
           </div>
           <div class="inline-actions studio-actions">
-            <span class="studio-save-status" data-save-status>Loading posts...</span>
+            <span class="studio-save-status" data-save-status>Ready</span>
             <span class="studio-word-count" data-word-count>0 words</span>
             <button class="primary-link" type="button" data-save-post>${icon("spark")} Save post</button>
             <button class="secondary-link" type="button" data-toggle-published>Publish</button>
@@ -479,7 +534,7 @@ function renderStudio() {
 
         <details class="studio-meta-details" style="margin-bottom: 12px; border: 1px solid var(--line); border-radius: var(--radius); background: color-mix(in srgb, var(--panel-solid), transparent 30%);">
           <summary style="padding: 10px 14px; font-weight: 700; cursor: pointer; user-select: none; font-size: 0.88rem; color: var(--teal); background: color-mix(in srgb, var(--panel), transparent 40%); display: flex; align-items: center; gap: 8px;">
-            <span>Settings & Metadata</span>
+            <span>Settings &amp; Metadata</span>
           </summary>
           <div class="studio-meta-content" style="padding: 14px; display: grid; gap: 12px;">
             <div class="studio-meta-bar">
@@ -511,7 +566,7 @@ function renderStudio() {
             </label>
 
             <div class="studio-meta-actions" style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; border-top: 1px solid var(--line); padding-top: 12px;">
-              <span style="font-size: 0.72rem; color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; font-family: var(--font);">Developer Tools:</span>
+              <span style="font-size: 0.72rem; color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; font-family: var(--sans);">Developer Tools:</span>
               <button class="secondary-link font-mono" type="button" data-export="json" style="margin: 0; padding: 6px 12px; font-size: 0.8rem; height: 36px; display: inline-flex; align-items: center;">Export JSON</button>
               <button class="secondary-link font-mono" type="button" data-export="mdx" style="margin: 0; padding: 6px 12px; font-size: 0.8rem; height: 36px; display: inline-flex; align-items: center;">Export MDX</button>
               <label class="file-label font-mono" style="margin: 0; padding: 6px 12px; font-size: 0.8rem; height: 36px; border: 1px solid var(--line); border-radius: var(--radius); background: color-mix(in srgb, var(--panel), transparent 40%); font-weight: bold; cursor: pointer; display: inline-flex; align-items: center;">
@@ -985,58 +1040,8 @@ function postAsDraft(post) {
 }
 
 function renderPostList() {
+  // In writer mode, no post list sidebar exists — this is a no-op
   if (!postListNode) return;
-  const query = (postSearchInput?.value || "").toLowerCase().trim();
-  const posts = currentPosts.filter((post) => {
-    const haystack = `${post.title} ${post.slug} ${(post.tags || []).join(" ")}`.toLowerCase();
-    return !query || haystack.includes(query);
-  });
-
-  const drafts = posts.filter((post) => post.published === false);
-  const published = posts.filter((post) => post.published !== false);
-
-  if (!posts.length) {
-    postListNode.innerHTML = `<div class="empty-state studio-empty"><h3>No posts found</h3><p>Create a new field note or adjust the search.</p></div>`;
-    return;
-  }
-
-  let html = "";
-
-  html += `
-    <div class="studio-list-section" style="margin-bottom: 1.5rem;">
-      <h3 style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--amber); margin-bottom: 8px; font-weight: 700;">Drafts (New)</h3>
-      <div style="display: grid; gap: 8px;">
-        ${drafts.length ? drafts.map((post) => `
-          <button class="studio-post-row ${post.slug === originalPostSlug ? "is-active" : ""}" type="button" data-load-post="${escapeHtml(post.slug)}">
-            <span>
-              <strong>${escapeHtml(post.title)}</strong>
-              <small>${escapeHtml(post.slug)} / ${escapeHtml(post.date || "No date")}</small>
-            </span>
-            <em class="is-draft">Draft</em>
-          </button>
-        `).join("") : `<div style="padding: 10px; font-size: 0.8rem; color: var(--muted); border: 1px dashed var(--line); border-radius: var(--radius); text-align: center;">No active drafts.</div>`}
-      </div>
-    </div>
-  `;
-
-  html += `
-    <div class="studio-list-section">
-      <h3 style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--teal); margin-bottom: 8px; font-weight: 700;">Published (Done)</h3>
-      <div style="display: grid; gap: 8px;">
-        ${published.length ? published.map((post) => `
-          <button class="studio-post-row ${post.slug === originalPostSlug ? "is-active" : ""}" type="button" data-load-post="${escapeHtml(post.slug)}">
-            <span>
-              <strong>${escapeHtml(post.title)}</strong>
-              <small>${escapeHtml(post.slug)} / ${escapeHtml(post.date || "No date")}</small>
-            </span>
-            <em>Live</em>
-          </button>
-        `).join("") : `<div style="padding: 10px; font-size: 0.8rem; color: var(--muted); border: 1px dashed var(--line); border-radius: var(--radius); text-align: center;">No published posts yet.</div>`}
-      </div>
-    </div>
-  `;
-
-  postListNode.innerHTML = html;
 }
 
 function updatePublishControls() {
@@ -1145,7 +1150,94 @@ async function deleteCurrentPost() {
   else await loadBlankPost();
 }
 
+function switchToRegistry() {
+  studioView = "registry";
+  window.history.replaceState(null, "", "/studio/");
+  renderStudio();
+  setupEvents();
+  bootInteractions(document.querySelector("#studio-root"));
+}
+
+function switchToWriter(post, options = {}) {
+  studioView = "writer";
+  renderStudio();
+  setupWriterEvents();
+  if (post) {
+    loadPost(post, options);
+  }
+  bootInteractions(document.querySelector("#studio-root"));
+}
+
 function setupEvents() {
+  if (studioView === "registry") {
+    setupRegistryEvents();
+  } else {
+    setupWriterEvents();
+  }
+}
+
+function setupRegistryEvents() {
+  document.querySelector("[data-registry-new-post]")?.addEventListener("click", () => {
+    const post = blankBlogPost();
+    post.slug = uniqueSlug(post.slug, "");
+    post.markdown = defaultMarkdown;
+    post.published = false;
+    switchToWriter(post, { skipDraft: true, unsaved: true });
+  });
+
+  document.querySelector("[data-registry-search]")?.addEventListener("input", (e) => {
+    const query = e.target.value.toLowerCase().trim();
+    const allRows = document.querySelectorAll(".studio-registry-row");
+    allRows.forEach(row => {
+      const text = row.textContent.toLowerCase();
+      row.style.display = (!query || text.includes(query)) ? "" : "none";
+    });
+  });
+
+  document.querySelectorAll("[data-registry-edit]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const slug = btn.dataset.registryEdit;
+      const post = currentPosts.find(p => p.slug === slug);
+      if (post) switchToWriter(post);
+    });
+  });
+
+  document.querySelectorAll("[data-registry-toggle]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const slug = btn.dataset.registryToggle;
+      const post = currentPosts.find(p => p.slug === slug);
+      if (!post) return;
+      post.published = post.published === false ? true : false;
+      try {
+        await saveBlogPost(post, post.slug);
+        currentPosts = await listBlogPosts();
+        renderStudio();
+        setupEvents();
+      } catch (err) {
+        alert(`Toggle failed: ${err.message}`);
+      }
+    });
+  });
+
+  document.querySelectorAll("[data-registry-delete]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const slug = btn.dataset.registryDelete;
+      const post = currentPosts.find(p => p.slug === slug);
+      if (!post) return;
+      if (!confirm(`Delete "${post.title}"? This cannot be undone.`)) return;
+      try {
+        await deleteBlogPost(slug);
+        currentPosts = currentPosts.filter(p => p.slug !== slug);
+        renderStudio();
+        setupEvents();
+      } catch (err) {
+        alert(`Delete failed: ${err.message}`);
+      }
+    });
+  });
+}
+
+function setupWriterEvents() {
   editor = document.querySelector("[data-editor]");
   preview = document.querySelector("[data-preview]");
   titleInput = document.querySelector("[data-title-input]");
@@ -1157,35 +1249,26 @@ function setupEvents() {
   tagsInput = document.querySelector("[data-tags-input]");
   statusNode = document.querySelector("[data-save-status]");
   wordCountNode = document.querySelector("[data-word-count]");
-  postListNode = document.querySelector("[data-post-list]");
-  postSearchInput = document.querySelector("[data-post-search]");
+  postListNode = null;
+  postSearchInput = null;
 
-  postListNode.addEventListener("click", async (event) => {
-    const button = event.target.closest("[data-load-post]");
-    if (!button) return;
-    const post = currentPosts.find((item) => item.slug === button.dataset.loadPost);
-    if (post) await loadPost(post);
+  document.querySelector("[data-back-registry]")?.addEventListener("click", async () => {
+    // Flush any pending save
+    if (saveTimer) {
+      window.clearTimeout(saveTimer);
+      saveTimer = null;
+      await writeDraft(currentDraft());
+    }
+    // Refresh posts from server before showing registry
+    try { currentPosts = await listBlogPosts(); } catch {}
+    switchToRegistry();
   });
 
-  postSearchInput.addEventListener("input", renderPostList);
-
-  document.querySelector("[data-new-post]").addEventListener("click", () => {
-    loadBlankPost();
-  });
-
-  document.querySelector("[data-duplicate-post]").addEventListener("click", () => {
-    duplicateCurrentPost().catch((error) => setStatus(`Duplicate failed: ${error.message}`));
-  });
-
-  document.querySelector("[data-delete-post]").addEventListener("click", () => {
-    deleteCurrentPost().catch((error) => setStatus(`Delete failed: ${error.message}`));
-  });
-
-  document.querySelector("[data-save-post]").addEventListener("click", () => {
+  document.querySelector("[data-save-post]")?.addEventListener("click", () => {
     persistCurrentPost().catch((error) => setStatus(`Save failed: ${error.message}`));
   });
 
-  document.querySelector("[data-toggle-published]").addEventListener("click", () => {
+  document.querySelector("[data-toggle-published]")?.addEventListener("click", () => {
     publishedInput.checked = !publishedInput.checked;
     updatePublishControls();
     persistCurrentPost(publishedInput.checked ? "Publishing post..." : "Unpublishing post...").catch((error) => {
@@ -1197,7 +1280,7 @@ function setupEvents() {
     button.addEventListener("click", () => setMode(button.dataset.mode));
   });
 
-  document.querySelector("[data-block]").addEventListener("change", (event) => {
+  document.querySelector("[data-block]")?.addEventListener("change", (event) => {
     applyBlock(event.target.value);
     event.target.value = "";
   });
@@ -1227,16 +1310,16 @@ function setupEvents() {
     });
   });
 
-  document.querySelector('[data-export="json"]').addEventListener("click", () => {
+  document.querySelector('[data-export="json"]')?.addEventListener("click", () => {
     downloadBlob(`${currentDraft().slug}.json`, "application/json", JSON.stringify(currentPostPayload(), null, 2));
   });
 
-  document.querySelector('[data-export="mdx"]').addEventListener("click", () => {
+  document.querySelector('[data-export="mdx"]')?.addEventListener("click", () => {
     const draft = currentDraft();
     downloadBlob(`${draft.slug}.mdx`, "text/markdown", `---\ntitle: "${draft.title}"\ndate: "${draft.date}"\ntags: [${tagsArray(draft.tags).map((tag) => `"${tag}"`).join(", ")}]\npublished: ${draft.published}\n---\n\n${editor.value}\n`);
   });
 
-  document.querySelector("[data-import]").addEventListener("change", (event) => {
+  document.querySelector("[data-import]")?.addEventListener("change", (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
@@ -1265,16 +1348,21 @@ function setupEvents() {
     reader.readAsText(file);
   });
 
-  editor.addEventListener("input", () => {
-    schedulePreviewSync();
-    scheduleSave();
-  });
-  titleInput.addEventListener("input", () => {
-    if (!originalPostSlug) slugInput.value = postSlugify(titleInput.value);
-    schedulePreviewSync();
-    scheduleSave();
-  });
+  if (editor) {
+    editor.addEventListener("input", () => {
+      schedulePreviewSync();
+      scheduleSave();
+    });
+  }
+  if (titleInput) {
+    titleInput.addEventListener("input", () => {
+      if (!originalPostSlug) slugInput.value = postSlugify(titleInput.value);
+      schedulePreviewSync();
+      scheduleSave();
+    });
+  }
   [slugInput, excerptInput, dateInput, coverInput, tagsInput, publishedInput].forEach((input) => {
+    if (!input) return;
     input.addEventListener("input", () => {
       if (input === publishedInput) updatePublishControls();
       schedulePreviewSync();
@@ -1291,30 +1379,59 @@ function setupEvents() {
 async function hydrateStudio() {
   const hash = window.location.hash.slice(1);
   const params = new URLSearchParams(window.location.search);
-  const preferredSlug = hash || params.get("post") || params.get("slug") || originalPostSlug;
+  const preferredSlug = hash || params.get("post") || params.get("slug");
 
+  // Load posts from server
   try {
-    await refreshPosts(preferredSlug);
+    currentPosts = await listBlogPosts();
   } catch (error) {
-    setStatus(`Post list unavailable: ${error.message}`);
-    const fallback = getSiteContent().blogPosts?.[0] || blankBlogPost();
-    await loadPost(fallback, { skipDraft: false, unsaved: false });
+    console.warn("Post list unavailable:", error);
+    currentPosts = getSiteContent().blogPosts || [];
   }
-  updatePublishControls();
 
+  // If a specific slug is requested via hash/param, go directly to writer
+  if (preferredSlug) {
+    const matched = currentPosts.find(p => p.slug === preferredSlug);
+    if (matched) {
+      switchToWriter(matched);
+    } else {
+      // Slug not found — start a new post with that slug
+      const post = blankBlogPost();
+      post.slug = preferredSlug;
+      post.markdown = defaultMarkdown;
+      post.published = false;
+      switchToWriter(post, { skipDraft: true, unsaved: true });
+    }
+  } else {
+    // Default: show registry
+    studioView = "registry";
+    renderStudio();
+    setupEvents();
+    bootInteractions(document.querySelector("#studio-root"));
+  }
+
+  // Listen for hash changes
   window.addEventListener("hashchange", async () => {
     if (saveTimer) {
       window.clearTimeout(saveTimer);
       saveTimer = null;
-      await writeDraft(currentDraft());
+      if (studioView === "writer" && editor) {
+        await writeDraft(currentDraft());
+      }
     }
     const nextSlug = window.location.hash.slice(1);
-    if (nextSlug && nextSlug !== originalPostSlug) {
-      const matched = currentPosts.find((post) => post.slug === nextSlug);
-      if (matched) await loadPost(matched);
+    if (nextSlug) {
+      try { currentPosts = await listBlogPosts(); } catch {}
+      const matched = currentPosts.find(p => p.slug === nextSlug);
+      if (matched) switchToWriter(matched);
+    } else {
+      try { currentPosts = await listBlogPosts(); } catch {}
+      switchToRegistry();
     }
   });
 }
+
+bootLoader();
 
 const sessionResponse = await fetch("/api/admin/session", { cache: "no-store" }).catch(() => null);
 const session = sessionResponse?.ok ? await sessionResponse.json() : { authenticated: false };
@@ -1326,7 +1443,5 @@ if (!session.authenticated) {
 await initSiteContent();
 mountShell("studio");
 bootTheme();
-renderStudio();
-setupEvents();
-hydrateStudio();
-bootInteractions(document.querySelector("#studio-root"));
+await hydrateStudio();
+dismissLoader();
