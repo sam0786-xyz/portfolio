@@ -136,11 +136,27 @@ function mergeContent(base, override) {
 }
 
 function mergeEducation(baseEducation, overrideEducation) {
-  const result = Array.isArray(overrideEducation) ? [...overrideEducation] : [];
-  const seen = new Set(result.map((item) => `${item.school || ""}|${item.degree || ""}`.toLowerCase()));
+  const rawResult = Array.isArray(overrideEducation) ? [...overrideEducation] : [];
+  const seen = new Set(rawResult.map((item) => `${item.school || ""}|${item.degree || ""}`.toLowerCase()));
   for (const item of baseEducation || []) {
     const key = `${item.school || ""}|${item.degree || ""}`.toLowerCase();
-    if (!seen.has(key)) result.push(item);
+    if (!seen.has(key)) rawResult.push(item);
   }
-  return result;
+
+  // Deduplicate by school name to prevent duplicate entries from old state / localStorage
+  const finalResult = [];
+  const schoolSeen = new Set();
+  for (const item of rawResult) {
+    const schoolKey = (item.school || "").trim().toLowerCase();
+    if (!schoolSeen.has(schoolKey)) {
+      schoolSeen.add(schoolKey);
+      finalResult.push(item);
+    } else {
+      const existingIndex = finalResult.findIndex(x => (x.school || "").trim().toLowerCase() === schoolKey);
+      if (existingIndex !== -1 && (item.degree || "").toLowerCase().includes("class 12")) {
+        finalResult[existingIndex] = item;
+      }
+    }
+  }
+  return finalResult;
 }
