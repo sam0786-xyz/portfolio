@@ -55,7 +55,10 @@ const skillLogos = {
   "gmail api": "https://cdn.simpleicons.org/gmail/52c7b8",
   "gemini 2.5 flash": "https://cdn.simpleicons.org/googlegemini/52c7b8",
   "gemini": "https://cdn.simpleicons.org/googlegemini/52c7b8",
-  "pydub": "https://cdn.simpleicons.org/python/52c7b8"
+  "pydub": "https://cdn.simpleicons.org/python/52c7b8",
+  "cloud firestore": "https://cdn.simpleicons.org/firebase/52c7b8",
+  "astral uv": "https://cdn.simpleicons.org/python/52c7b8",
+  "apple shortcuts": "https://cdn.simpleicons.org/apple/52c7b8"
 };
 
 export function skillIcon(name) {

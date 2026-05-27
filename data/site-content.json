@@ -98,6 +98,22 @@
   ],
   "projects": [
     {
+      "title": "Personal CFO: AI Financial Guardian",
+      "type": "AI Financial Dashboard",
+      "status": "Active Project",
+      "summary": "An aggressive, highly analytical, and brutally sarcastic financial guardian designed to protect runway. Powered by Gemini 2.5 Flash, Cloud Firestore, and FastAPI, wired directly to an iPhone Action Button (via Apple Shortcuts) to evaluate spending habits in real time.",
+      "impact": "Delivers character-building financial roasts, tracks INR runway balances with real-time Firestore persistence, and runs continuous state sync across devices.",
+      "tags": [
+        "FastAPI",
+        "Gemini 2.5 Flash",
+        "Cloud Firestore",
+        "Astral uv",
+        "Apple Shortcuts",
+        "Python"
+      ],
+      "href": "https://cfo.sam18.xyz"
+    },
+    {
       "title": "Technova Society Website",
       "type": "Full-stack platform",
       "status": "Dec 2025 - Mar 2026",
