@@ -2,7 +2,7 @@ import { bootLoader, dismissLoader } from "./loader.js";
 import { bootTheme } from "./theme.js";
 import { initSiteContent, getSiteContent } from "./content-store.js";
 import { bootInteractions } from "./animations.js";
-import { escapeHtml, mountShell, renderBlogCard } from "./render.js";
+import { escapeHtml, icon, mountShell, renderBlogCard } from "./render.js";
 
 let activeTag = "All";
 let searchQuery = "";
@@ -54,14 +54,15 @@ function renderGrid() {
 
 function renderPage() {
   document.querySelector("#blog-root").innerHTML = `
-    <section class="page-hero">
-      <p class="eyebrow">Blog</p>
-      <h1>Field notes from AI/ML learning and building.</h1>
+    <section class="page-hero page-hero-pro">
+      <p class="eyebrow">Writing / Build Logs</p>
+      <h1>AI systems, explained from the workbench.</h1>
       <p class="lede">
-        Essays, experiments, diagrams, and implementation notes that show how the work is reasoned through.
+        Practical notes on Generative AI, RAG, product architecture, evaluation, and the decisions behind real implementations.
       </p>
       <div class="hero-actions">
-        <a class="primary-link" href="/#writing">Featured writing</a>
+        <a class="primary-link" href="/#writing">${icon("spark")} Featured notes</a>
+        <a class="secondary-link" href="/#projects">${icon("arrow")} See shipped work</a>
       </div>
     </section>
     ${renderTagBar()}

@@ -62,7 +62,7 @@ export async function initSiteContent() {
     const response = await fetch(`/api/blog-posts?t=${Date.now()}`, { cache: "no-store" });
     if (response.ok) {
       const payload = await response.json();
-      if (Array.isArray(payload.posts)) content.blogPosts = payload.posts;
+      if (Array.isArray(payload.posts) && payload.posts.length) content.blogPosts = payload.posts;
     }
   } catch {}
 
@@ -129,7 +129,11 @@ function mergeContent(base, override) {
     "certificates",
     "blogPosts"
   ]) {
-    next[key] = Array.isArray(override[key]) ? override[key] : base[key];
+    if (key === "blogPosts" && Array.isArray(override[key]) && !override[key].length && base[key]?.length) {
+      next[key] = base[key];
+    } else {
+      next[key] = Array.isArray(override[key]) ? override[key] : base[key];
+    }
   }
   next.education = mergeEducation(base.education, next.education);
   return next;
