@@ -4,6 +4,7 @@ import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { extname, join, normalize, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { defaultContent, mergeContent, renderHomeDocument } from "./src/ssr.mjs";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
 const env = loadEnv([".env", "supabase/.env"]);
@@ -306,7 +307,9 @@ async function readBlogPosts(includeDrafts = false) {
 
   const content = await readSiteContent();
   const posts = Array.isArray(content?.blogPosts) ? content.blogPosts.map((post) => normalizeBlogPost(post)) : [];
-  return sortBlogPosts(includeDrafts ? posts : posts.filter((post) => post.published !== false));
+  const fallbackPosts = defaultContent().blogPosts.map((post) => normalizeBlogPost(post));
+  const visiblePosts = includeDrafts ? posts : posts.filter((post) => post.published !== false);
+  return sortBlogPosts(visiblePosts.length ? visiblePosts : fallbackPosts);
 }
 
 async function mirrorBlogPosts(posts) {
@@ -389,6 +392,16 @@ async function supabaseFetch(path, options = {}) {
   } catch {
     return null;
   }
+}
+
+async function renderHomePage() {
+  const template = await readFile(join(root, "index.html"), "utf8");
+  let content = defaultContent();
+  const stored = await readSiteContent();
+  if (stored) content = mergeContent(content, stored);
+  const posts = await readBlogPosts(false);
+  content.blogPosts = posts.length ? posts : defaultContent().blogPosts;
+  return renderHomeDocument(template, content);
 }
 
 async function handleApi(request, response) {
@@ -573,6 +586,20 @@ createServer(async (request, response) => {
   }
 
   const url = request.url?.split("?")[0] || "/";
+
+  // Server-render the home page so crawlers, ATS systems, and link-preview
+  // bots receive the real content instead of an empty JavaScript shell.
+  if (request.method === "GET" && (url === "/" || url === "/index.html")) {
+    try {
+      const html = await renderHomePage();
+      response.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" });
+      response.end(html);
+      return;
+    } catch (error) {
+      console.error("SSR failed, falling back to static index.html:", error.message);
+    }
+  }
+
   const adminOnlyRoutes = new Set(["/cms", "/cms/", "/cms/index.html", "/studio", "/studio/", "/studio/index.html"]);
   const targetUrl = adminOnlyRoutes.has(url) && !getSession(request) ? `/cms/login.html?next=${encodeURIComponent(url)}` : request.url || "/";
   const target = await resolveFile(targetUrl);

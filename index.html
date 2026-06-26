@@ -3,8 +3,48 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Mohammad Sameer portfolio: AI/ML, Generative AI, projects, certificates, blog, LinkedIn highlights, and focus tools.">
-    <title>Mohammad Sameer | AI/ML Research OS</title>
+    <title>Mohammad Sameer — AI/ML Engineer | Generative AI, RAG & Cloud</title>
+    <meta name="description" content="Mohammad Sameer is an AI/ML engineer building production Generative AI applications with RAG, FastAPI, LangChain, and cloud backends. Projects, experience, certificates, and writing.">
+    <meta name="author" content="Mohammad Sameer">
+    <meta name="keywords" content="Mohammad Sameer, AI/ML Engineer, Generative AI, RAG, LangChain, FastAPI, Machine Learning, Cloud, Python, GenAI Developer">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://sam18.xyz/">
+
+    <!-- Open Graph / Facebook / LinkedIn -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Mohammad Sameer">
+    <meta property="og:title" content="Mohammad Sameer — AI/ML Engineer | Generative AI, RAG & Cloud">
+    <meta property="og:description" content="AI/ML engineer building production Generative AI applications with RAG, FastAPI, LangChain, and cloud backends. See projects, experience, and writing.">
+    <meta property="og:url" content="https://sam18.xyz/">
+    <meta property="og:image" content="https://sam18.xyz/assets/neural-console.png">
+    <meta property="og:image:alt" content="Mohammad Sameer — AI/ML Engineer">
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Mohammad Sameer — AI/ML Engineer | Generative AI, RAG & Cloud">
+    <meta name="twitter:description" content="AI/ML engineer building production Generative AI applications with RAG, FastAPI, LangChain, and cloud backends.">
+    <meta name="twitter:image" content="https://sam18.xyz/assets/neural-console.png">
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "Mohammad Sameer",
+      "jobTitle": "Generative AI Developer",
+      "description": "AI and Machine Learning engineer building production-ready GenAI applications with RAG, FastAPI, LangChain, cloud backends, and practical product workflows.",
+      "url": "https://sam18.xyz",
+      "image": "https://sam18.xyz/assets/neural-console.png",
+      "email": "mailto:hello@sam18.xyz",
+      "worksFor": { "@type": "Organization", "name": "AI Zoned" },
+      "alumniOf": { "@type": "EducationalOrganization", "name": "Sharda University" },
+      "knowsAbout": ["Generative AI", "RAG", "LangChain", "Machine Learning", "FastAPI", "Python", "Cloud Computing", "LLMs"],
+      "sameAs": [
+        "https://linkedin.com/in/connect-to-sam-xyz",
+        "https://github.com/sam0786-xyz"
+      ]
+    }
+    </script>
+
     <script>
       (() => {
         const stored = localStorage.getItem("sameer-theme");
@@ -13,12 +53,13 @@
       })();
     </script>
     <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/redesign.css">
   </head>
   <body>
     <div class="app-shell">
-      <header class="site-header" data-site-header></header>
-      <main id="home-root"></main>
-      <footer class="site-footer" data-site-footer></footer>
+      <header class="site-header" data-site-header><!--SSR-HEADER--></header>
+      <main id="home-root"><!--SSR-HOME--></main>
+      <footer class="site-footer" data-site-footer><!--SSR-FOOTER--></footer>
     </div>
     <script type="module" src="/src/main.js"></script>
   </body>

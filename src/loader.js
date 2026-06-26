@@ -22,13 +22,13 @@ function createLoaderDOM() {
     <div class="loader-brand">
       <div class="loader-topline">
         <span class="loader-sigil">MS</span>
-        <span class="loader-text">Booting portfolio interface<span class="loader-dots"><span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></span></span>
+        <span class="loader-text">Initializing Sameer OS<span class="loader-dots"><span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></span></span>
       </div>
       <span class="loader-line"></span>
       <div class="loader-status-grid" aria-hidden="true">
         <span>content graph</span>
-        <span>motion system</span>
-        <span>signal canvas</span>
+        <span>AI signal</span>
+        <span>interface ready</span>
       </div>
       <div class="loader-progress" aria-hidden="true"><span></span></div>
       <span class="loader-subtext">AI/ML / GenAI / Cloud / Data Science</span>

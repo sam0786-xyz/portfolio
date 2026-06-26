@@ -370,9 +370,15 @@ function renderFocus() {
     <section class="focus-hero">
       <canvas class="focus-canvas" data-neural-canvas aria-hidden="true"></canvas>
       <div data-animate="slide-right">
-        <p class="eyebrow">Focus OS</p>
-        <h1>Deep work, made simple.</h1>
-        <p class="lede">A minimal productivity workspace to stay focused and ship faster.</p>
+        <p class="eyebrow">Focus OS / Private Workbench</p>
+        <h1>Deep work with a timer, tasks, and proof.</h1>
+        <p class="lede">A focused operating layer for planning sessions, running distraction-free blocks, and tracking visible momentum.</p>
+        <div class="focus-hero-strip" aria-label="Focus OS features">
+          <span>Pomodoro engine</span>
+          <span>Task queue</span>
+          <span>Calendar memory</span>
+          <span>Habit analytics</span>
+        </div>
       </div>
       <aside class="streak-panel" data-animate="slide-left">
         <span class="streak-flame" aria-hidden="true"></span>
