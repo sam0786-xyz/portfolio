@@ -1,4 +1,4 @@
-import { supabaseFetch, getSupabaseConfig } from "./supabase-client.js";
+import { supabaseFetch, getSupabaseConfig, hydrateSupabaseConfig } from "./supabase-client.js";
 
 /**
  * Render blog reactions (like/dislike) and comments section.
@@ -63,7 +63,7 @@ export function renderBlogReactions(container, slug) {
 }
 
 async function loadReactions(section, slug) {
-  const config = getSupabaseConfig();
+  const config = await hydrateSupabaseConfig();
   if (config.url && config.anonKey) {
     try {
       const rows = await supabaseFetch(`blog_reactions?post_slug=eq.${encodeURIComponent(slug)}&select=reaction`);
@@ -81,7 +81,7 @@ async function handleReaction(section, slug, type) {
   const userKey = `blog-reacted-${slug}`;
   if (localStorage.getItem(userKey)) return; // one reaction per post
 
-  const config = getSupabaseConfig();
+  const config = await hydrateSupabaseConfig();
   if (!config.url || !config.anonKey) return;
 
   try {
@@ -103,7 +103,7 @@ async function handleReaction(section, slug, type) {
 
 async function loadComments(section, slug) {
   const list = section.querySelector("[data-comment-list]");
-  const config = getSupabaseConfig();
+  const config = await hydrateSupabaseConfig();
   if (config.url && config.anonKey) {
     try {
       const rows = await supabaseFetch(
@@ -119,7 +119,7 @@ async function loadComments(section, slug) {
 }
 
 async function postComment(section, slug, name, body) {
-  const config = getSupabaseConfig();
+  const config = await hydrateSupabaseConfig();
   const comment = { post_slug: slug, name, body, created_at: new Date().toISOString() };
 
   if (!config.url || !config.anonKey) return false;

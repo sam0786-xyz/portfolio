@@ -246,7 +246,6 @@ function blogRowToPost(row) {
     tags: row.tags,
     cover: row.cover,
     readingTime: row.reading_time,
-    markdown: row.markdown,
     body: row.body,
     published: row.published,
     createdAt: row.created_at,
@@ -263,7 +262,6 @@ function blogPostToRow(post) {
     tags: post.tags,
     cover: post.cover,
     reading_time: post.readingTime,
-    markdown: post.markdown || "",
     body: post.body,
     published: post.published !== false,
     created_at: post.createdAt,
@@ -301,7 +299,7 @@ function sortBlogPosts(posts) {
 
 async function readBlogPosts(includeDrafts = false) {
   const visibility = includeDrafts ? "" : "published=eq.true&";
-  const select = "slug,title,excerpt,date,tags,cover,reading_time,markdown,body,published,created_at,updated_at";
+  const select = "slug,title,excerpt,date,tags,cover,reading_time,body,published,created_at,updated_at";
   const remote = await supabaseFetch(`blog_posts?${visibility}select=${select}&order=date.desc&order=updated_at.desc`, { method: "GET" });
   if (Array.isArray(remote) && remote.length) return remote.map(blogRowToPost);
 
@@ -610,7 +608,37 @@ createServer(async (request, response) => {
     return;
   }
 
-  const body = await readFile(target);
+  let body = await readFile(target);
+
+  if (extname(target) === ".html" && url.startsWith("/blog/")) {
+    const slug = url.split("/")[2];
+    if (slug) {
+      const posts = await readBlogPosts(false);
+      const post = posts.find(p => p.slug === slug);
+      if (post) {
+        const escapeStr = (s) => String(s || "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
+        const title = escapeStr(post.title) + " | Mohammad Sameer";
+        const desc = escapeStr(post.excerpt);
+        const cover = post.cover ? (post.cover.startsWith("http") ? post.cover : `https://sam18.xyz${post.cover}`) : "https://sam18.xyz/assets/neural-console.png";
+        
+        let html = body.toString("utf8");
+        html = html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
+        html = html.replace(/<meta name="description" content="[^"]*">/, "");
+        const ogTags = `
+    <meta name="description" content="${desc}">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="${title}">
+    <meta property="og:description" content="${desc}">
+    <meta property="og:url" content="https://sam18.xyz/blog/${escapeStr(slug)}">
+    <meta property="og:image" content="${cover}">
+    <meta name="twitter:card" content="summary_large_image">
+        `.trim();
+        html = html.replace("</head>", `  ${ogTags}\n  </head>`);
+        body = Buffer.from(html, "utf8");
+      }
+    }
+  }
+
   response.writeHead(200, {
     "content-type": types[extname(target)] || "application/octet-stream",
     "cache-control": "no-store"
