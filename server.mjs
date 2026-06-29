@@ -20,7 +20,7 @@ const loginAttempts = new Map();
 
 const SUPABASE_URL = process.env.SUPABASE_URL || env.SUPABASE_URL || env.Supabase_URL || "https://rygkdlltqpdnkohelqnb.supabase.co";
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || env.SUPABASE_ANON_KEY || env.Anon_key || env.Supabase_publisable_key || "";
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_ROLE_KEY || env.service_role_key || "";
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.Supabase_service_key || env.SUPABASE_SERVICE_KEY || env.SUPABASE_SERVICE_ROLE_KEY || env.service_role_key || env.Supabase_service_key || "";
 
 const types = {
   ".html": "text/html; charset=utf-8",
@@ -383,11 +383,15 @@ async function supabaseFetch(path, options = {}) {
         ...(options.headers || {})
       }
     });
-    if (!response.ok) return null;
+    if (!response.ok) {
+      console.error(`Supabase error [${response.status}] for ${path}:`, await response.text());
+      return null;
+    }
     if (response.status === 204) return { ok: true };
     const text = await response.text();
     return text ? JSON.parse(text) : { ok: true };
-  } catch {
+  } catch (err) {
+    console.error(`Supabase fetch failed for ${path}:`, err);
     return null;
   }
 }
