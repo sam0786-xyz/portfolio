@@ -384,14 +384,20 @@ async function supabaseFetch(path, options = {}) {
       }
     });
     if (!response.ok) {
-      console.error(`Supabase error [${response.status}] for ${path}:`, await response.text());
+      const scrubbedPath = path.split("?")[0];
+      const errorText = await response.text();
+      // Keep a scrubbed error summary, but remove full text if it contains sensitive info?
+      // "log only the route or table identifier and a scrubbed error summary"
+      const errorSummary = errorText.substring(0, 100).replace(/\n/g, " ");
+      console.error(`Supabase error [${response.status}] for ${scrubbedPath}:`, errorSummary);
       return null;
     }
-    if (response.status === 204) return { ok: true };
+    if (response.status === 204) return null;
     const text = await response.text();
-    return text ? JSON.parse(text) : { ok: true };
+    return text ? JSON.parse(text) : null;
   } catch (err) {
-    console.error(`Supabase fetch failed for ${path}:`, err);
+    const scrubbedPath = path.split("?")[0];
+    console.error(`Supabase fetch failed for ${scrubbedPath}:`, err.message || "Unknown error");
     return null;
   }
 }
