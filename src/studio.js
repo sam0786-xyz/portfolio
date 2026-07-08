@@ -451,33 +451,35 @@ function renderRegistryView() {
   const published = currentPosts.filter(p => p.published !== false);
 
   document.querySelector("#studio-root").innerHTML = `
-    <section class="page-hero studio-hero">
-      <p class="eyebrow">Admin writing studio</p>
-      <h1>Post Registry</h1>
-      <p class="lede">Manage all your field notes. Create, edit, publish, or delete posts from one place.</p>
-      <div class="hero-actions">
-        <button class="primary-link" type="button" data-registry-new-post>${icon("spark")} Write New Post</button>
-        <a class="secondary-link" href="/cms/">Back to CMS</a>
+    <section class="v3-hero v3-container">
+      <div class="v3-hero-content reveal-up">
+        <span class="eyebrow">Admin writing studio</span>
+        <h1>Post Registry</h1>
+        <p class="lede">Manage all your field notes. Create, edit, publish, or delete posts from one place.</p>
+        <div style="display: flex; gap: 1rem; align-items: center; margin-top: 2rem;">
+          <button class="v3-btn v3-btn-primary" type="button" data-registry-new-post>${icon("spark")} Write New Post</button>
+          <a class="v3-btn v3-btn-glass" href="/cms/">Back to CMS</a>
+        </div>
       </div>
     </section>
 
-    <section class="studio-registry" aria-label="Post Registry">
-      <div class="studio-registry-toolbar">
-        <input class="studio-registry-search" data-registry-search type="search" placeholder="Search by title, slug, or tag…" aria-label="Search posts">
-        <span class="studio-registry-count" data-registry-count>${currentPosts.length} post${currentPosts.length !== 1 ? "s" : ""}</span>
+    <section class="v3-section v3-container reveal-up" aria-label="Post Registry">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); border-bottom: 1px solid var(--glass-border); padding-bottom: var(--space-2);">
+        <input class="v3-input" data-registry-search type="search" placeholder="Search by title, slug, or tag…" aria-label="Search posts" style="max-width: 400px;">
+        <span class="mono-text" data-registry-count>${currentPosts.length} post${currentPosts.length !== 1 ? "s" : ""}</span>
       </div>
 
-      <div class="studio-registry-section">
-        <h3 class="studio-registry-section-title" style="color: var(--amber);">Drafts (${drafts.length})</h3>
-        <div class="studio-registry-table" data-registry-table-drafts>
-          ${drafts.length ? drafts.map(p => registryRow(p)).join("") : `<div class="studio-registry-empty">No drafts.</div>`}
+      <div style="margin-bottom: 4rem;">
+        <h3 style="color: var(--accent-1); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;"><span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent-1);"></span> Drafts (${drafts.length})</h3>
+        <div class="v3-minimal-list" data-registry-table-drafts>
+          ${drafts.length ? drafts.map(p => registryRow(p)).join("") : `<div style="padding: 2rem; color: var(--text-muted); text-align: center; border: 1px dashed var(--glass-border); border-radius: 12px;">No drafts.</div>`}
         </div>
       </div>
 
-      <div class="studio-registry-section">
-        <h3 class="studio-registry-section-title" style="color: var(--teal);">Published (${published.length})</h3>
-        <div class="studio-registry-table" data-registry-table-published>
-          ${published.length ? published.map(p => registryRow(p)).join("") : `<div class="studio-registry-empty">No published posts yet.</div>`}
+      <div>
+        <h3 style="color: var(--accent-green); margin-bottom: var(--space-3); display: flex; align-items: center; gap: var(--space-1);"><span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent-green);"></span> Published (${published.length})</h3>
+        <div class="v3-minimal-list" data-registry-table-published>
+          ${published.length ? published.map(p => registryRow(p)).join("") : `<div style="padding: 2rem; color: var(--text-muted); text-align: center; border: 1px dashed var(--glass-border); border-radius: 12px;">No published posts yet.</div>`}
         </div>
       </div>
     </section>
@@ -488,24 +490,23 @@ function registryRow(p) {
   const statusClass = p.published === false ? "is-draft" : "is-live";
   const statusLabel = p.published === false ? "Draft" : "Live";
   return `
-    <div class="studio-registry-row">
-      <div class="studio-registry-row-info">
-        <strong>${escapeHtml(p.title)}</strong>
-        <small>${escapeHtml(p.slug)} — ${escapeHtml(p.date || "No date")} — ${escapeHtml(p.readingTime || "")}</small>
+    <div class="v3-minimal-row" style="align-items: center;">
+      <div style="flex: 1; min-width: 0;">
+        <h4 class="v3-row-title">${escapeHtml(p.title)}</h4>
+        <span class="v3-row-meta">${escapeHtml(p.slug)} — ${escapeHtml(p.date || "No date")} — ${escapeHtml(p.readingTime || "")}</span>
       </div>
-      <span class="cms-blog-status ${statusClass}">${statusLabel}</span>
-      <div class="studio-registry-row-actions">
-        <button class="cms-action-btn" type="button" data-registry-edit="${escapeHtml(p.slug)}" title="Edit">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+      <div style="display: flex; gap: 0.5rem;">
+        <button class="v3-btn v3-btn-glass" type="button" data-registry-edit="${escapeHtml(p.slug)}" title="Edit" style="padding: 0.25rem 0.75rem; font-size: 0.8rem;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 0.25rem;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
           Edit
         </button>
-        <button class="cms-action-btn" type="button" data-registry-toggle="${escapeHtml(p.slug)}" title="${p.published === false ? "Publish" : "Unpublish"}">
+        <button class="v3-btn v3-btn-glass" type="button" data-registry-toggle="${escapeHtml(p.slug)}" title="${p.published === false ? "Publish" : "Unpublish"}" style="padding: 0.25rem 0.75rem; font-size: 0.8rem;">
           ${p.published === false ? "Publish" : "Unpublish"}
         </button>
-        <button class="cms-action-btn cms-action-danger" type="button" data-registry-delete="${escapeHtml(p.slug)}" title="Delete">
+        <button class="v3-btn" type="button" data-registry-delete="${escapeHtml(p.slug)}" title="Delete" style="padding: 0.25rem 0.75rem; font-size: 0.8rem; background: transparent; border: 1px solid var(--accent-1); color: var(--accent-1);">
           Delete
         </button>
-        ${p.published !== false ? `<a class="cms-action-btn" href="/blog/${escapeHtml(p.slug)}/" target="_blank" title="View live">View</a>` : ""}
+        ${p.published !== false ? `<a class="v3-btn v3-btn-glass" href="/blog/${escapeHtml(p.slug)}/" target="_blank" title="View live" style="padding: 0.25rem 0.75rem; font-size: 0.8rem; text-decoration: none;">View</a>` : ""}
       </div>
     </div>
   `;
@@ -514,62 +515,67 @@ function registryRow(p) {
 function renderWriterView() {
   const blank = blankBlogPost();
   document.querySelector("#studio-root").innerHTML = `
-    <section class="studio-shell studio-pro studio-fullwidth" aria-label="Blog writing studio">
-      <div class="studio-workspace">
-        <div class="studio-topbar">
-          <button class="secondary-link studio-back-btn" type="button" data-back-registry>← Registry</button>
-          <input class="studio-title" data-title-input value="${escapeHtml(blank.title)}" aria-label="Post title">
-          <div class="segmented" aria-label="Studio view mode">
-            <button type="button" data-mode="split">Split</button>
-            <button type="button" class="is-active" data-mode="editor">Markdown</button>
-            <button type="button" data-mode="preview">Preview</button>
+    <section class="v3-container v3-section reveal-up" style="max-width: 1200px; padding-top: 2rem;">
+      <div style="background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 24px; padding: 2rem; display: flex; flex-direction: column; gap: 2rem; min-height: 80vh;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); padding-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+          <div style="display: flex; align-items: center; gap: 1rem; flex: 1;">
+            <button class="v3-btn v3-btn-glass" type="button" data-back-registry style="padding: 0.5rem 1rem;">← Registry</button>
+            <input class="studio-title" data-title-input value="${escapeHtml(blank.title)}" aria-label="Post title" style="flex: 1; background: transparent; border: none; color: #fff; font-size: 1.5rem; font-weight: 400; font-family: var(--font-body); padding: 0.5rem; outline: none; border-bottom: 1px dashed var(--glass-border);">
           </div>
-          <div class="inline-actions studio-actions">
-            <span class="studio-save-status" data-save-status>Ready</span>
-            <span class="studio-word-count" data-word-count>0 words</span>
-            <button class="primary-link" type="button" data-save-post>${icon("spark")} Save post</button>
-            <button class="secondary-link" type="button" data-toggle-published>Publish</button>
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <div style="background: rgba(0,0,0,0.5); padding: 0.25rem; border-radius: 12px; border: 1px solid var(--glass-border); display: flex; margin-right: 1rem;">
+              <button class="v3-btn v3-btn-glass" type="button" data-mode="split" style="border: none; padding: 0.5rem 1rem;">Split</button>
+              <button class="v3-btn v3-btn-glass" type="button" data-mode="editor" style="border: none; padding: 0.5rem 1rem; background: var(--glass-bg);">Markdown</button>
+              <button class="v3-btn v3-btn-glass" type="button" data-mode="preview" style="border: none; padding: 0.5rem 1rem;">Preview</button>
+            </div>
+            <span style="font-size: 0.8rem; color: var(--text-muted); font-variant-numeric: tabular-nums;" data-save-status>Ready</span>
+            <span style="font-size: 0.8rem; color: var(--text-muted); font-variant-numeric: tabular-nums; margin: 0 1rem;" data-word-count>0 words</span>
+            <button class="v3-btn v3-btn-primary" type="button" data-save-post style="padding: 0.5rem 1rem;">${icon("spark")} Save post</button>
+            <button class="v3-btn v3-btn-glass" type="button" data-toggle-published style="padding: 0.5rem 1rem;">Publish</button>
           </div>
         </div>
 
-        <details class="studio-meta-details" style="margin-bottom: 12px; border: 1px solid var(--line); border-radius: var(--radius); background: color-mix(in srgb, var(--panel-solid), transparent 30%);">
-          <summary style="padding: 10px 14px; font-weight: 700; cursor: pointer; user-select: none; font-size: 0.88rem; color: var(--teal); background: color-mix(in srgb, var(--panel), transparent 40%); display: flex; align-items: center; gap: 8px;">
+        <details class="v3-card" style="padding: 0;">
+          <summary style="padding: var(--space-2) var(--space-3); cursor: pointer; user-select: none; font-size: 0.9rem; color: var(--accent-1); display: flex; align-items: center;">
             <span>Settings &amp; Metadata</span>
           </summary>
-          <div class="studio-meta-content" style="padding: 14px; display: grid; gap: 12px;">
-            <div class="studio-meta-bar">
-              <label>
+          <div style="padding: 1.5rem; display: grid; gap: 1.5rem; border-top: 1px solid var(--glass-border);">
+            <div style="display: flex; flex-wrap: wrap; gap: 1rem;">
+              <label class="v3-label" style="flex: 1; min-width: 200px;">
                 Slug
-                <input class="studio-tags-input" data-slug-input placeholder="genai-field-notes" value="${escapeHtml(blank.slug)}">
+                <input class="v3-input" data-slug-input placeholder="genai-field-notes" value="${escapeHtml(blank.slug)}">
               </label>
-              <label>
+              <label class="v3-label" style="flex: 1; min-width: 150px;">
                 Date
-                <input class="studio-tags-input" type="date" data-date-input value="${escapeHtml(blank.date)}">
+                <input class="v3-input" type="date" data-date-input value="${escapeHtml(blank.date)}" style="color-scheme: dark;">
               </label>
-              <label class="studio-tags-label">
+              <label class="v3-label" style="flex: 2; min-width: 300px;">
                 Tags
-                <input class="studio-tags-input" data-tags-input placeholder="AI/ML, RAG, Tutorial" value="${escapeHtml(blank.tags.join(", "))}">
+                <input class="v3-input" data-tags-input placeholder="AI/ML, RAG, Tutorial" value="${escapeHtml(blank.tags.join(", "))}">
               </label>
-              <label>
-                Cover URL
-                <input class="studio-tags-input" data-cover-input placeholder="/assets/neural-console.png" value="${escapeHtml(blank.cover)}">
+            </div>
+            
+            <div style="display: flex; gap: 1rem; align-items: flex-end;">
+              <label style="flex: 1;">
+                <span style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.8rem;">Cover URL</span>
+                <input class="v3-input" data-cover-input placeholder="/assets/neural-console.png" value="${escapeHtml(blank.cover)}">
               </label>
-              <label class="studio-published-toggle">
+              <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 8px; cursor: pointer;">
                 <input type="checkbox" data-published-input>
-                Published
+                <span style="color: #fff; font-size: 0.9rem;">Published</span>
               </label>
             </div>
 
-            <label class="studio-excerpt-label" style="margin-top: 10px; display: grid; gap: 6px;">
-              Excerpt
-              <textarea class="studio-excerpt-input" data-excerpt-input placeholder="Write the promise of this post.">${escapeHtml(blank.excerpt)}</textarea>
+              <label class="v3-label" style="display: block;">
+                Excerpt
+                <textarea class="v3-input" data-excerpt-input placeholder="Write the promise of this post.">${escapeHtml(blank.excerpt)}</textarea>
             </label>
 
-            <div class="studio-meta-actions" style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; border-top: 1px solid var(--line); padding-top: 12px;">
-              <span style="font-size: 0.72rem; color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; font-family: var(--sans);">Developer Tools:</span>
-              <button class="secondary-link font-mono" type="button" data-export="json" style="margin: 0; padding: 6px 12px; font-size: 0.8rem; height: 36px; display: inline-flex; align-items: center;">Export JSON</button>
-              <button class="secondary-link font-mono" type="button" data-export="mdx" style="margin: 0; padding: 6px 12px; font-size: 0.8rem; height: 36px; display: inline-flex; align-items: center;">Export MDX</button>
-              <label class="file-label font-mono" style="margin: 0; padding: 6px 12px; font-size: 0.8rem; height: 36px; border: 1px solid var(--line); border-radius: var(--radius); background: color-mix(in srgb, var(--panel), transparent 40%); font-weight: bold; cursor: pointer; display: inline-flex; align-items: center;">
+            <div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; border-top: 1px solid var(--glass-border); padding-top: 1.5rem;">
+              <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">Developer Tools:</span>
+              <button class="v3-btn v3-btn-glass" type="button" data-export="json" style="padding: 0.5rem 1rem; font-size: 0.8rem;">Export JSON</button>
+              <button class="v3-btn v3-btn-glass" type="button" data-export="mdx" style="padding: 0.5rem 1rem; font-size: 0.8rem;">Export MDX</button>
+              <label class="v3-btn v3-btn-glass" style="padding: 0.5rem 1rem; font-size: 0.8rem; cursor: pointer; margin: 0;">
                 Import JSON
                 <input type="file" accept="application/json" data-import style="display: none;">
               </label>
@@ -577,8 +583,8 @@ function renderWriterView() {
           </div>
         </details>
 
-        <div class="studio-toolbar" aria-label="Markdown tools">
-          <select class="studio-select" data-block aria-label="Insert block style">
+        <div class="studio-toolbar" aria-label="Markdown tools" style="display: flex; gap: 0.5rem; padding: 1rem; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: 12px; overflow-x: auto; margin-top: 1rem;">
+          <select class="studio-select" data-block aria-label="Insert block style" style="background: var(--glass-bg); border: 1px solid var(--glass-border); color: #fff; padding: 0.5rem; border-radius: 8px;">
             <option value="">Block</option>
             <option value="h1">H1</option>
             <option value="h2">H2</option>
@@ -587,29 +593,24 @@ function renderWriterView() {
             <option value="ul">List</option>
             <option value="ol">Numbered</option>
           </select>
-          <button class="tool-button" type="button" title="Bold" data-wrap="bold">B</button>
-          <button class="tool-button" type="button" title="Italic" data-wrap="italic">I</button>
-          <button class="tool-button" type="button" title="Inline code" data-wrap="code">Code</button>
-          <span class="toolbar-divider"></span>
-          <button class="tool-button" type="button" title="Horizontal rule" data-tool="hr">HR</button>
-          <button class="tool-button" type="button" title="Code fence" data-tool="code">Fence</button>
-          <button class="tool-button" type="button" title="Table" data-tool="table">Table</button>
-          <button class="tool-button" type="button" title="Image" data-tool="image">Image</button>
-          <span class="toolbar-divider"></span>
-          <button class="tool-button" type="button" title="Math block" data-tool="math">Math</button>
-          <button class="tool-button" type="button" title="Mermaid diagram" data-tool="diagram">Diagram</button>
-          <button class="tool-button" type="button" title="Equation plot" data-tool="plot">Plot</button>
-          <button class="tool-button" type="button" title="Freehand drawing" data-tool="draw">Draw</button>
-          <button class="tool-button" type="button" title="Source citation" data-tool="source">Source</button>
-          <button class="tool-button" type="button" title="Studio help" data-tool="info">?</button>
+          <button class="v3-btn v3-btn-glass" type="button" title="Bold" data-wrap="bold" style="padding: 0.5rem; min-width: 40px; font-weight: bold;">B</button>
+          <button class="v3-btn v3-btn-glass" type="button" title="Italic" data-wrap="italic" style="padding: 0.5rem; min-width: 40px; font-style: italic;">I</button>
+          <button class="v3-btn v3-btn-glass" type="button" title="Inline code" data-wrap="code" style="padding: 0.5rem; font-family: monospace;">Code</button>
+          <span style="width: 1px; background: var(--glass-border); margin: 0 0.5rem;"></span>
+          <button class="v3-btn v3-btn-glass" type="button" title="Horizontal rule" data-tool="hr" style="padding: 0.5rem;">HR</button>
+          <button class="v3-btn v3-btn-glass" type="button" title="Code fence" data-tool="code" style="padding: 0.5rem;">Fence</button>
+          <button class="v3-btn v3-btn-glass" type="button" title="Table" data-tool="table" style="padding: 0.5rem;">Table</button>
+          <button class="v3-btn v3-btn-glass" type="button" title="Image" data-tool="image" style="padding: 0.5rem;">Image</button>
+          <span style="width: 1px; background: var(--glass-border); margin: 0 0.5rem;"></span>
+          <button class="v3-btn v3-btn-glass" type="button" title="Math block" data-tool="math" style="padding: 0.5rem;">Math</button>
+          <button class="v3-btn v3-btn-glass" type="button" title="Mermaid diagram" data-tool="diagram" style="padding: 0.5rem;">Diagram</button>
         </div>
-
-        <div class="studio-body" data-studio-body>
-          <section class="editor-pane" data-pane="editor" aria-label="Markdown editor">
-            <textarea class="editor-surface markdown-editor" data-editor spellcheck="true" aria-label="Markdown source"></textarea>
+        <div class="studio-body" data-studio-body style="display: flex; flex: 1; gap: 2rem; min-height: 500px; margin-top: 1rem;">
+          <section class="editor-pane" data-pane="editor" aria-label="Markdown editor" style="flex: 1; display: flex; flex-direction: column;">
+            <textarea class="editor-surface markdown-editor" data-editor spellcheck="true" aria-label="Markdown source" placeholder="Type / for commands, or write markdown..." style="flex: 1; background: transparent; border: none; color: #fff; font-family: var(--font-mono); font-size: 0.95rem; line-height: 1.6; outline: none; resize: none; min-height: 500px;">${escapeHtml(blank.markdown)}</textarea>
           </section>
-          <section class="preview-pane" data-pane="preview" aria-label="Rendered preview">
-            <div class="preview-surface" data-preview></div>
+          <section class="preview-pane" data-pane="preview" aria-label="Rendered preview" style="flex: 1; display: flex; flex-direction: column;">
+            <div class="preview-surface blog-content" data-preview style="flex: 1; padding: 1.5rem; overflow-y: auto; background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); border-radius: 12px;"></div>
           </section>
         </div>
       </div>

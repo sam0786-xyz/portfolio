@@ -62,10 +62,9 @@ function loadSessionSecret() {
   if (env.SESSION_SECRET) return env.SESSION_SECRET;
   const isProd = (process.env.NODE_ENV || env.NODE_ENV || "").toLowerCase() === "production";
   if (isProd) {
-    console.error("FATAL: SESSION_SECRET is required in production. Set it via environment variable or .env file.");
-    process.exit(1);
+    console.warn("WARNING: SESSION_SECRET is missing in production. Using an ephemeral secret. Sessions will be invalidated on restart. Set SESSION_SECRET via environment variable for persistence.");
   }
-  // Dev-only fallback: read or generate a persistent local secret
+  // Fallback: read or generate a persistent local secret (or ephemeral if read-only)
   const secretPath = join(root, ".session-secret");
   try {
     const stored = readFileSync(secretPath, "utf8").trim();
@@ -280,8 +279,12 @@ async function readSiteContent() {
 }
 
 async function writeSiteContent(content) {
-  await mkdir(join(root, "data"), { recursive: true });
-  await writeFile(join(root, "data", "site-content.json"), `${JSON.stringify(content, null, 2)}\n`);
+  try {
+    await mkdir(join(root, "data"), { recursive: true });
+    await writeFile(join(root, "data", "site-content.json"), `${JSON.stringify(content, null, 2)}\n`);
+  } catch (err) {
+    console.warn("Failed to write local site-content.json, proceeding to remote sync", err.message);
+  }
   await supabaseFetch("site_content", {
     method: "POST",
     headers: { Prefer: "resolution=merge-duplicates,return=minimal" },

@@ -12,14 +12,27 @@
         document.documentElement.dataset.theme = theme;
       })();
     </script>
-    <link rel="stylesheet" href="/styles.css">
   </head>
   <body>
+
+    <div id="globalLoader" class="global-loader">
+      <div class="loader-spinner"></div>
+    </div>
+    <script>
+      window.addEventListener('load', () => {
+        const loader = document.getElementById('globalLoader');
+        if (loader) {
+          loader.classList.add('hidden');
+          setTimeout(() => loader.remove(), 500);
+        }
+      });
+    </script>
+
     <div class="app-shell">
       <header class="site-header" data-site-header></header>
       <main id="cms-root"></main>
       <footer class="site-footer" data-site-footer></footer>
     </div>
-    <script type="module" src="/src/cms.js"></script>
+    <script type="module" src="../src/cms.js"></script>
   </body>
 </html>

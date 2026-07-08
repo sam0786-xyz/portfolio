@@ -101,58 +101,61 @@ export async function validateFocusEmail(email) {
  */
 export function renderAuthGate(container, onSuccess) {
   container.innerHTML = `
-    <section class="focus-hero">
-      <canvas class="focus-canvas" data-neural-canvas aria-hidden="true"></canvas>
-      <div data-animate="slide-right">
-        <p class="eyebrow">Focus OS / Private Workbench</p>
-        <h1>Deep work with a timer, tasks, and proof.</h1>
-        <p class="lede">Create a lightweight profile to keep your sessions, tasks, calendar, and habit analytics tied to your own workspace.</p>
-        <div class="focus-hero-strip" aria-label="Focus OS features">
-          <span>Pomodoro engine</span>
-          <span>Task queue</span>
-          <span>Calendar memory</span>
-          <span>Habit analytics</span>
+    <div class="v3-container v3-section reveal-up" style="min-height: 80vh; display: flex; align-items: center; justify-content: center;">
+      <div style="background: var(--glass-bg); border: 1px solid var(--glass-border); padding: 4rem; border-radius: 24px; max-width: 500px; width: 100%;">
+        <span class="eyebrow" style="text-align: center; display: block; margin-bottom: 1rem;">Private Tool</span>
+        <h1 style="text-align: center; margin-bottom: 1rem; font-size: 2.5rem;">Focus OS</h1>
+        <p class="lede" style="text-align: center; margin-bottom: 3rem;">A productivity layer for deep work and session tracking.</p>
+
+        <!-- Login Card -->
+        <div id="auth-login-card">
+          <form data-login-form style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <div>
+              <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Email Address</label>
+              <input name="email" type="email" required placeholder="name@example.com" autocomplete="email" style="width: 100%; padding: 1rem; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 12px; color: #fff; font-family: inherit;">
+            </div>
+            <button class="v3-btn v3-btn-primary" type="submit" style="width: 100%; padding: 1rem;">Sign in</button>
+          </form>
+          <p data-login-status style="text-align: center; color: var(--accent-1); min-height: 1.5rem; margin: 1rem 0 0; font-size: 0.9rem;"></p>
+          <p style="text-align: center; margin-top: 2rem; font-size: 0.9rem; color: var(--text-muted);">
+            New here? <button type="button" class="v3-btn" data-show-register style="padding: 0; background: none; border: none; color: var(--accent-1); text-decoration: underline;">Create a profile</button>
+          </p>
         </div>
-      </div>
-    </section>
 
-    <section class="focus-auth-gate">
-      <div class="auth-card" id="auth-login-card">
-        <h2>Welcome back</h2>
-        <p>Enter your email to continue.</p>
-        <form data-login-form>
-          <input name="email" type="email" placeholder="your@email.com" required autocomplete="email">
-          <button class="primary-link" type="submit">Continue</button>
-        </form>
-        <p class="auth-status" data-login-status></p>
-        <p class="auth-toggle">New here? <button type="button" class="text-link" data-show-register>Create a profile</button></p>
-      </div>
+        <!-- Register Card -->
+        <div id="auth-register-card" style="display: none;">
+          <form data-register-form style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <div>
+              <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Display Name</label>
+              <input name="name" type="text" placeholder="Your name" autocomplete="name" required style="width: 100%; padding: 1rem; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 12px; color: #fff; font-family: inherit;">
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Email Address</label>
+              <input name="email" type="email" required placeholder="name@example.com" autocomplete="email" style="width: 100%; padding: 1rem; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 12px; color: #fff; font-family: inherit;">
+            </div>
+            <button class="v3-btn v3-btn-primary" type="submit" style="width: 100%; padding: 1rem;">Get Started</button>
+          </form>
+          <p data-register-status style="text-align: center; color: var(--accent-1); min-height: 1.5rem; margin: 1rem 0 0; font-size: 0.9rem;"></p>
+          <p style="text-align: center; margin-top: 2rem; font-size: 0.9rem; color: var(--text-muted);">
+            Already have an account? <button type="button" class="v3-btn" data-show-login style="padding: 0; background: none; border: none; color: var(--accent-1); text-decoration: underline;">Sign in</button>
+          </p>
+        </div>
 
-      <div class="auth-card is-hidden" id="auth-register-card">
-        <h2>Create your profile</h2>
-        <p>Your email is all you need to sign in next time.</p>
-        <form data-register-form>
-          <input name="name" placeholder="Your name" required autocomplete="name">
-          <input name="email" type="email" placeholder="your@email.com" required autocomplete="email">
-          <button class="primary-link" type="submit">Get started</button>
-        </form>
-        <p class="auth-status" data-register-status></p>
-        <p class="auth-toggle">Already have an account? <button type="button" class="text-link" data-show-login>Sign in</button></p>
       </div>
-    </section>
+    </div>
   `;
 
   const loginCard = container.querySelector("#auth-login-card");
   const registerCard = container.querySelector("#auth-register-card");
 
   container.querySelector("[data-show-register]").addEventListener("click", () => {
-    loginCard.classList.add("is-hidden");
-    registerCard.classList.remove("is-hidden");
+    loginCard.style.display = "none";
+    registerCard.style.display = "block";
   });
 
   container.querySelector("[data-show-login]").addEventListener("click", () => {
-    registerCard.classList.add("is-hidden");
-    loginCard.classList.remove("is-hidden");
+    registerCard.style.display = "none";
+    loginCard.style.display = "block";
   });
 
   // Email login form
@@ -161,16 +164,16 @@ export function renderAuthGate(container, onSuccess) {
     const status = container.querySelector("[data-login-status]");
     const email = new FormData(event.currentTarget).get("email").toString().trim();
     status.textContent = "Checking...";
-    status.className = "auth-status";
+    status.style.color = "var(--text-muted)";
 
     const result = await validateFocusEmail(email);
     if (result) {
       status.textContent = `Welcome back, ${result.name}!`;
-      status.className = "auth-status is-success";
+      status.style.color = "var(--accent-green)";
       setTimeout(() => onSuccess(result), 600);
     } else {
       status.textContent = "No account found. Create a profile first.";
-      status.className = "auth-status is-error";
+      status.style.color = "var(--accent-1)";
     }
   });
 
@@ -184,16 +187,16 @@ export function renderAuthGate(container, onSuccess) {
 
     if (!name || !email) {
       status.textContent = "Please fill in all fields.";
-      status.className = "auth-status is-error";
+      status.style.color = "var(--accent-1)";
       return;
     }
 
     status.textContent = "Creating your profile...";
-    status.className = "auth-status";
+    status.style.color = "var(--text-muted)";
 
     const result = await registerFocusUser(name, email);
     status.textContent = `Welcome, ${result.name}! Redirecting...`;
-    status.className = "auth-status is-success";
+    status.style.color = "var(--accent-green)";
     setTimeout(() => onSuccess(result), 800);
   });
 }

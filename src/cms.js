@@ -21,125 +21,132 @@ function renderCms() {
   const posts = content.blogPosts || [];
 
   document.querySelector("#cms-root").innerHTML = `
-      <section class="page-hero">
-        <p class="eyebrow">Admin CMS</p>
-        <h1>Update the portfolio, resume, and content model.</h1>
-        <p class="lede">
-          Saves to the project when the local server is running. Also keeps a browser fallback so you can preview changes instantly.
-        </p>
-        <div class="hero-actions">
-          <a class="primary-link" href="${content.profile.resumeUrl}" download data-resume-download>Download current resume</a>
-          <a class="secondary-link" href="/studio/">Open writing studio</a>
-          <a class="secondary-link" href="/">Preview home</a>
+      <section class="v3-hero v3-container reveal-up" style="min-height: 50vh; padding-top: 100px;">
+        <div class="v3-hero-content">
+          <p class="eyebrow">Admin CMS</p>
+          <h1>Update the portfolio, resume, and content model.</h1>
+          <p class="lede">
+            Saves to the project when the local server is running. Also keeps a browser fallback so you can preview changes instantly.
+          </p>
+          <div class="v3-hero-ctas">
+            <a class="v3-btn v3-btn-primary" href="${content.profile.resumeUrl}" download data-resume-download>Download current resume</a>
+            <a class="v3-btn v3-btn-glass" href="/studio/">Open writing studio</a>
+            <a class="v3-btn v3-btn-glass" href="/">Preview home</a>
+          </div>
         </div>
       </section>
 
-      <section class="cms-shell">
-        <div class="cms-topbar">
-          <div>
-            <p class="eyebrow">Admin status</p>
-            <h2>Source control for portfolio content.</h2>
-            <p data-cms-status>Ready.</p>
-          </div>
-          <div class="inline-actions cms-actions">
-            <button class="primary-link" type="button" data-save-cms>${svgIcon("save")} Save All</button>
-            <button class="secondary-link" type="button" data-admin-logout>Sign out</button>
-            <button class="secondary-link" type="button" data-reset-cms>Reset</button>
+      <section class="v3-container v3-section reveal-up">
+        <div class="v3-card" style="padding: var(--space-4); margin-bottom: var(--space-5);">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-3);">
+            <div>
+              <p class="eyebrow">Admin status</p>
+              <h2 style="margin: 0; font-size: 1.5rem;">Source control for portfolio content.</h2>
+              <p data-cms-status style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">Ready.</p>
+            </div>
+            <div style="display: flex; gap: var(--space-2); align-items: center;">
+              <button class="v3-btn v3-btn-primary" type="button" data-save-cms>${svgIcon("save")} Save All</button>
+              <button class="v3-btn v3-btn-glass" type="button" data-admin-logout>Sign out</button>
+              <button class="v3-btn v3-btn-glass" type="button" data-reset-cms>Reset</button>
+            </div>
           </div>
         </div>
 
-        <div class="cms-grid">
-          <form class="cms-panel" data-profile-form>
+        <div class="v3-grid v3-grid-2">
+          <form class="v3-card" data-profile-form>
             <p class="eyebrow">Profile</p>
-            ${profileField("name", "Name")}
-            ${profileField("role", "Role")}
-            ${profileField("company", "Company")}
-            ${profileField("education", "Education")}
-            ${profileField("semester", "Current state")}
-            ${profileField("location", "Location")}
-            ${profileField("phone", "Phone")}
-            ${profileField("email", "Email")}
-            ${profileField("resumeUrl", "Resume URL")}
-            <label>
-              Summary
-              <textarea data-profile-field="summary">${escapeHtml(content.profile.summary)}</textarea>
-            </label>
+            <div style="display: flex; flex-direction: column; gap: var(--space-3);">
+              ${profileField("name", "Name")}
+              ${profileField("role", "Role")}
+              ${profileField("company", "Company")}
+              ${profileField("education", "Education")}
+              ${profileField("semester", "Current state")}
+              ${profileField("location", "Location")}
+              ${profileField("phone", "Phone")}
+              ${profileField("email", "Email")}
+              ${profileField("resumeUrl", "Resume URL")}
+              <label class="v3-label">
+                Summary
+                <textarea class="v3-input" data-profile-field="summary" rows="4">${escapeHtml(content.profile.summary)}</textarea>
+              </label>
+            </div>
           </form>
 
-          <section class="cms-panel">
+          <section class="v3-card">
             <p class="eyebrow">Resume manager</p>
-            <h3>Upload a new PDF resume</h3>
-            <p>The admin server stores the uploaded PDF as <code>assets/mohammad-sameer-resume.pdf</code>.</p>
-            <label class="upload-zone">
-              <span>Choose PDF resume</span>
-              <input type="file" accept="application/pdf" data-resume-upload>
+            <h3 class="text-heading" style="margin-bottom: var(--space-2);">Upload a new PDF resume</h3>
+            <p class="lede" style="font-size: 1rem; margin-bottom: var(--space-4);">The admin server stores the uploaded PDF as <code>assets/mohammad-sameer-resume.pdf</code>.</p>
+            <label class="v3-card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px dashed var(--glass-border-strong); padding: var(--space-5); cursor: pointer; text-align: center; margin-bottom: var(--space-3);">
+              <span style="font-family: var(--font-display); font-size: 1.2rem; color: var(--accent-1); margin-bottom: 8px;">Choose PDF resume</span>
+              <input type="file" accept="application/pdf" data-resume-upload style="display: none;">
+              <span style="font-size: 0.9rem; color: var(--text-muted);">Click to browse</span>
             </label>
-            <div class="inline-actions">
-              <a class="secondary-link" href="${content.profile.resumeUrl}" download data-resume-download-secondary>Download resume</a>
-              <a class="secondary-link" href="${content.profile.resumeUrl}" target="_blank" rel="noreferrer" data-resume-open>Open resume</a>
+            <div style="display: flex; gap: var(--space-3);">
+              <a class="v3-btn v3-btn-glass" href="${content.profile.resumeUrl}" download data-resume-download-secondary>Download resume</a>
+              <a class="v3-btn v3-btn-glass" href="${content.profile.resumeUrl}" target="_blank" rel="noreferrer" data-resume-open>Open resume</a>
             </div>
           </section>
         </div>
 
         <!-- Status Chips -->
-        <section class="cms-panel cms-section-card" style="margin-top: 14px;">
-          <div class="cms-section-header">
-            <div><p class="eyebrow">Status Chips</p><h3>Hero tagline chips</h3></div>
+        <section class="v3-card" style="margin-top: var(--space-5);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4);">
+            <div><p class="eyebrow">Status Chips</p><h3 class="text-heading" style="margin: 0;">Hero tagline chips</h3></div>
           </div>
-          <div class="cms-chip-editor" data-chip-editor="status">
-            <div class="cms-chip-list" data-chip-list="status">
+          <div data-chip-editor="status">
+            <div class="v3-tags" data-chip-list="status" style="margin-bottom: var(--space-4);">
               ${(content.profile.status || []).map((chip, i) => `
-                <span class="cms-chip">${escapeHtml(chip)} <button type="button" data-remove-chip="${i}" title="Remove">&times;</button></span>
+                <span class="v3-tag">${escapeHtml(chip)} <button type="button" data-remove-chip="${i}" title="Remove" style="margin-left: 8px; cursor: pointer; color: var(--accent-1);">&times;</button></span>
               `).join("")}
             </div>
-            <div class="cms-chip-add">
-              <input type="text" placeholder="Add a chip…" data-chip-input="status">
-              <button type="button" class="cms-action-btn" data-add-chip="status">+ Add</button>
+            <div style="display: flex; gap: var(--space-2); max-width: 400px;">
+              <input type="text" class="v3-input" placeholder="Add a chip…" data-chip-input="status">
+              <button type="button" class="v3-btn v3-btn-glass" data-add-chip="status">+ Add</button>
             </div>
           </div>
         </section>
 
         <!-- Social Links -->
-        <section class="cms-panel cms-section-card" style="margin-top: 14px;">
-          <div class="cms-section-header">
-            <div><p class="eyebrow">Social Links</p><h3>Profile links in hero</h3></div>
+        <section class="v3-card" style="margin-top: var(--space-5);">
+          <div style="margin-bottom: var(--space-4);">
+            <p class="eyebrow">Social Links</p><h3 class="text-heading" style="margin: 0;">Profile links in hero</h3>
           </div>
-          <div class="cms-link-editor" data-link-editor="socials">
+          <div data-link-editor="socials" style="display: flex; flex-direction: column; gap: var(--space-2);">
             ${(content.profile.socials || []).map((link, i) => `
-              <div class="cms-link-row" data-link-index="${i}">
-                <input type="text" value="${escapeHtml(link.label || "")}" placeholder="Label" data-link-label="${i}">
-                <input type="text" value="${escapeHtml(link.href || "")}" placeholder="URL" data-link-href="${i}">
-                <button type="button" class="cms-action-btn cms-action-danger" data-remove-link="${i}" title="Remove">&times;</button>
+              <div class="cms-link-row" data-link-index="${i}" style="display: grid; grid-template-columns: 1fr 2fr auto; gap: var(--space-2); align-items: center;">
+                <input type="text" class="v3-input" value="${escapeHtml(link.label || "")}" placeholder="Label" data-link-label="${i}">
+                <input type="text" class="v3-input" value="${escapeHtml(link.href || "")}" placeholder="URL" data-link-href="${i}">
+                <button type="button" class="v3-btn v3-btn-glass" style="color: #ff453a;" data-remove-link="${i}" title="Remove">&times;</button>
               </div>
             `).join("")}
-            <button type="button" class="cms-action-btn" data-add-link="socials" style="margin-top:8px;">+ Add Link</button>
+            <button type="button" class="v3-btn v3-btn-glass" data-add-link="socials" style="align-self: flex-start; margin-top: var(--space-2);">+ Add Link</button>
           </div>
         </section>
 
         <!-- Skills -->
-        <section class="cms-panel cms-section-card" style="margin-top: 14px;">
-          <div class="cms-section-header">
-            <div><p class="eyebrow">Skills</p><h3>Grouped skill badges</h3></div>
+        <section class="v3-card" style="margin-top: var(--space-5);">
+          <div style="margin-bottom: var(--space-4);">
+            <p class="eyebrow">Skills</p><h3 class="text-heading" style="margin: 0;">Grouped skill badges</h3>
           </div>
-          <div data-skills-editor>
+          <div data-skills-editor style="display: flex; flex-direction: column; gap: var(--space-5);">
             ${(content.skills || []).map((group, gi) => `
-              <div class="cms-skill-group" data-skill-group="${gi}">
-                <div class="cms-skill-group-header">
-                  <input type="text" value="${escapeHtml(group.group)}" placeholder="Group name" data-skill-group-name="${gi}">
-                  <button type="button" class="cms-action-btn cms-action-danger" data-remove-skill-group="${gi}">&times;</button>
+              <div class="v3-card" data-skill-group="${gi}" style="background: var(--bg-surface-0);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-3);">
+                  <input type="text" class="v3-input" value="${escapeHtml(group.group)}" placeholder="Group name" data-skill-group-name="${gi}" style="max-width: 300px; font-weight: bold;">
+                  <button type="button" class="v3-btn v3-btn-glass" style="color: #ff453a;" data-remove-skill-group="${gi}">&times;</button>
                 </div>
-                <div class="cms-chip-list" data-skill-chips="${gi}">
+                <div class="v3-tags" data-skill-chips="${gi}" style="margin-bottom: var(--space-3);">
                   ${(group.items || []).map((skill, si) => `
-                    <span class="cms-chip">${escapeHtml(skill)} <button type="button" data-remove-skill="${gi}-${si}" title="Remove">&times;</button></span>
+                    <span class="v3-tag">${escapeHtml(skill)} <button type="button" data-remove-skill="${gi}-${si}" title="Remove" style="margin-left: 8px; cursor: pointer; color: var(--accent-1);">&times;</button></span>
                   `).join("")}
                 </div>
-                <div class="cms-chip-add">
-                  <input type="text" placeholder="Add skill…" data-skill-input="${gi}">
-                  <button type="button" class="cms-action-btn" data-add-skill="${gi}">+ Add</button>
+                <div style="display: flex; gap: var(--space-2); max-width: 400px;">
+                  <input type="text" class="v3-input" placeholder="Add skill…" data-skill-input="${gi}">
+                  <button type="button" class="v3-btn v3-btn-glass" data-add-skill="${gi}">+ Add</button>
                 </div>
               </div>
             `).join("")}
-            <button type="button" class="cms-action-btn" data-add-skill-group style="margin-top:12px;">+ Add Skill Group</button>
+            <button type="button" class="v3-btn v3-btn-glass" data-add-skill-group style="align-self: flex-start;">+ Add Skill Group</button>
           </div>
         </section>
 
@@ -187,7 +194,7 @@ function renderCms() {
           { key: "credentialId", label: "Credential ID", type: "text" },
           { key: "verificationUrl", label: "Verification URL", type: "text" },
           { key: "mediaUrl", label: "Media URL", type: "text" },
-          { key: "skills", label: "Skills (comma separated)", type: "tags" },
+          { key: "skills", label: "Tags (comma separated)", type: "tags" },
           { key: "summary", label: "Summary", type: "textarea" },
           { key: "featured", label: "Featured", type: "checkbox" }
         ])}
@@ -204,66 +211,60 @@ function renderCms() {
         ])}
 
         <!-- Blog Manager -->
-        <section class="cms-panel cms-blog-manager" style="margin-top: 14px;">
-            <div class="cms-blog-manager-header">
+        <section class="v3-card" style="margin-top: var(--space-5);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4);">
               <div>
                 <p class="eyebrow">Blog Manager</p>
-                <h3>All field notes</h3>
+                <h3 class="text-heading" style="margin: 0;">All field notes</h3>
               </div>
-              <div class="inline-actions" style="margin: 0; gap: 10px;">
-                <a class="primary-link" href="/studio/" style="display: inline-flex; align-items: center; gap: 6px;">
-                  ${svgIcon("edit")} New Post
-                </a>
-              </div>
+              <a class="v3-btn v3-btn-primary" href="/studio/">
+                ${svgIcon("edit")} New Post
+              </a>
             </div>
-            <div class="cms-blog-table" data-cms-blog-table>
+            <div class="v3-minimal-list" data-cms-blog-table>
               ${posts.length ? posts.map((p) => `
-                <div class="cms-blog-row">
-                  <div class="cms-blog-row-info">
-                    <strong>${escapeHtml(p.title)}</strong>
-                    <small>${escapeHtml(p.slug)} — ${escapeHtml(p.date || "No date")}</small>
+                <div class="v3-minimal-row" style="grid-template-columns: 2fr 1fr auto; gap: var(--space-4);">
+                  <div>
+                    <h4 style="font-family: var(--font-display); font-size: 1.1rem; margin-bottom: 4px;">${escapeHtml(p.title)}</h4>
+                    <span class="mono-text">${escapeHtml(p.slug)} — ${escapeHtml(p.date || "No date")}</span>
                   </div>
-                  <span class="cms-blog-status ${p.published === false ? "is-draft" : "is-live"}">${p.published === false ? "Draft" : "Live"}</span>
-                  <div class="cms-blog-row-actions">
-                    <a class="cms-action-btn" href="/studio/#${escapeHtml(p.slug)}" title="Edit">
-                      ${svgIcon("edit")} Edit
-                    </a>
-                    <button class="cms-action-btn" type="button" data-toggle-publish="${escapeHtml(p.slug)}" title="${p.published === false ? "Publish" : "Unpublish"}">
-                      ${p.published === false ? svgIcon("plus") : svgIcon("x")}
+                  <span class="v3-tag" style="background: ${p.published === false ? 'rgba(255,153,0,0.2)' : 'rgba(0,255,0,0.2)'}; color: ${p.published === false ? '#ff9900' : '#00ff00'}; width: fit-content; align-self: center;">
+                    ${p.published === false ? "Draft" : "Live"}
+                  </span>
+                  <div style="display: flex; gap: var(--space-2);">
+                    <a class="v3-btn v3-btn-glass" href="/studio/#${escapeHtml(p.slug)}" title="Edit">Edit</a>
+                    <button class="v3-btn v3-btn-glass" type="button" data-toggle-publish="${escapeHtml(p.slug)}">
                       ${p.published === false ? "Publish" : "Unpublish"}
                     </button>
-                    <button class="cms-action-btn cms-action-danger" type="button" data-delete-post="${escapeHtml(p.slug)}" title="Delete">
-                      ${svgIcon("trash")} Delete
-                    </button>
-                    ${p.published !== false ? `<a class="cms-action-btn" href="/blog/${escapeHtml(p.slug)}/" target="_blank" title="View live">
-                      ${svgIcon("external")} View
-                    </a>` : ""}
+                    <button class="v3-btn v3-btn-glass" style="color: #ff453a;" type="button" data-delete-post="${escapeHtml(p.slug)}" title="Delete">Delete</button>
+                    ${p.published !== false ? `<a class="v3-btn v3-btn-glass" href="/blog/${escapeHtml(p.slug)}/" target="_blank">View</a>` : ""}
                   </div>
                 </div>
               `).join("") : `
-                <div class="empty-state-small" style="padding: 20px; color: var(--muted); border: 1px dashed var(--line); border-radius: var(--radius); text-align: center;">
-                  No blog posts yet. <a href="/studio/" style="color: var(--teal); font-weight: bold;">Write your first post &rarr;</a>
+                <div class="v3-card" style="text-align: center; border: 1px dashed var(--glass-border-strong);">
+                  <p class="lede">No blog posts yet.</p>
+                  <a href="/studio/" class="v3-btn v3-btn-primary" style="margin-top: var(--space-3);">Write your first post &rarr;</a>
                 </div>
               `}
             </div>
           </section>
 
         <!-- Advanced JSON Tools (collapsed) -->
-        <details class="cms-panel cms-advanced-tools" style="margin-top: 14px;">
-          <summary style="cursor:pointer; font-weight:700; color:var(--muted); font-size:0.85rem; padding:12px 0;">
+        <details class="v3-card" style="margin-top: var(--space-5);">
+          <summary style="cursor: pointer; font-family: var(--font-mono); font-weight: bold; color: var(--text-muted); outline: none;">
             ${svgIcon("code")} Advanced: Export / Import / Full JSON
           </summary>
-          <div style="padding-top:14px; display:grid; gap:14px;">
-            <div class="inline-actions" style="margin:0;">
-              <button class="secondary-link" type="button" data-export-cms>Export JSON</button>
-              <label class="file-label">
+          <div style="margin-top: var(--space-4); display: flex; flex-direction: column; gap: var(--space-3);">
+            <div style="display: flex; gap: var(--space-3); flex-wrap: wrap;">
+              <button class="v3-btn v3-btn-glass" type="button" data-export-cms>Export JSON</button>
+              <label class="v3-btn v3-btn-glass" style="cursor: pointer;">
                 Import JSON
-                <input type="file" accept="application/json" data-import-cms>
+                <input type="file" accept="application/json" data-import-cms style="display: none;">
               </label>
-              <button class="secondary-link" type="button" data-load-defaults>Load resume defaults</button>
+              <button class="v3-btn v3-btn-glass" type="button" data-load-defaults>Load defaults</button>
             </div>
-            <textarea class="cms-full-json" data-full-json style="min-height:200px; font-size:0.78rem;">${escapeHtml(JSON.stringify(content, null, 2))}</textarea>
-            <button class="secondary-link" type="button" data-apply-full-json>Apply full JSON</button>
+            <textarea class="v3-input" data-full-json style="min-height: 300px; font-family: var(--font-mono); font-size: 0.85rem;" spellcheck="false">${escapeHtml(JSON.stringify(content, null, 2))}</textarea>
+            <button class="v3-btn v3-btn-primary" type="button" data-apply-full-json style="align-self: flex-end;">Apply full JSON</button>
           </div>
         </details>
 
@@ -289,21 +290,21 @@ function svgIcon(name) {
 
 function profileField(key, label) {
   return `
-    <label>
+    <label class="v3-label">
       ${label}
-      <input data-profile-field="${key}" value="${escapeHtml(content.profile[key] || "")}">
+      <input class="v3-input" data-profile-field="${key}" value="${escapeHtml(content.profile[key] || "")}">
     </label>
   `;
 }
 
 function renderCardSection(title, sectionKey, items, fields) {
   return `
-    <section class="cms-panel cms-section-card" style="margin-top: 14px;">
-      <div class="cms-section-header">
-        <div><p class="eyebrow">${title}</p><h3>${items.length} item${items.length !== 1 ? "s" : ""}</h3></div>
-        <button type="button" class="cms-action-btn" data-add-card="${sectionKey}">+ Add</button>
+    <section class="v3-card" style="margin-top: var(--space-5);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4);">
+        <div><p class="eyebrow">${title}</p><h3 class="text-heading" style="margin: 0;">${items.length} item${items.length !== 1 ? "s" : ""}</h3></div>
+        <button type="button" class="v3-btn v3-btn-glass" data-add-card="${sectionKey}">+ Add New</button>
       </div>
-      <div class="cms-card-list" data-card-list="${sectionKey}">
+      <div data-card-list="${sectionKey}" style="display: flex; flex-direction: column; gap: var(--space-4);">
         ${items.map((item, i) => renderCardItem(sectionKey, item, i, fields)).join("")}
       </div>
     </section>
@@ -314,30 +315,26 @@ function renderCardItem(sectionKey, item, index, fields) {
   const fieldHtml = fields.map(f => {
     const val = item[f.key];
     if (f.type === "checkbox") {
-      return `<label class="cms-card-toggle"><input type="checkbox" data-card-field="${sectionKey}:${index}:${f.key}" ${val ? "checked" : ""}> ${f.label}</label>`;
+      return `<label class="v3-label" style="display: flex; align-items: center; gap: 8px;"><input type="checkbox" data-card-field="${sectionKey}:${index}:${f.key}" ${val ? "checked" : ""}> ${f.label}</label>`;
     }
-    if (f.type === "textarea") {
-      return `<label class="cms-card-field">${f.label}<textarea data-card-field="${sectionKey}:${index}:${f.key}">${escapeHtml(String(val || ""))}</textarea></label>`;
+    if (f.type === "textarea" || f.type === "lines") {
+      const textVal = Array.isArray(val) ? val.join("\\n") : (val || "");
+      return `<label class="v3-label">${f.label}<textarea class="v3-input" data-card-field="${sectionKey}:${index}:${f.key}" rows="4">${escapeHtml(String(textVal))}</textarea></label>`;
     }
-    if (f.type === "tags") {
-      const tagStr = Array.isArray(val) ? val.join(", ") : (val || "");
-      return `<label class="cms-card-field">${f.label}<input type="text" data-card-field="${sectionKey}:${index}:${f.key}" value="${escapeHtml(tagStr)}"></label>`;
-    }
-    if (f.type === "lines") {
-      const lineStr = Array.isArray(val) ? val.join("\n") : (val || "");
-      return `<label class="cms-card-field">${f.label}<textarea data-card-field="${sectionKey}:${index}:${f.key}" rows="4">${escapeHtml(lineStr)}</textarea></label>`;
-    }
-    return `<label class="cms-card-field">${f.label}<input type="text" data-card-field="${sectionKey}:${index}:${f.key}" value="${escapeHtml(String(val || ""))}"></label>`;
+    const tagStr = Array.isArray(val) ? val.join(", ") : (val || "");
+    return `<label class="v3-label">${f.label}<input type="text" class="v3-input" data-card-field="${sectionKey}:${index}:${f.key}" value="${escapeHtml(String(tagStr))}"></label>`;
   }).join("");
 
   const label = item.title || item.role || item.degree || item.group || `Item ${index + 1}`;
   return `
-    <details class="cms-item-card" data-card-index="${index}">
-      <summary>
+    <details class="v3-card" data-card-index="${index}" style="background: var(--bg-surface-0);">
+      <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-family: var(--font-display); font-size: 1.2rem; outline: none; padding: 4px;">
         <span>${escapeHtml(String(label))}</span>
-        <button type="button" class="cms-action-btn cms-action-danger cms-remove-card" data-remove-card="${sectionKey}:${index}" title="Remove">&times;</button>
+        <button type="button" class="v3-btn v3-btn-glass" style="color: #ff453a; padding: 6px 12px;" data-remove-card="${sectionKey}:${index}" title="Remove">Delete</button>
       </summary>
-      <div class="cms-card-fields">${fieldHtml}</div>
+      <div style="display: flex; flex-direction: column; gap: var(--space-3); margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--glass-border);">
+        ${fieldHtml}
+      </div>
     </details>
   `;
 }

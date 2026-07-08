@@ -12,9 +12,22 @@
         document.documentElement.dataset.theme = theme;
       })();
     </script>
-    <link rel="stylesheet" href="/styles.css">
   </head>
   <body>
+
+    <div id="globalLoader" class="global-loader">
+      <div class="loader-spinner"></div>
+    </div>
+    <script>
+      window.addEventListener('load', () => {
+        const loader = document.getElementById('globalLoader');
+        if (loader) {
+          loader.classList.add('hidden');
+          setTimeout(() => loader.remove(), 500);
+        }
+      });
+    </script>
+
     <div class="app-shell">
       <header class="site-header" data-site-header></header>
       <main id="studio-root"></main>

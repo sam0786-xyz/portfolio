@@ -127,7 +127,8 @@ async function completeSession() {
     id: createId("session"),
     mode: timer.mode,
     durationMinutes: duration,
-    completedAt: new Date().toISOString()
+    completedAt: new Date().toISOString(),
+    taskId: timer.mode === "focus" ? state.activeTaskId || null : null
   });
 
   if (timer.mode === "focus") {
@@ -182,7 +183,9 @@ function enterFullscreen() {
   fullscreenActive = true;
   document.documentElement.requestFullscreen?.().catch(() => {});
 
-  const pendingTasks = state.tasks.filter(t => t.status !== "done");
+  const activeTask = state.tasks.find(t => t.id === state.activeTaskId && t.status !== "done");
+  const pendingTasks = [...state.tasks.filter(t => t.status !== "done")]
+    .sort((a, b) => (b.id === state.activeTaskId) - (a.id === state.activeTaskId));
   const currentSession = (timer.focusCycle % state.settings.longBreakInterval) + 1;
 
   const overlay = document.createElement("div");
@@ -198,6 +201,7 @@ function enterFullscreen() {
           Session <strong>${currentSession}</strong> of <strong>${state.settings.longBreakInterval}</strong>
           <span>until long break</span>
         </div>
+        ${activeTask ? `<div class="fs-active-task">→ ${escapeHtml(activeTask.title)}</div>` : ""}
         <div class="fs-orb" data-fs-orb>
           <div class="fs-orb-inner">
             <span class="fs-mode" data-fs-mode>${modeLabels[timer.mode]}</span>
@@ -219,7 +223,7 @@ function enterFullscreen() {
         <div class="fs-task-list">
           ${pendingTasks.length
             ? pendingTasks.map(t => `
-              <div class="fs-task-item">
+              <div class="fs-task-item ${t.id === state.activeTaskId ? "is-active" : ""}">
                 <button class="task-circle" data-fs-toggle="${t.id}"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
                 <span>${escapeHtml(t.title)}</span>
               </div>`).join("")
@@ -253,8 +257,9 @@ function enterFullscreen() {
     btn.addEventListener("click", async () => {
       const id = btn.dataset.fsToggle;
       state.tasks = state.tasks.map(t => t.id === id ? { ...t, status: "done" } : t);
+      if (state.activeTaskId === id) state.activeTaskId = null;
       btn.closest(".fs-task-item").classList.add("is-done");
-      btn.innerHTML = `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="var(--teal)" stroke-width="2"/><path d="M9 12l2 2 4-4" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+      btn.innerHTML = `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="var(--accent-green)" stroke-width="2"/><path d="M9 12l2 2 4-4" fill="none" stroke="var(--accent-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
       await persist();
     });
   });
@@ -360,141 +365,221 @@ function exitFullscreen() {
 /* ═══ Main render ═══ */
 
 function renderFocus() {
-  const streak = calculateStreak(state.sessions);
-  const todaySess = sessionsToday();
-  const totalFocus = state.sessions.filter(s => s.mode === "focus").length;
-  const openTasks = state.tasks.filter(t => t.status !== "done").length;
   const currentCycle = (timer.focusCycle % state.settings.longBreakInterval) + 1;
 
+  const circumference = 2 * Math.PI * 96; // ring radius = 96
+
   document.querySelector("#focus-root").innerHTML = `
-    <section class="focus-hero">
-      <canvas class="focus-canvas" data-neural-canvas aria-hidden="true"></canvas>
-      <div data-animate="slide-right">
-        <p class="eyebrow">Focus OS / Private Workbench</p>
-        <h1>Deep work with a timer, tasks, and proof.</h1>
-        <p class="lede">A focused operating layer for planning sessions, running distraction-free blocks, and tracking visible momentum.</p>
-        <div class="focus-hero-strip" aria-label="Focus OS features">
-          <span>Pomodoro engine</span>
-          <span>Task queue</span>
-          <span>Calendar memory</span>
-          <span>Habit analytics</span>
+    <section class="focus-head v3-container">
+      <div class="reveal-up">
+        <span class="eyebrow">Focus OS / Private Workbench</span>
+        <div class="focus-head-row">
+          <h1 class="focus-title">Today's flow</h1>
+          <span class="mono-text">${new Intl.DateTimeFormat("en", { weekday: "long", month: "long", day: "numeric" }).format(new Date())}</span>
         </div>
+        <div class="focus-today-strip" data-today-strip>${todayStripHtml()}</div>
       </div>
-      <aside class="streak-panel" data-animate="slide-left">
-        <span class="streak-flame" aria-hidden="true"></span>
-        <strong>${streak}</strong>
-        <p>day focus streak</p>
-      </aside>
     </section>
 
-    <section class="focus-timer-section">
-      <article class="timer-card" data-timer-card data-animate="fade-up">
-        <button class="timer-gear" type="button" data-gear-toggle title="Settings" aria-label="Timer settings">
-          <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-        </button>
-        <div class="timer-settings-dropdown" data-settings-dropdown>
-          <form class="settings-grid" data-settings-form>
-            ${numberField("focusMinutes", "Focus (min)", state.settings.focusMinutes)}
-            ${numberField("shortBreakMinutes", "Short break", state.settings.shortBreakMinutes)}
-            ${numberField("longBreakMinutes", "Long break", state.settings.longBreakMinutes)}
-            ${numberField("longBreakInterval", "Long break every", state.settings.longBreakInterval)}
-            <button class="primary-link" type="submit">Save</button>
-          </form>
-        </div>
-        <div class="mode-switch">
-          ${Object.keys(modeLabels).map(mode => `<button type="button" class="${timer.mode === mode ? "is-active" : ""}" data-mode="${mode}">${modeLabels[mode]}</button>`).join("")}
-        </div>
-        <div class="timer-orb" data-timer-orb>
-          <div class="timer-core">
-            <span data-timer-mode>${modeLabels[timer.mode]}</span>
-            <strong data-time>${formatTime(timer.remaining)}</strong>
-            <small>${timer.running ? "Running" : "Ready"}</small>
-            <small class="cycle-indicator">Session ${currentCycle}/${state.settings.longBreakInterval}</small>
+    <section class="v3-section v3-container section-glow section-glow-teal" style="padding-top: 0;">
+      <div class="focus-layout">
+        <!-- Timer Card -->
+        <article class="v3-card v3-card-static" data-timer-card>
+          <button style="position: absolute; top: var(--space-2); right: var(--space-2); background: none; border: none; color: var(--text-dark); cursor: pointer;" type="button" data-gear-toggle title="Settings" aria-label="Timer settings">
+            <svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+          </button>
+
+          <div data-settings-dropdown style="position: absolute; top: 3rem; right: var(--space-2); background: var(--bg-surface-0); padding: var(--space-3); border-radius: var(--radius-lg); border: 1px solid var(--glass-border); z-index: 10; width: 240px;">
+            <form data-settings-form style="display: flex; flex-direction: column; gap: var(--space-2);">
+              ${numberField("focusMinutes", "Focus (min)", state.settings.focusMinutes)}
+              ${numberField("shortBreakMinutes", "Short break", state.settings.shortBreakMinutes)}
+              ${numberField("longBreakMinutes", "Long break", state.settings.longBreakMinutes)}
+              ${numberField("longBreakInterval", "Long break every", state.settings.longBreakInterval)}
+              ${numberField("dailyGoal", "Daily goal (sessions)", state.settings.dailyGoal || 4)}
+              <button class="v3-btn v3-btn-primary v3-btn-sm" type="submit" style="margin-top: var(--space-1);">Save</button>
+            </form>
           </div>
-        </div>
-        <div class="timer-actions">
-          <button class="primary-link" type="button" data-start>${timer.running ? "Running" : "Start"}</button>
-          <button class="secondary-link" type="button" data-pause>Pause</button>
-          <button class="secondary-link" type="button" data-reset>Reset</button>
-          <button class="secondary-link" type="button" data-complete>Complete</button>
-        </div>
-      </article>
-      <article class="task-panel" data-animate="slide-right">
-        <div class="section-header compact-header"><div>
-          <p class="eyebrow">Task queue</p>
-          <h2>Plan your next deep-work block.</h2>
-        </div></div>
-        <form class="task-form" data-task-form>
-          <input name="title" required placeholder="Task title">
-          <input name="date" type="date" value="${todayKey()}">
-          <select name="priority"><option>High</option><option selected>Medium</option><option>Low</option></select>
-          <input name="estimatedSessions" type="number" min="1" max="12" value="1">
-          <button class="primary-link" type="submit">Add task</button>
-        </form>
-        <div class="task-list" data-task-list></div>
-      </article>
+
+          <div style="display: flex; gap: 4px; justify-content: center; margin-bottom: var(--space-4);">
+            ${Object.keys(modeLabels).map(mode => `<button type="button" class="v3-btn v3-btn-sm ${timer.mode === mode ? "v3-btn-primary" : "v3-btn-glass"}" data-mode="${mode}">${modeLabels[mode]}</button>`).join("")}
+          </div>
+
+          <div class="focus-active-task" data-active-task></div>
+
+          <!-- SVG Ring Timer -->
+          <div class="v3-timer-ring" data-timer-orb>
+            <svg viewBox="0 0 200 200">
+              <circle class="ring-bg" cx="100" cy="100" r="96"/>
+              <circle class="ring-progress" cx="100" cy="100" r="96"
+                stroke-dasharray="${circumference}"
+                stroke-dashoffset="${circumference}" data-ring-progress/>
+            </svg>
+            <div class="v3-timer-core">
+              <span class="mono-text" style="color: var(--accent-1); font-size: 0.75rem; text-transform: uppercase;" data-timer-mode>${modeLabels[timer.mode]}</span>
+              <strong style="font-family: var(--font-display); font-size: 3.5rem; font-weight: 200; line-height: 1;" data-time>${formatTime(timer.remaining)}</strong>
+              <span class="mono-text" style="font-size: 0.75rem; color: var(--text-dark);">${timer.running ? "Running" : "Ready"} · ${currentCycle}/${state.settings.longBreakInterval}</span>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: var(--space-2); justify-content: center; margin-top: var(--space-4);">
+            <button class="v3-btn v3-btn-primary" type="button" data-start>${timer.running ? "Running" : "Start"}</button>
+            <button class="v3-btn v3-btn-glass" type="button" data-pause>Pause</button>
+            <button class="v3-btn v3-btn-glass" type="button" data-reset>Reset</button>
+            <button class="v3-btn v3-btn-glass" type="button" data-complete>Complete</button>
+          </div>
+        </article>
+
+        <!-- Task Panel -->
+        <article style="display: flex; flex-direction: column; gap: var(--space-4);">
+          <div>
+            <span class="eyebrow">Task queue</span>
+            <h3>Pick a task, link it, focus.</h3>
+          </div>
+          <form data-task-form style="display: flex; flex-direction: column; gap: var(--space-2);">
+            <input class="v3-input" name="title" required placeholder="Task title">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 80px; gap: var(--space-2);">
+              <input class="v3-input" name="date" type="date" value="${todayKey()}" style="color-scheme: dark;">
+              <select class="v3-input" name="priority"><option>High</option><option selected>Medium</option><option>Low</option></select>
+              <input class="v3-input" name="estimatedSessions" type="number" min="1" max="12" value="1" placeholder="#">
+            </div>
+            <button class="v3-btn v3-btn-glass" type="submit">Add task</button>
+          </form>
+          <div data-task-list></div>
+        </article>
+      </div>
     </section>
 
-    <section class="focus-calendar-section">
-      <article class="calendar-panel" data-animate="fade-up">
-        <div class="calendar-top">
-          <button class="tool-button" type="button" data-calendar-prev>Prev</button>
-          <h2 data-calendar-title></h2>
-          <button class="tool-button" type="button" data-calendar-next>Next</button>
+    <!-- Calendar -->
+    <section class="v3-section v3-container section-glow section-glow-purple reveal-up">
+      <span class="eyebrow">Plan ahead</span>
+      <h2 style="margin-bottom: var(--space-4);">Month view.</h2>
+      <div class="v3-card v3-card-static">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-3);">
+          <button class="v3-btn v3-btn-glass v3-btn-sm" type="button" data-calendar-prev>← Prev</button>
+          <h3 data-calendar-title style="margin: 0;"></h3>
+          <button class="v3-btn v3-btn-glass v3-btn-sm" type="button" data-calendar-next>Next →</button>
         </div>
         <div class="calendar-grid" data-calendar></div>
-      </article>
+      </div>
     </section>
 
-    <section class="focus-insights" data-animate="fade-up">
-      <article><p class="eyebrow">Today</p><strong>${todaySess}</strong><span>focus sessions</span></article>
-      <article><p class="eyebrow">Total</p><strong>${totalFocus}</strong><span>sessions logged</span></article>
-      <article><p class="eyebrow">Open</p><strong>${openTasks}</strong><span>tasks remaining</span></article>
-    </section>
-
-    <section class="productivity-dashboard" data-animate="fade-up">
-      <div class="section-header compact-header"><div>
-        <p class="eyebrow">Productivity DNA</p>
-        <h2>Your hidden habits.</h2>
-      </div></div>
-      <div class="dashboard-grid" data-dashboard></div>
+    <!-- Dashboard -->
+    <section class="v3-section v3-container reveal-up">
+      <span class="eyebrow">Productivity DNA</span>
+      <h2 style="margin-bottom: var(--space-4);">Your hidden habits.</h2>
+      <div class="v3-grid v3-grid-3" data-dashboard></div>
     </section>
   `;
   renderTimer(); renderTasks(); renderCalendar(); renderDashboard(); setupEvents();
   bootInteractions(document.querySelector("#focus-root"));
 }
 
-function numberField(n, l, v) { return `<label>${l}<input name="${n}" type="number" min="1" max="180" value="${escapeHtml(v)}"></label>`; }
+function numberField(n, l, v) { return `<label class="v3-label" style="display:flex;flex-direction:column;gap:4px;">${l}<input class="v3-input" name="${n}" type="number" min="1" max="180" value="${escapeHtml(v)}"></label>`; }
+
+function todayStripHtml() {
+  const goal = state.settings.dailyGoal || 4;
+  const todaySess = sessionsToday();
+  const minutesToday = state.sessions
+    .filter(s => s.mode === "focus" && todayKey(new Date(s.completedAt)) === todayKey())
+    .reduce((sum, s) => sum + (s.durationMinutes || 0), 0);
+  const openTasks = state.tasks.filter(t => t.status !== "done").length;
+  const streak = calculateStreak(state.sessions);
+  const totalFocus = state.sessions.filter(s => s.mode === "focus").length;
+  const dots = Array.from({ length: goal }, (_, i) => `<span class="session-dot ${i < todaySess ? "is-filled" : ""}"></span>`).join("");
+  const overflow = todaySess > goal ? `<span class="session-dot-extra">+${todaySess - goal}</span>` : "";
+  return `
+    <div class="session-dots" title="Focus sessions today vs daily goal">${dots}${overflow}</div>
+    <span class="focus-pill"><strong>${todaySess}/${goal}</strong> sessions today</span>
+    <div class="focus-pills">
+      <span class="focus-pill">🔥 <strong>${streak}</strong> day streak</span>
+      <span class="focus-pill"><strong>${minutesToday}</strong> min today</span>
+      <span class="focus-pill"><strong>${openTasks}</strong> open tasks</span>
+      <span class="focus-pill"><strong>${totalFocus}</strong> all-time</span>
+    </div>`;
+}
+
+function taskFocusCount(taskId) {
+  return state.sessions.filter(s => s.mode === "focus" && s.taskId === taskId).length;
+}
+
+function renderActiveTask() {
+  const el = document.querySelector("[data-active-task]");
+  if (!el) return;
+  const task = state.tasks.find(t => t.id === state.activeTaskId && t.status !== "done");
+  el.innerHTML = task
+    ? `→ <strong>${escapeHtml(task.title)}</strong> · ${taskFocusCount(task.id)}/${Math.max(1, task.estimatedSessions || 1)} sessions`
+    : `<span class="focus-active-empty">No task linked — hit “Focus” on a task to track it</span>`;
+}
 
 function renderTimer() {
   const timeNode = document.querySelector("[data-time]");
-  const orb = document.querySelector("[data-timer-orb]");
-  if (!timeNode || !orb) return;
+  const ringEl = document.querySelector("[data-ring-progress]");
+  if (!timeNode) return;
   const progress = 1 - timer.remaining / timer.total;
+  const circumference = 2 * Math.PI * 96;
   timeNode.textContent = formatTime(timer.remaining);
   document.querySelector("[data-timer-mode]").textContent = modeLabels[timer.mode];
-  orb.style.setProperty("--timer-progress", `${progress * 360}deg`);
-  document.querySelectorAll("[data-mode]").forEach(b => b.classList.toggle("is-active", b.dataset.mode === timer.mode));
+  if (ringEl) {
+    ringEl.style.strokeDashoffset = `${circumference * (1 - progress)}`;
+  }
+  document.querySelectorAll("[data-mode]").forEach(b => {
+    b.classList.remove("v3-btn-primary", "v3-btn-glass");
+    b.classList.add(b.dataset.mode === timer.mode ? "v3-btn-primary" : "v3-btn-glass");
+  });
   document.querySelector("[data-start]").textContent = timer.running ? "Running" : "Start";
-  document.querySelector("[data-timer-card]").classList.toggle("is-running", timer.running);
+  document.querySelector("[data-timer-card]")?.classList.toggle("is-running", timer.running);
+}
+
+function taskRow(task) {
+  const done = task.status === "done";
+  const est = Math.max(1, task.estimatedSessions || 1);
+  const logged = taskFocusCount(task.id);
+  const isActive = !done && state.activeTaskId === task.id;
+  const progressDots = Array.from({ length: est }, (_, i) => `<i class="${i < logged ? "is-filled" : ""}"></i>`).join("");
+  const overflow = logged > est ? `<span class="task-progress-extra">+${logged - est}</span>` : "";
+  return `
+    <div class="v3-minimal-row focus-task-row ${isActive ? "is-active" : ""}">
+      <div class="focus-task-main">
+        <button class="task-circle" type="button" data-toggle-task="${task.id}" style="color: ${done ? "var(--accent-green)" : "var(--text-dark)"};">
+          ${done
+            ? `<svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 12l2 2 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+            : `<svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/></svg>`}
+        </button>
+        <div>
+          <h4 class="v3-row-title" style="${done ? "text-decoration: line-through; opacity: 0.4;" : ""}">${escapeHtml(task.title)}</h4>
+          <span class="v3-row-meta"><span class="priority-dot p-${escapeHtml((task.priority || "medium").toLowerCase())}"></span>${escapeHtml(task.date)} · ${logged}/${est} sessions</span>
+        </div>
+      </div>
+      <div class="focus-task-side">
+        <span class="task-progress" title="${logged} of ${est} estimated sessions logged">${progressDots}${overflow}</span>
+        ${done ? "" : `<button class="v3-btn v3-btn-sm ${isActive ? "v3-btn-primary" : "v3-btn-glass"}" type="button" data-focus-task="${task.id}">${isActive ? "Focusing" : "Focus"}</button>`}
+        <button class="v3-btn v3-btn-glass v3-btn-sm v3-btn-icon" type="button" data-delete-task="${task.id}" title="Delete task">✕</button>
+      </div>
+    </div>`;
 }
 
 function renderTasks() {
   const list = document.querySelector("[data-task-list]");
   if (!list) return;
-  const sorted = [...state.tasks].sort((a, b) => `${a.date}${a.status}`.localeCompare(`${b.date}${b.status}`));
-  list.innerHTML = sorted.length
-    ? sorted.map(task => `
-        <article class="task-item ${task.status === "done" ? "is-done" : ""}">
-          <button class="task-circle ${task.status === "done" ? "is-checked" : ""}" type="button" data-toggle-task="${task.id}">
-            ${task.status === "done"
-              ? `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="var(--teal)" stroke-width="2"/><path d="M9 12l2 2 4-4" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`
-              : `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/></svg>`}
-          </button>
-          <div><h3>${escapeHtml(task.title)}</h3><p>${escapeHtml(task.date)} · ${escapeHtml(task.priority)} · ${task.estimatedSessions || 1} session</p></div>
-          <button class="tool-button" type="button" data-delete-task="${task.id}">✕</button>
-        </article>`).join("")
-    : `<div class="empty-state"><h3>No tasks yet</h3><p>Add a task to get started.</p></div>`;
+  const today = todayKey();
+  const open = state.tasks.filter(t => t.status !== "done");
+  const priorityRank = { High: 0, Medium: 1, Low: 2 };
+  const byPriorityThenDate = (a, b) =>
+    (priorityRank[a.priority] ?? 1) - (priorityRank[b.priority] ?? 1) || a.date.localeCompare(b.date);
+  const groups = [
+    ["Overdue", open.filter(t => t.date < today).sort(byPriorityThenDate), "is-overdue"],
+    ["Today", open.filter(t => t.date === today).sort(byPriorityThenDate), ""],
+    ["Upcoming", open.filter(t => t.date > today).sort((a, b) => a.date.localeCompare(b.date) || byPriorityThenDate(a, b)), ""],
+    ["Done", state.tasks.filter(t => t.status === "done").slice(0, 6), "is-done-group"]
+  ];
+  const html = groups
+    .filter(([, tasks]) => tasks.length)
+    .map(([label, tasks, cls]) => `
+      <div class="task-group-label ${cls}">${label} · ${tasks.length}</div>
+      <div class="v3-minimal-list">${tasks.map(taskRow).join("")}</div>`)
+    .join("");
+  list.innerHTML = html || `<div style="padding: var(--space-4); color: var(--text-dark); text-align: center;">No tasks yet. Plan a session to begin.</div>`;
+  renderActiveTask();
 }
 
 function renderCalendar() {
@@ -524,7 +609,13 @@ function sessionsToday() {
   return state.sessions.filter(s => s.mode === "focus" && todayKey(new Date(s.completedAt)) === todayKey()).length;
 }
 
-async function persist() { state = await saveFocusState(state); renderTasks(); renderCalendar(); }
+async function persist() {
+  state = await saveFocusState(state);
+  renderTasks();
+  renderCalendar();
+  const strip = document.querySelector("[data-today-strip]");
+  if (strip) strip.innerHTML = todayStripHtml();
+}
 
 function setupEvents() {
   document.querySelector("[data-start]").addEventListener("click", startTimer);
@@ -541,7 +632,8 @@ function setupEvents() {
       focusMinutes: clamp(Number(f.get("focusMinutes")), 1, 180),
       shortBreakMinutes: clamp(Number(f.get("shortBreakMinutes")), 1, 180),
       longBreakMinutes: clamp(Number(f.get("longBreakMinutes")), 1, 180),
-      longBreakInterval: clamp(Number(f.get("longBreakInterval")), 1, 10)
+      longBreakInterval: clamp(Number(f.get("longBreakInterval")), 1, 10),
+      dailyGoal: clamp(Number(f.get("dailyGoal")), 1, 12)
     };
     await persist(); resetTimer(timer.mode);
     document.querySelector("[data-settings-dropdown]")?.classList.remove("is-open");
@@ -558,8 +650,21 @@ function setupEvents() {
   document.querySelector("[data-task-list]").addEventListener("click", async e => {
     const tid = e.target.closest("[data-toggle-task]")?.dataset.toggleTask;
     const did = e.target.closest("[data-delete-task]")?.dataset.deleteTask;
-    if (tid) { state.tasks = state.tasks.map(t => t.id === tid ? { ...t, status: t.status === "done" ? "todo" : "done" } : t); await persist(); }
-    if (did) { state.tasks = state.tasks.filter(t => t.id !== did); await persist(); }
+    const fid = e.target.closest("[data-focus-task]")?.dataset.focusTask;
+    if (tid) {
+      state.tasks = state.tasks.map(t => t.id === tid ? { ...t, status: t.status === "done" ? "todo" : "done" } : t);
+      if (state.activeTaskId === tid && state.tasks.find(t => t.id === tid)?.status === "done") state.activeTaskId = null;
+      await persist();
+    }
+    if (did) {
+      if (state.activeTaskId === did) state.activeTaskId = null;
+      state.tasks = state.tasks.filter(t => t.id !== did);
+      await persist();
+    }
+    if (fid) {
+      state.activeTaskId = state.activeTaskId === fid ? null : fid;
+      await persist();
+    }
   });
 
   document.querySelector("[data-calendar-prev]").addEventListener("click", () => { calendarDate.setMonth(calendarDate.getMonth() - 1); renderCalendar(); });
@@ -636,55 +741,33 @@ function renderDashboard() {
   if (!el) return;
   const d = computeInsights();
 
+  const statCard = (icon, value, label, sub) => `
+    <div class="v3-card v3-card-static" style="padding: var(--space-3);">
+      <span style="font-size: 1.2rem; display: block; margin-bottom: 6px;">${icon}</span>
+      <span class="v3-stat-value" style="font-size: 1.4rem;">${value}</span>
+      <strong style="display: block; font-size: 0.9rem; margin-top: 4px;">${label}</strong>
+      <span class="mono-text" style="font-size: 0.75rem; color: var(--text-dark);">${sub}</span>
+    </div>`;
+
+  // Activity bar chart for last 7 days
+  const activityBars = d.last7.map(day => {
+    const height = Math.max(4, (day.count / d.maxLast7) * 48);
+    return `<div style="flex:1; text-align:center;">
+      <div class="v3-activity-bar" style="height:${height}px; margin: 0 auto; width: 100%;"></div>
+      <span class="v3-activity-label">${day.day}</span>
+    </div>`;
+  }).join("");
+
   el.innerHTML = `
-    <div class="dash-card">
-      <span class="dash-icon">🕐</span>
-      <strong>${d.peakHourLabel}</strong>
-      <p>Peak focus hour</p>
-      <small>You're most productive around this time</small>
-    </div>
-    <div class="dash-card">
-      <span class="dash-icon">📅</span>
-      <strong>${d.peakDayLabel}</strong>
-      <p>Strongest day</p>
-      <small>Your best day for deep work</small>
-    </div>
-    <div class="dash-card">
-      <span class="dash-icon">⚡</span>
-      <strong>${d.totalHours}h</strong>
-      <p>Total focus time</p>
-      <small>${d.totalSessions} sessions across ${d.activeDays} days</small>
-    </div>
-    <div class="dash-card">
-      <span class="dash-icon">📊</span>
-      <strong>${d.avgPerDay}</strong>
-      <p>Avg sessions/day</p>
-      <small>On days you actually focused</small>
-    </div>
-    <div class="dash-card">
-      <span class="dash-icon">✅</span>
-      <strong>${d.completionRate}%</strong>
-      <p>Task completion</p>
-      <small>${d.completionRate >= 80 ? "Machine-level consistency" : d.completionRate >= 50 ? "Room to improve" : "Start finishing what you start"}</small>
-    </div>
-    <div class="dash-card">
-      <span class="dash-icon">🔥</span>
-      <strong>${d.streak} days</strong>
-      <p>Current streak</p>
-      <small>${d.streak >= 7 ? "You're unstoppable" : d.streak >= 3 ? "Building momentum" : "Keep showing up"}</small>
-    </div>
-    <div class="dash-card dash-card-wide">
-      <span class="dash-icon">📈</span>
-      <p class="dash-chart-title">Last 7 days</p>
-      <div class="dash-bars">
-        ${d.last7.map(day => `
-          <div class="dash-bar-col">
-            <div class="dash-bar" style="height:${Math.max(4, (day.count / d.maxLast7) * 100)}%"></div>
-            <span>${day.day}</span>
-          </div>
-        `).join("")}
-      </div>
-      <small>${d.thisWeekSessions} sessions this week</small>
+    ${statCard("🕐", d.peakHourLabel, "Peak focus hour", "Most productive time")}
+    ${statCard("📅", d.peakDayLabel, "Strongest day", "Best day for deep work")}
+    ${statCard("⚡", d.totalHours + "h", "Total focus time", `${d.totalSessions} sessions · ${d.activeDays} days`)}
+    ${statCard("📊", d.avgPerDay, "Avg sessions/day", "On active days")}
+    ${statCard("✅", d.completionRate + "%", "Task completion", d.completionRate >= 80 ? "Machine-level" : d.completionRate >= 50 ? "Room to improve" : "Start finishing")}
+    ${statCard("🔥", d.streak + " days", "Current streak", d.streak >= 7 ? "Unstoppable" : d.streak >= 3 ? "Building momentum" : "Keep showing up")}
+    <div class="v3-card v3-card-static" style="grid-column: 1 / -1; padding: var(--space-3);">
+      <span class="eyebrow" style="margin-bottom: var(--space-2);">Last 7 days</span>
+      <div class="v3-activity-bars">${activityBars}</div>
     </div>
   `;
 }

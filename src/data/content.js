@@ -30,7 +30,7 @@ export const profile = {
   education: "B.Tech Computer Science, AI & ML Specialisation",
   semester: "6th semester, currently giving end-sem exams",
   location: "Greater Noida, India",
-  phone: "+91 8603829005",
+  phone: "+91 8603829005 (IN) / +971 50 893 4973 (UAE)",
   email: "hello@sam18.xyz",
   resumeUrl: "/assets/mohammad-sameer-resume.pdf",
   avatarAlt: "Abstract neural console artwork for Mohammad Sameer",

@@ -7,10 +7,12 @@ export const defaultFocusState = {
     focusMinutes: 50,
     shortBreakMinutes: 10,
     longBreakMinutes: 30,
-    longBreakInterval: 3
+    longBreakInterval: 3,
+    dailyGoal: 4
   },
   tasks: [],
   sessions: [],
+  activeTaskId: null,
   updatedAt: new Date().toISOString()
 };
 
@@ -30,7 +32,9 @@ export { getSupabaseConfig, saveSupabaseConfig };
 export async function loadFocusState() {
   const local = readLocalState();
   const remote = await tryLoadSupabase();
-  return remote || local;
+  if (!remote) return local;
+  // activeTaskId is UI state — it lives in localStorage only
+  return { ...remote, activeTaskId: local.activeTaskId ?? null };
 }
 
 export async function saveFocusState(state) {
@@ -75,7 +79,8 @@ async function tryLoadSupabase() {
           focusMinutes: settingsRows[0].focus_minutes,
           shortBreakMinutes: settingsRows[0].short_break_minutes,
           longBreakMinutes: settingsRows[0].long_break_minutes,
-          longBreakInterval: settingsRows[0].long_break_interval
+          longBreakInterval: settingsRows[0].long_break_interval,
+          dailyGoal: settingsRows[0].daily_goal ?? defaultFocusState.settings.dailyGoal
         }
       : defaultFocusState.settings;
     return {
@@ -92,7 +97,8 @@ async function tryLoadSupabase() {
         id: session.id,
         mode: session.mode,
         durationMinutes: session.duration_minutes,
-        completedAt: session.completed_at
+        completedAt: session.completed_at,
+        taskId: session.task_id ?? null
       })),
       updatedAt: new Date().toISOString()
     };
@@ -115,7 +121,8 @@ async function trySaveSupabase(state) {
           focus_minutes: state.settings.focusMinutes,
           short_break_minutes: state.settings.shortBreakMinutes,
           long_break_minutes: state.settings.longBreakMinutes,
-          long_break_interval: state.settings.longBreakInterval
+          long_break_interval: state.settings.longBreakInterval,
+          daily_goal: state.settings.dailyGoal || 4
         })
       }),
       supabaseFetch("focus_tasks", {
@@ -140,7 +147,8 @@ async function trySaveSupabase(state) {
             id: session.id,
             mode: session.mode,
             duration_minutes: session.durationMinutes,
-            completed_at: session.completedAt
+            completed_at: session.completedAt,
+            task_id: session.taskId ?? null
           }))
         )
       })

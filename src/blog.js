@@ -27,18 +27,20 @@ function getFilteredPosts() {
 function renderTagBar() {
   const tags = getAllTags();
   return `
-    <div class="blog-filter-bar">
-      <div class="blog-search-wrap">
-        <svg class="blog-search-icon" viewBox="0 0 24 24" width="18" height="18"><circle cx="11" cy="11" r="8" fill="none" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4.35-4.35" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        <input class="blog-search" type="search" placeholder="Search posts..." data-blog-search aria-label="Search blog posts">
+    <section class="v3-container" style="margin-bottom: var(--space-4);">
+      <div class="v3-split" style="align-items: center; gap: var(--space-3);">
+        <div style="flex: 1; max-width: 400px; position: relative;">
+          <svg style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted);" viewBox="0 0 24 24" width="18" height="18"><circle cx="11" cy="11" r="8" fill="none" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4.35-4.35" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <input class="v3-input" type="search" placeholder="Search posts..." data-blog-search aria-label="Search blog posts" style="padding-left: 3rem;">
+        </div>
+        <div class="v3-tags" role="tablist" aria-label="Filter by tag" style="margin-top: 0; display: flex; align-items: center; gap: var(--space-2); overflow-x: auto; padding-bottom: 0.5rem;">
+          ${tags.map(tag => {
+            const safe = escapeHtml(tag);
+            return `<button class="v3-tag ${tag === activeTag ? "is-active" : ""}" style="cursor: pointer;" type="button" role="tab" aria-selected="${tag === activeTag}" data-tag="${safe}">${safe}</button>`;
+          }).join("")}
+        </div>
       </div>
-      <div class="blog-tags" role="tablist" aria-label="Filter by tag">
-        ${tags.map(tag => {
-          const safe = escapeHtml(tag);
-          return `<button class="blog-tag-btn ${tag === activeTag ? "is-active" : ""}" type="button" role="tab" aria-selected="${tag === activeTag}" data-tag="${safe}">${safe}</button>`;
-        }).join("")}
-      </div>
-    </div>
+    </section>
   `;
 }
 
@@ -54,19 +56,19 @@ function renderGrid() {
 
 function renderPage() {
   document.querySelector("#blog-root").innerHTML = `
-    <section class="page-hero page-hero-pro">
-      <p class="eyebrow">Writing / Build Logs</p>
-      <h1>AI systems, explained from the workbench.</h1>
-      <p class="lede">
-        Practical notes on Generative AI, RAG, product architecture, evaluation, and the decisions behind real implementations.
-      </p>
-      <div class="hero-actions">
-        <a class="primary-link" href="/#writing">${icon("spark")} Featured notes</a>
-        <a class="secondary-link" href="/#projects">${icon("arrow")} See shipped work</a>
+    <section class="v3-hero v3-container">
+      <div class="v3-hero-content reveal-up">
+        <span class="eyebrow">Writing / Build Logs</span>
+        <h1>AI systems, explained from the workbench.</h1>
+        <p class="lede">
+          Practical notes on Generative AI, RAG, product architecture, evaluation, and the decisions behind real implementations.
+        </p>
       </div>
     </section>
     ${renderTagBar()}
-    <section class="blog-grid" data-blog-grid aria-label="Blog posts"></section>
+    <section class="v3-section v3-container">
+      <div class="v3-minimal-list" data-blog-grid aria-label="Blog posts"></div>
+    </section>
   `;
   renderGrid();
   setupFilterEvents();

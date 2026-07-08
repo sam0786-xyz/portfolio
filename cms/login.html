@@ -12,28 +12,49 @@
         document.documentElement.dataset.theme = theme;
       })();
     </script>
-    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="../v3.css">
   </head>
   <body>
-    <main class="admin-login-shell">
-      <section class="admin-login-card">
-        <p class="eyebrow">Protected admin</p>
-        <h1>Sign in to manage the website.</h1>
-        <p>CMS access is private and server-session protected.</p>
-        <form data-admin-login>
-          <label>
-            Username
-            <input name="username" autocomplete="username" required>
-          </label>
-          <label>
-            Password
-            <input name="password" type="password" autocomplete="current-password" required>
-          </label>
-          <button class="primary-link" type="submit">Sign in</button>
+
+    <div id="globalLoader" class="global-loader">
+      <div class="loader-spinner"></div>
+    </div>
+    <script>
+      window.addEventListener('load', () => {
+        const loader = document.getElementById('globalLoader');
+        if (loader) {
+          loader.classList.add('hidden');
+          setTimeout(() => loader.remove(), 500);
+        }
+      });
+    </script>
+
+    <div class="void-bg"></div>
+    <div class="grid-pattern"></div>
+    <div class="noise-overlay"></div>
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+    
+    <main class="v3-container v3-section reveal-up" style="display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: var(--space-4);">
+      <section class="v3-card" style="width: 100%; max-width: 480px; padding: var(--space-6) var(--space-5);">
+        <p class="eyebrow" style="text-align: center; margin-bottom: var(--space-2);">Protected admin</p>
+        <h1 class="text-heading" style="text-align: center; margin-bottom: var(--space-2); font-size: 2rem;">Sign in to manage the website.</h1>
+        <p class="lede" style="text-align: center; margin-bottom: var(--space-5); font-size: 1rem;">CMS access is private and server-session protected.</p>
+        
+        <form data-admin-login style="display: flex; flex-direction: column; gap: var(--space-4);">
+          <div>
+            <label class="v3-label">Username</label>
+            <input class="v3-input" name="username" autocomplete="username" required>
+          </div>
+          <div>
+            <label class="v3-label">Password</label>
+            <input class="v3-input" name="password" type="password" autocomplete="current-password" required>
+          </div>
+          <button class="v3-btn v3-btn-primary" type="submit" style="width: 100%; padding: 14px; margin-top: var(--space-2);">Sign in</button>
         </form>
-        <p class="admin-login-status" data-login-status></p>
+        <p data-login-status style="text-align: center; color: var(--accent-1); min-height: 1.5rem; margin-top: var(--space-4); font-size: 0.9rem; font-family: var(--font-mono);"></p>
       </section>
     </main>
-    <script type="module" src="/src/admin-login.js"></script>
+    <script type="module" src="../src/admin-login.js"></script>
   </body>
 </html>

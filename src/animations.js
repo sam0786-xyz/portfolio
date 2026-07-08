@@ -1,5 +1,5 @@
 export function setupScrollAnimations(root = document) {
-  const animated = Array.from(root.querySelectorAll("[data-animate], .section, .metric, .project-card, .skill-panel, .credential-card, .blog-card, .timeline-card"));
+  const animated = Array.from(root.querySelectorAll("[data-animate], .section, .metric, .project-card, .skill-panel, .credential-card, .blog-card, .timeline-card, .reveal-up"));
   animated.forEach((element, index) => {
     if (!element.dataset.animate) element.dataset.animate = "fade-up";
     element.style.setProperty("--reveal-delay", `${Math.min(index % 8, 7) * 70}ms`);
