@@ -27,7 +27,7 @@ export function icon(name) {
 }
 
 const skillLogos = {
-  "generative ai": "https://cdn.simpleicons.org/openai/52c7b8",
+  "generative ai": "https://cdn.simpleicons.org/googlegemini/52c7b8",
   "rag": "https://cdn.simpleicons.org/readthedocs/52c7b8",
   "langchain": "https://cdn.simpleicons.org/langchain/52c7b8",
   "gemini llms": "https://cdn.simpleicons.org/googlegemini/52c7b8",
@@ -35,13 +35,13 @@ const skillLogos = {
   "tensorflow": "https://cdn.simpleicons.org/tensorflow/52c7b8",
   "python": "https://cdn.simpleicons.org/python/52c7b8",
   "c++": "https://cdn.simpleicons.org/cplusplus/52c7b8",
-  "java": "https://cdn.simpleicons.org/oracle/52c7b8",
+  "java": "https://cdn.simpleicons.org/openjdk/52c7b8",
   "sql": "https://cdn.simpleicons.org/postgresql/52c7b8",
   "fastapi": "https://cdn.simpleicons.org/fastapi/52c7b8",
   "jwt authentication": "https://cdn.simpleicons.org/jsonwebtokens/52c7b8",
-  "aws": "https://cdn.simpleicons.org/amazonaws/52c7b8",
+  "aws": "https://cdn.simpleicons.org/amazonwebservices/52c7b8",
   "gcp": "https://cdn.simpleicons.org/googlecloud/52c7b8",
-  "azure": "https://cdn.simpleicons.org/microsoftazure/52c7b8",
+  "azure": "https://cdn.simpleicons.org/azure/52c7b8",
   "dynamodb": "https://cdn.simpleicons.org/amazondynamodb/52c7b8",
   "qdrant": "https://cdn.simpleicons.org/qdrant/52c7b8",
   "elevenlabs": "https://cdn.simpleicons.org/elevenlabs/52c7b8",
@@ -90,56 +90,80 @@ export function formatDate(value) {
   return new Intl.DateTimeFormat("en", { month: "short", year: "numeric" }).format(new Date(value));
 }
 
-export function mountShell(active) {
+export function mountShell(active = "home") {
+  // Ensure background layering
+  if (!document.querySelector(".void-bg")) {
+    document.body.insertAdjacentHTML(
+      "afterbegin",
+      `<div class="void-bg"></div>
+       <div class="grid-pattern"></div>
+       <div class="noise-overlay"></div>
+       <div class="glow-orb orb-1"></div>
+       <div class="glow-orb orb-2"></div>`
+    );
+    const voidBg = document.querySelector(".void-bg");
+    document.addEventListener("mousemove", (e) => {
+      voidBg.style.setProperty("--mouse-x", `${e.clientX}px`);
+      voidBg.style.setProperty("--mouse-y", `${e.clientY}px`);
+    });
+  }
   const { profile } = getSiteContent();
   const header = document.querySelector("[data-site-header]");
   const footer = document.querySelector("[data-site-footer]");
+  
   if (header) {
     header.innerHTML = `
-      <a class="brand-mark" href="/" aria-label="Mohammad Sameer home">
-        <span class="brand-sigil">MS</span>
-        <span>
-          <strong>Mohammad Sameer</strong>
-          <small>AI/ML Engineer</small>
-        </span>
-      </a>
-      <nav class="site-nav" aria-label="Primary navigation">
+      <nav class="v3-dock" aria-label="Primary navigation">
         ${pages
           .map(
             (page) => `
-              <a class="${page.id === active ? "is-active" : ""}" href="${page.href}">
-                ${page.label}
+              <a class="v3-dock-link ${page.id === active ? "is-active" : ""}" href="${page.href}">
+                ${escapeHtml(page.label)}
               </a>
             `
           )
           .join("")}
       </nav>
-      <button class="theme-toggle" type="button" data-theme-toggle>
-        <span class="toggle-track" aria-hidden="true">
-          <span class="toggle-orbit"></span>
-          <span class="toggle-core"></span>
-        </span>
-      </button>
     `;
   }
 
   if (footer) {
+    const year = new Date().getFullYear();
     footer.innerHTML = `
-      <div>
-        <strong>© ${new Date().getFullYear()} ${profile.name}</strong>
-        <p>AI/ML Engineer | GenAI | Cloud | Data Science</p>
-      </div>
-      <div class="footer-links">
-        ${profile.socials
-          .map((link) => `<a href="${link.href}" ${link.href.startsWith("http") ? 'target="_blank" rel="noreferrer"' : ""}>${link.label}</a>`)
-          .join("")}
+      <div class="v3-container v3-footer">
+        <div class="v3-footer-cta">
+          <span class="eyebrow">Available for opportunities</span>
+          <h2>Let's build something together.</h2>
+          <p class="lede" style="margin: var(--space-2) auto var(--space-4);">I'm always interested in challenging AI/ML roles and collaborations.</p>
+          ${profile.email ? `<a class="v3-btn v3-btn-primary" href="mailto:${escapeHtml(profile.email)}">Get in touch</a>` : ""}
+        </div>
+        <div class="v3-footer-grid">
+          <div class="v3-footer-brand">
+            <strong style="font-family: var(--font-display); font-size: 1.2rem;">${escapeHtml(profile.name)}</strong>
+            <p>${escapeHtml(profile.summary)}</p>
+          </div>
+          <div class="v3-footer-links">
+            <span class="mono-text" style="color: var(--text-dark); margin-bottom: var(--space-1); display: block; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.7rem;">Pages</span>
+            ${pages.map(p => `<a href="${p.href}">${escapeHtml(p.label)}</a>`).join("")}
+          </div>
+          <div class="v3-footer-links">
+            <span class="mono-text" style="color: var(--text-dark); margin-bottom: var(--space-1); display: block; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.7rem;">Connect</span>
+            ${(profile.socials || [])
+              .map((link) => `<a href="${escapeHtml(link.href)}" ${link.href.startsWith("http") ? 'target="_blank" rel="noreferrer"' : ""}>${escapeHtml(link.label)}</a>`)
+              .join("")}
+          </div>
+        </div>
+        <div class="v3-footer-bottom">
+          <span>© ${year} ${escapeHtml(profile.name)}. All rights reserved.</span>
+          <button class="v3-back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">Back to top ↑</button>
+        </div>
       </div>
     `;
   }
 }
 
 export function renderPills(items) {
-  return items.map((item) => `<span class="pill">${escapeHtml(item)}</span>`).join("");
+  return items.map((item) => `<span class="v3-tag">${escapeHtml(item)}</span>`).join("");
 }
 
 export function renderContactLinks() {
@@ -147,9 +171,9 @@ export function renderContactLinks() {
   return profile.socials
     .map(
       (link) => `
-        <a class="command-link" href="${link.href}" ${link.href.startsWith("http") ? 'target="_blank" rel="noreferrer"' : ""}>
+        <a class="v3-btn v3-btn-glass" href="${link.href}" ${link.href.startsWith("http") ? 'target="_blank" rel="noreferrer"' : ""}>
           <span>${link.label}</span>
-          <span aria-hidden="true">-&gt;</span>
+          <span aria-hidden="true" style="margin-left: 0.5rem; font-family: var(--font-mono); color: var(--accent-1);">-&gt;</span>
         </a>
       `
     )
@@ -159,24 +183,15 @@ export function renderContactLinks() {
 export function renderCertificateCard(certificate) {
   const hasLink = Boolean(certificate.verificationUrl);
   return `
-    <article class="credential-card">
-      <div class="credential-media ${certificate.mediaUrl ? "" : "is-empty"}">
-        ${
-          certificate.mediaUrl
-            ? `<img src="${certificate.mediaUrl}" alt="${escapeHtml(certificate.title)} certificate preview">`
-            : `<span>Verified link ready</span>`
-        }
+    <a href="${hasLink ? certificate.verificationUrl : "#"}" class="v3-minimal-row reveal-up" ${hasLink ? 'target="_blank" rel="noreferrer"' : 'aria-disabled="true"'}>
+      <div>
+        <h3 class="v3-row-title">${escapeHtml(certificate.title)}</h3>
+        <span class="v3-row-meta">${escapeHtml(certificate.issuer)} · ${formatDate(certificate.issuedAt)}</span>
       </div>
-      <div class="credential-body">
-        <p class="eyebrow">${escapeHtml(certificate.issuer)} / ${formatDate(certificate.issuedAt)}</p>
-        <h3>${escapeHtml(certificate.title)}</h3>
-        <p>${escapeHtml(certificate.summary)}</p>
-        <div class="tag-row">${renderPills(certificate.skills)}</div>
-        <a class="verify-link ${hasLink ? "" : "is-disabled"}" href="${hasLink ? certificate.verificationUrl : "#"}" ${hasLink ? 'target="_blank" rel="noreferrer"' : 'aria-disabled="true"'}>
-          ${hasLink ? "Verify credential" : "Add verification URL"}
-        </a>
+      <div class="v3-tags">
+        ${(certificate.skills || []).map(t => `<span class="v3-tag">${escapeHtml(t)}</span>`).join("")}
       </div>
-    </article>
+    </a>
   `;
 }
 
@@ -187,17 +202,17 @@ export function renderCertificates(featuredOnly = false) {
 }
 
 export function renderBlogCard(post) {
+  const dateStr = new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(new Date(post.date));
   return `
-    <article class="blog-card" data-animate="fade-up">
-      <img src="${post.cover}" alt="" loading="lazy">
+    <a href="/blog/${post.slug}/" class="v3-minimal-row reveal-up">
       <div>
-        <p class="eyebrow">${new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(new Date(post.date))} / ${post.readingTime}</p>
-        <h3>${escapeHtml(post.title)}</h3>
-        <p>${escapeHtml(post.excerpt)}</p>
-        <div class="tag-row">${renderPills(post.tags)}</div>
-        <a class="text-link" href="/blog/${post.slug}/">Read field note</a>
+        <h3 class="v3-row-title">${escapeHtml(post.title)}</h3>
+        <span class="v3-row-meta">${dateStr} · ${post.readingTime}</span>
       </div>
-    </article>
+      <div class="v3-tags">
+        ${(post.tags || []).map(t => `<span class="v3-tag">${escapeHtml(t)}</span>`).join("")}
+      </div>
+    </a>
   `;
 }
 
@@ -235,26 +250,17 @@ export function sanitizeLinkedInEmbed(embedHtml) {
 }
 
 export function renderLinkedInCard(post, options = {}) {
-  const wantEmbed = options.embed !== false;
-  const sanitizedEmbed = wantEmbed ? sanitizeLinkedInEmbed(post.embedHtml) : "";
-  const hasEmbed = !!sanitizedEmbed;
+  const dateStr = new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(new Date(post.publishedAt));
   return `
-    <article class="linkedin-card ${hasEmbed ? "has-embed" : ""}" data-animate="fade-up">
-      ${
-        hasEmbed
-          ? `<div class="linkedin-embed">${sanitizedEmbed}</div>`
-          : `
-            <div class="linkedin-fallback">
-              <div class="linkedin-mark" aria-hidden="true">in</div>
-              <p class="eyebrow">${new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(new Date(post.publishedAt))}</p>
-              <h3>${escapeHtml(post.title)}</h3>
-              <p>${escapeHtml(post.summary)}</p>
-              <div class="tag-row">${(post.tags || []).map(item => `<span class="pill">${icon("tag")}&nbsp;${escapeHtml(item)}</span>`).join("")}</div>
-            </div>
-          `
-      }
-      <a class="text-link" href="${post.url}" target="_blank" rel="noreferrer">Open on LinkedIn</a>
-    </article>
+    <a href="${post.url}" class="v3-minimal-row reveal-up" target="_blank" rel="noreferrer">
+      <div>
+        <h3 class="v3-row-title">${escapeHtml(post.title)}</h3>
+        <span class="v3-row-meta">LinkedIn · ${dateStr}</span>
+      </div>
+      <div class="v3-tags">
+        ${(post.tags || []).map(t => `<span class="v3-tag">${escapeHtml(t)}</span>`).join("")}
+      </div>
+    </a>
   `;
 }
 

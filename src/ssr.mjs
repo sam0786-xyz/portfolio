@@ -58,37 +58,25 @@ export function mergeContent(base, override) {
 
 function renderHeader(active = "home") {
   return `
-      <a class="brand-mark" href="/" aria-label="Mohammad Sameer home">
-        <span class="brand-sigil">MS</span>
-        <span>
-          <strong>Mohammad Sameer</strong>
-          <small>AI/ML Engineer</small>
-        </span>
-      </a>
-      <nav class="site-nav" aria-label="Primary navigation">
+      <nav class="v3-dock" aria-label="Primary navigation">
         ${pages
-          .map((page) => `<a class="${page.id === active ? "is-active" : ""}" href="${page.href}">${escapeHtml(page.label)}</a>`)
+          .map((page) => `<a class="v3-dock-link ${page.id === active ? "is-active" : ""}" href="${page.href}">${escapeHtml(page.label)}</a>`)
           .join("")}
-      </nav>
-      <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle theme">
-        <span class="toggle-track" aria-hidden="true">
-          <span class="toggle-orbit"></span>
-          <span class="toggle-core"></span>
-        </span>
-      </button>`;
+      </nav>`;
 }
 
 function renderFooter(content) {
   const p = content.profile;
   return `
-      <div>
-        <strong>© ${new Date().getFullYear()} ${escapeHtml(p.name)}</strong>
-        <p>AI/ML Engineer | GenAI | Cloud | Data Science</p>
-      </div>
-      <div class="footer-links">
-        ${(p.socials || [])
-          .map((link) => `<a href="${escapeHtml(link.href)}" ${link.href.startsWith("http") ? 'target="_blank" rel="noreferrer"' : ""}>${escapeHtml(link.label)}</a>`)
-          .join("")}
+      <div class="v3-container v3-footer">
+        <div class="v3-footer-brand">
+          <strong>${escapeHtml(p.name)}</strong>
+        </div>
+        <div class="v3-footer-links">
+          ${(p.socials || [])
+            .map((link) => `<a href="${escapeHtml(link.href)}" ${link.href.startsWith("http") ? 'target="_blank" rel="noreferrer"' : ""}>${escapeHtml(link.label)}</a>`)
+            .join("")}
+        </div>
       </div>`;
 }
 

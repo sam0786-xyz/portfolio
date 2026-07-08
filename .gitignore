@@ -11,3 +11,4 @@ build/
 .next/
 .vscode/
 supabase/
+cookie.txt
