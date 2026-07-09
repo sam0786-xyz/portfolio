@@ -171,6 +171,15 @@ function renderCms() {
           { key: "href", label: "Link URL", type: "text" }
         ])}
 
+        <!-- Mini Projects (ongoing smaller builds; separate from Selected Work) -->
+        ${renderCardSection("Mini Projects", "miniProjects", content.miniProjects || [], [
+          { key: "title", label: "Title", type: "text" },
+          { key: "summary", label: "Summary (one or two lines)", type: "textarea" },
+          { key: "date", label: "Date (YYYY-MM-DD)", type: "text" },
+          { key: "tags", label: "Tags (comma separated)", type: "tags" },
+          { key: "href", label: "Link (GitHub repo or blog post)", type: "text" }
+        ])}
+
         <!-- Education -->
         ${renderCardSection("Education", "education", content.education || [], [
           { key: "degree", label: "Degree", type: "text" },
@@ -355,6 +364,10 @@ const cardSchemas = {
     { key: "title", type: "text" }, { key: "type", type: "text" }, { key: "status", type: "text" },
     { key: "summary", type: "textarea" }, { key: "impact", type: "text" }, { key: "tags", type: "tags" },
     { key: "href", type: "text" }
+  ],
+  miniProjects: [
+    { key: "title", type: "text" }, { key: "summary", type: "textarea" }, { key: "date", type: "text" },
+    { key: "tags", type: "tags" }, { key: "href", type: "text" }
   ],
   education: [
     { key: "degree", type: "text" }, { key: "school", type: "text" }, { key: "location", type: "text" },

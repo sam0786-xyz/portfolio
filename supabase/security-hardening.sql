@@ -35,7 +35,11 @@ grant execute on function public.focus_user_lookup(text) to anon, authenticated;
 
 -- 2. Constrain blog comments ----------------------------------------------
 -- Cap comment length so the open insert policy can't be used to store huge
--- payloads. Adjust the limits to taste.
+-- payloads. Adjust the limits to taste. Drop-then-add keeps this script
+-- idempotent (ADD CONSTRAINT has no IF NOT EXISTS), so re-running is safe.
+alter table public.blog_comments
+  drop constraint if exists blog_comments_name_len,
+  drop constraint if exists blog_comments_body_len;
 alter table public.blog_comments
   add constraint blog_comments_name_len  check (char_length(name) between 1 and 80),
   add constraint blog_comments_body_len  check (char_length(body) between 1 and 4000);

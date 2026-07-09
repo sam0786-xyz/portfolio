@@ -118,7 +118,7 @@ function renderSkillsSection(skills) {
     </section>`;
 }
 
-/* ── Projects ── */
+/* ── Projects (major work — unchanged "Selected Work" section) ── */
 function renderProjects(projects) {
   if (!projects?.length) return "";
 
@@ -163,13 +163,58 @@ function renderProjects(projects) {
     </section>`;
 }
 
+/* ── Mini Projects: the ongoing stream of smaller builds ──
+   Separate from Selected Work. Managed via the CMS; the whole section stays
+   hidden until at least one mini project exists. */
+function renderMiniProjects(miniProjects) {
+  if (!miniProjects?.length) return "";
+  const sorted = [...miniProjects].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+  return `
+    <section class="v3-section v3-container section-glow section-glow-teal" aria-labelledby="mini-heading">
+      <div class="reveal-up" style="margin-bottom: var(--space-5);">
+        <span class="eyebrow">Always Building</span>
+        <h2 id="mini-heading">Mini Projects</h2>
+        <p class="lede" style="font-size: 1rem; margin-top: var(--space-1);">Smaller builds from the ongoing AI engineering journey — shipped, written up, and pushed to GitHub.</p>
+      </div>
+      <div class="v3-grid v3-grid-3 stagger-children">
+        ${sorted.map((mini) => {
+          const href = mini.href && mini.href !== "#" ? mini.href : "";
+          const isExternal = href.startsWith("http");
+          const dateStr = mini.date
+            ? new Intl.DateTimeFormat("en", { month: "short", year: "numeric" }).format(new Date(mini.date))
+            : "";
+          const inner = `
+            <div class="mini-project-head">
+              <h3 class="mini-project-title">${escapeHtml(mini.title)}</h3>
+              ${dateStr ? `<span class="mini-project-date">${escapeHtml(dateStr)}</span>` : ""}
+            </div>
+            <p class="mini-project-summary">${escapeHtml(mini.summary || "")}</p>
+            <div class="mini-project-foot">
+              <div class="v3-tags">${(mini.tags || []).map(t => `<span class="v3-tag">${escapeHtml(t)}</span>`).join("")}</div>
+              ${href ? `<span class="v3-project-link">${isExternal ? "View ↗" : "Read →"}</span>` : ""}
+            </div>`;
+          return href
+            ? `<a class="v3-card mini-project reveal-up" href="${escapeHtml(href)}" ${isExternal ? 'target="_blank" rel="noreferrer"' : ""}>${inner}</a>`
+            : `<article class="v3-card mini-project reveal-up">${inner}</article>`;
+        }).join("")}
+      </div>
+    </section>`;
+}
+
 /* ── GitHub (populated client-side; hidden until it has data) ── */
-function renderGithub() {
+const githubMark = `<svg class="gh-mark" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>`;
+
+function renderGithub(profile) {
+  const githubSocial = (profile?.socials || []).find((link) => /github\.com/i.test(link.href || ""));
+  const profileUrl = githubSocial?.href || "https://github.com/sam0786-xyz";
   return `
     <section class="v3-section v3-container section-glow section-glow-teal" data-github-section hidden aria-labelledby="gh-heading">
-      <div class="reveal-up" style="margin-bottom: var(--space-5);">
-        <span class="eyebrow">Open Source</span>
-        <h2 id="gh-heading">Latest from GitHub</h2>
+      <div class="reveal-up gh-section-head" style="margin-bottom: var(--space-5);">
+        <div>
+          <span class="eyebrow">Open Source · Shipping Regularly</span>
+          <h2 id="gh-heading" class="gh-heading">${githubMark} Latest from GitHub</h2>
+        </div>
+        <a class="v3-btn v3-btn-glass gh-profile-link" href="${escapeHtml(profileUrl)}" target="_blank" rel="noreferrer">${githubMark} View all repos</a>
       </div>
       <div class="v3-grid v3-grid-3 stagger-children" data-github-grid></div>
     </section>`;
@@ -182,6 +227,7 @@ export function renderHomeMarkup(content) {
     ${renderExperience(content.experience)}
     ${renderSkillsSection(content.skills)}
     ${renderProjects(content.projects)}
-    ${renderGithub()}
+    ${renderMiniProjects(content.miniProjects)}
+    ${renderGithub(content.profile)}
   `;
 }
