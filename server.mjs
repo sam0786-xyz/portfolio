@@ -10,6 +10,13 @@ const root = fileURLToPath(new URL(".", import.meta.url));
 const env = loadEnv([".env", "supabase/.env"]);
 const port = Number(process.env.PORT || env.PORT || 8080);
 const host = process.env.HOST || env.HOST || "0.0.0.0";
+const SITE_URL = (process.env.SITE_URL || env.SITE_URL || "https://sam18.xyz").replace(/\/$/, "");
+
+// Static serving is allowlist-based: only these top-level directories and
+// root files are ever readable over HTTP. Everything else (server.mjs,
+// package.json, Dockerfile, cookie.txt, supabase/*, data/*, dotfiles, …) 404s.
+const PUBLIC_DIRS = new Set(["assets", "src", "blog", "certificates", "cms", "focus", "linkedin", "studio"]);
+const PUBLIC_ROOT_FILES = new Set(["index.html", "v3.css", "robots.txt", "sitemap.xml", "favicon.ico", "manifest.webmanifest"]);
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || env.ADMIN_USERNAME || "sam.xyz";
 const DEFAULT_ADMIN_HASH = "pbkdf2_sha256$210000$sameer-portfolio-admin-v1$fe2ed834797469c62a4774d0ec580f12fb8f3dfdd5730e9d3ba95193354798de";
@@ -163,8 +170,16 @@ function verifyPassword(password) {
   return actual.length === expected.length && timingSafeEqual(actual, expected);
 }
 
+function clientIp(request) {
+  // On Cloud Run / any reverse proxy, socket.remoteAddress is the proxy — all
+  // visitors share it. Use the first hop of X-Forwarded-For so one attacker
+  // cannot rate-limit-lock every other visitor (including the admin).
+  const forwarded = String(request.headers["x-forwarded-for"] || "").split(",")[0].trim();
+  return forwarded || request.socket.remoteAddress || "local";
+}
+
 function isRateLimited(request) {
-  const key = request.socket.remoteAddress || "local";
+  const key = clientIp(request);
   const now = Date.now();
   const attempt = loginAttempts.get(key) || { count: 0, resetAt: now + 1000 * 60 * 10 };
   if (attempt.resetAt < now) {
@@ -175,7 +190,7 @@ function isRateLimited(request) {
 }
 
 function recordFailedLogin(request) {
-  const key = request.socket.remoteAddress || "local";
+  const key = clientIp(request);
   const now = Date.now();
   const attempt = loginAttempts.get(key) || { count: 0, resetAt: now + 1000 * 60 * 10 };
   attempt.count += 1;
@@ -303,7 +318,7 @@ function sortBlogPosts(posts) {
 async function readBlogPosts(includeDrafts = false) {
   const visibility = includeDrafts ? "" : "published=eq.true&";
   const select = "slug,title,excerpt,date,tags,cover,reading_time,body,published,created_at,updated_at";
-  const remote = await supabaseFetch(`blog_posts?${visibility}select=${select}&order=date.desc&order=updated_at.desc`, { method: "GET" });
+  const remote = await supabaseFetch(`blog_posts?${visibility}select=${select}&order=date.desc,updated_at.desc`, { method: "GET" });
   if (Array.isArray(remote) && remote.length) return remote.map(blogRowToPost);
 
   const content = await readSiteContent();
@@ -403,6 +418,63 @@ async function supabaseFetch(path, options = {}) {
     console.error(`Supabase fetch failed for ${scrubbedPath}:`, err.message || "Unknown error");
     return null;
   }
+}
+
+function xmlEscape(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&apos;");
+}
+
+function absoluteUrl(path) {
+  if (!path) return SITE_URL;
+  if (/^https?:\/\//i.test(path)) return path;
+  return `${SITE_URL}${path.startsWith("/") ? "" : "/"}${path}`;
+}
+
+function buildRssFeed(posts) {
+  const items = posts
+    .map((post) => `
+    <item>
+      <title>${xmlEscape(post.title)}</title>
+      <link>${SITE_URL}/blog/${xmlEscape(post.slug)}/</link>
+      <guid isPermaLink="true">${SITE_URL}/blog/${xmlEscape(post.slug)}/</guid>
+      <description>${xmlEscape(post.excerpt)}</description>
+      <pubDate>${new Date(post.date || post.createdAt || Date.now()).toUTCString()}</pubDate>
+      ${(post.tags || []).map((tag) => `<category>${xmlEscape(tag)}</category>`).join("")}
+    </item>`)
+    .join("");
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Mohammad Sameer — AI/ML Field Notes</title>
+    <link>${SITE_URL}/blog/</link>
+    <atom:link href="${SITE_URL}/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <description>Notes on Generative AI, RAG, evaluation, and building production ML systems.</description>
+    <language>en</language>
+    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>${items}
+  </channel>
+</rss>`;
+}
+
+function buildSitemap(posts) {
+  const staticRoutes = [
+    { loc: "/", freq: "weekly", priority: "1.0" },
+    { loc: "/blog/", freq: "weekly", priority: "0.8" },
+    { loc: "/certificates/", freq: "monthly", priority: "0.7" },
+    { loc: "/linkedin/", freq: "monthly", priority: "0.6" },
+    { loc: "/focus/", freq: "monthly", priority: "0.4" }
+  ];
+  const staticUrls = staticRoutes
+    .map((route) => `  <url>\n    <loc>${SITE_URL}${route.loc}</loc>\n    <changefreq>${route.freq}</changefreq>\n    <priority>${route.priority}</priority>\n  </url>`)
+    .join("\n");
+  const postUrls = posts
+    .map((post) => `  <url>\n    <loc>${SITE_URL}/blog/${xmlEscape(post.slug)}/</loc>\n    <lastmod>${String(post.updatedAt || post.date || "").slice(0, 10)}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.7</priority>\n  </url>`)
+    .join("\n");
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${staticUrls}\n${postUrls}\n</urlset>\n`;
 }
 
 async function renderHomePage() {
@@ -531,17 +603,28 @@ async function handleApi(request, response) {
   return false;
 }
 
-function isPrivatePath(urlPath) {
-  const cleanUrl = decodeURIComponent(urlPath.split("?")[0]).replace(/^\/+/, "");
-  const parts = normalize(cleanUrl || "index.html").split(sep);
-  return parts.some((part) => part.startsWith(".")) || parts.includes("supabase") && parts.includes(".env");
-}
-
 function resolvePath(urlPath) {
-  if (isPrivatePath(urlPath)) return null;
-  const cleanUrl = decodeURIComponent(urlPath.split("?")[0]).replace(/^\/+/, "");
+  let cleanUrl;
+  try {
+    cleanUrl = decodeURIComponent(urlPath.split("?")[0]).replace(/^\/+/, "");
+  } catch {
+    return null; // malformed percent-encoding
+  }
   const normalized = normalize(cleanUrl || "index.html");
-  if (normalized.startsWith("..")) return null;
+  if (normalized.startsWith("..") || normalized.includes("\0")) return null;
+
+  const parts = normalized.split(sep).filter(Boolean);
+  if (!parts.length) return null;
+  // Never expose dotfiles/dotdirs (.env, .session-secret, .git, …).
+  if (parts.some((part) => part.startsWith("."))) return null;
+
+  if (parts.length === 1) {
+    // A single segment is either a whitelisted root file (index.html, v3.css…)
+    // or a directory index request like "/blog" → "/blog/index.html".
+    if (!PUBLIC_ROOT_FILES.has(parts[0]) && !PUBLIC_DIRS.has(parts[0])) return null;
+  } else if (!PUBLIC_DIRS.has(parts[0])) {
+    return null;
+  }
   return join(root, normalized);
 }
 
@@ -598,6 +681,29 @@ createServer(async (request, response) => {
 
   const url = request.url?.split("?")[0] || "/";
 
+  // Dynamic feeds: generated from live blog data so they never drift.
+  if (request.method === "GET" && (url === "/blog/rss.xml" || url === "/rss.xml" || url === "/feed.xml")) {
+    try {
+      const xml = buildRssFeed(await readBlogPosts(false));
+      response.writeHead(200, { "content-type": "application/rss+xml; charset=utf-8", "cache-control": "public, max-age=600" });
+      response.end(xml);
+      return;
+    } catch (error) {
+      console.error("RSS generation failed:", error.message);
+    }
+  }
+
+  if (request.method === "GET" && url === "/sitemap.xml") {
+    try {
+      const xml = buildSitemap(await readBlogPosts(false));
+      response.writeHead(200, { "content-type": "application/xml; charset=utf-8", "cache-control": "public, max-age=600" });
+      response.end(xml);
+      return;
+    } catch (error) {
+      console.error("Sitemap generation failed:", error.message);
+    }
+  }
+
   // Server-render the home page so crawlers, ATS systems, and link-preview
   // bots receive the real content instead of an empty JavaScript shell.
   if (request.method === "GET" && (url === "/" || url === "/index.html")) {
@@ -628,27 +734,50 @@ createServer(async (request, response) => {
     if (slug) {
       const posts = await readBlogPosts(false);
       const post = posts.find(p => p.slug === slug);
-      if (post) {
-        const escapeStr = (s) => String(s || "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
-        const title = escapeStr(post.title) + " | Mohammad Sameer";
-        const desc = escapeStr(post.excerpt);
-        const cover = post.cover ? (post.cover.startsWith("http") ? post.cover : `https://sam18.xyz${post.cover}`) : "https://sam18.xyz/assets/neural-console.png";
-        
-        let html = body.toString("utf8");
-        html = html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
-        html = html.replace(/<meta name="description" content="[^"]*">/, "");
-        const ogTags = `
+      if (!post) {
+        // Unknown slug: return a real 404 instead of silently serving the
+        // first post (which created duplicate content under infinite URLs).
+        response.writeHead(404, { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" });
+        response.end("Not found");
+        return;
+      }
+      const esc = (s) => xmlEscape(s);
+      const title = esc(post.title) + " | Mohammad Sameer";
+      const desc = esc(post.excerpt);
+      const cover = esc(absoluteUrl(post.cover || "/assets/neural-console.png"));
+      const postUrl = `${SITE_URL}/blog/${esc(slug)}/`;
+
+      const jsonLd = {
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        headline: post.title,
+        description: post.excerpt,
+        image: absoluteUrl(post.cover || "/assets/neural-console.png"),
+        datePublished: post.date,
+        dateModified: post.updatedAt || post.date,
+        keywords: (post.tags || []).join(", "),
+        author: { "@type": "Person", name: "Mohammad Sameer", url: SITE_URL },
+        publisher: { "@type": "Person", name: "Mohammad Sameer", url: SITE_URL },
+        mainEntityOfPage: { "@type": "WebPage", "@id": postUrl }
+      };
+
+      let html = body.toString("utf8");
+      html = html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
+      html = html.replace(/<meta name="description" content="[^"]*">/, "");
+      const ogTags = `
     <meta name="description" content="${desc}">
+    <link rel="canonical" href="${postUrl}">
     <meta property="og:type" content="article">
     <meta property="og:title" content="${title}">
     <meta property="og:description" content="${desc}">
-    <meta property="og:url" content="https://sam18.xyz/blog/${escapeStr(slug)}">
+    <meta property="og:url" content="${postUrl}">
     <meta property="og:image" content="${cover}">
     <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="${cover}">
+    <script type="application/ld+json">${JSON.stringify(jsonLd).replaceAll("<", "\\u003c")}</script>
         `.trim();
-        html = html.replace("</head>", `  ${ogTags}\n  </head>`);
-        body = Buffer.from(html, "utf8");
-      }
+      html = html.replace("</head>", `  ${ogTags}\n  </head>`);
+      body = Buffer.from(html, "utf8");
     }
   }
 

@@ -35,45 +35,57 @@ A modern, dependency-free portfolio website built with vanilla JavaScript, HTML,
 ├── server.mjs              # Node.js HTTP server (static files + API routes)
 ├── Dockerfile              # Cloud Run container config
 ├── package.json            # Scripts (start, dev, check)
-├── styles.css              # Global stylesheet (design tokens, components, animations)
 │
-├── index.html              # Main SPA shell
-├── blog.html               # Blog listing page
-├── post.html               # Individual blog post page
-├── certificates.html       # Certificate timeline page
-├── linkedin.html           # LinkedIn showcase page
-├── focus.html              # Focus OS workspace
-├── cms.html                # Protected admin CMS
-├── studio.html             # Protected writing studio
+├── index.html              # Home shell (server-rendered on request)
+├── v3.css                  # Global stylesheet (design tokens, components, animations)
+├── blog/index.html                    # Blog listing shell
+├── blog/genai-field-notes/index.html  # Shared blog-post template shell
+├── certificates/index.html # Certificate timeline shell
+├── linkedin/index.html     # LinkedIn showcase shell
+├── focus/index.html        # Focus OS workspace shell
+├── cms/index.html          # Protected admin CMS shell
+├── cms/login.html          # Admin login page
+├── studio/index.html       # Protected writing studio shell
 │
 ├── src/
 │   ├── data/
-│   │   └── content.js      # All site content (profile, projects, skills, blog, etc.)
+│   │   └── content.js      # Default site content (profile, projects, skills, blog, etc.)
+│   ├── ssr.mjs             # Server-side render helpers for the home page
 │   ├── main.js             # Home page renderer and interactions
-│   ├── render.js            # Shared UI components (cards, pills, icons, skill logos)
-│   ├── loader.js            # Neural network canvas loading animation
-│   ├── animations.js        # Scroll-triggered fade/slide animations
-│   ├── theme.js             # Dark/light theme toggle with persistence
-│   ├── content-store.js     # Content layer (localStorage + Supabase sync)
-│   ├── supabase-client.js   # Supabase REST API helper
-│   ├── blog.js              # Blog listing page logic
-│   ├── post.js              # Blog post page logic
-│   ├── blog-reactions.js    # Like/dislike + comments (Supabase-backed)
-│   ├── certificates.js      # Certificate timeline page logic
-│   ├── linkedin.js          # LinkedIn showcase page logic
-│   ├── focus.js             # Focus OS — Pomodoro, tasks, calendar, streaks
-│   ├── focus-auth.js        # Focus OS email-based authentication
-│   ├── focus-store.js       # Focus OS data persistence layer
-│   ├── admin-login.js       # Admin login for CMS/Studio
-│   ├── cms.js               # Admin CMS (edit profile, projects, certs, blog)
-│   └── studio.js            # Writing studio (drafts, MDX export)
+│   ├── home-view.js        # Home page markup (hero, experience, skills, projects, GitHub)
+│   ├── render.js           # Shared UI components (cards, pills, icons, skill logos)
+│   ├── github-repos.js     # Live GitHub repos section (progressive enhancement)
+│   ├── loader.js           # Global page-loader control
+│   ├── animations.js       # Scroll-triggered reveal animations + neural canvas
+│   ├── theme.js            # Theme control (dark-only "Glass & Void")
+│   ├── content-store.js    # Content layer (localStorage + Supabase sync)
+│   ├── supabase-client.js  # Supabase REST API helper (browser)
+│   ├── blog.js             # Blog listing page logic
+│   ├── post.js             # Blog post page logic
+│   ├── blog-admin-store.js # Blog CRUD client for the studio
+│   ├── blog-reactions.js   # Like/dislike + comments (Supabase-backed)
+│   ├── certificates.js     # Certificate timeline page logic
+│   ├── linkedin.js         # LinkedIn showcase page logic
+│   ├── focus.js            # Focus OS — Pomodoro, tasks, calendar, streaks
+│   ├── focus-auth.js       # Focus OS email-based authentication
+│   ├── focus-store.js      # Focus OS data persistence layer
+│   ├── admin-login.js      # Admin login for CMS/Studio
+│   ├── cms.js              # Admin CMS (edit profile, projects, certs, blog)
+│   └── studio.js           # Writing studio (drafts, markdown)
 │
 ├── assets/                  # Static assets (resume PDF, images)
 ├── data/
 │   └── site-content.json    # CMS-managed content (auto-generated)
 └── supabase/
-    └── schema.sql           # Database schema + RLS policies
+    ├── schema.sql              # Database schema + RLS policies
+    ├── migrations.sql          # Incremental migrations
+    └── security-hardening.sql  # focus_users lockdown + comment constraints
 ```
+
+> Routing note: the Node server serves only an allowlist of top-level paths
+> (`assets/`, `src/`, the page directories, and a few root files). Source like
+> `server.mjs`, `package.json`, and `supabase/*` is never exposed over HTTP.
+> `/sitemap.xml` and `/blog/rss.xml` are generated dynamically from live posts.
 
 ## Features
 
@@ -112,12 +124,12 @@ A modern, dependency-free portfolio website built with vanilla JavaScript, HTML,
 - Password-protected admin panel
 - Edit profile, projects, certificates, and blog posts
 - Resume PDF upload
-- Writing studio with draft management and MDX export
+- Writing studio with draft management and markdown editing
 
 ### ✨ Design & UX
-- **Neural network loading animation** — canvas-based particle system
+- Neural network canvas backdrop — animated particle system
 - Scroll-triggered fade/slide animations
-- Dark/light theme with system preference detection
+- Single, deliberate dark "Glass & Void" theme
 - Fully responsive (mobile → desktop)
 - Glassmorphism panels and micro-interactions
 

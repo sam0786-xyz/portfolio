@@ -4,6 +4,9 @@ node_modules
 .env
 .env.*
 supabase/.env
+.session-secret
+cookie.txt
+.claude
 .DS_Store
 dist
 build

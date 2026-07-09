@@ -6,11 +6,8 @@
     <meta name="robots" content="noindex,nofollow">
     <title>Admin Login | Mohammad Sameer</title>
     <script>
-      (() => {
-        const stored = localStorage.getItem("sameer-theme");
-        const theme = stored || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-        document.documentElement.dataset.theme = theme;
-      })();
+      // Site is dark-only ("Glass & Void"); force dark to avoid an unstyled light flash.
+        document.documentElement.dataset.theme = "dark";
     </script>
     <link rel="stylesheet" href="../v3.css">
   </head>

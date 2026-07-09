@@ -36,6 +36,14 @@ export const profile = {
   avatarAlt: "Abstract neural console artwork for Mohammad Sameer",
   summary:
     "AI and Machine Learning engineer building production-ready GenAI applications with RAG, FastAPI, LangChain, cloud backends, and practical product workflows.",
+  // Hero stat bar. `auto:projects` / `auto:certs` are replaced at render time
+  // with the live counts from the data below, so the numbers never lie.
+  metrics: [
+    { value: "auto:projects", label: "Shipped projects" },
+    { value: "800+", label: "Students impacted" },
+    { value: "3", label: "Cloud platforms" },
+    { value: "∞", label: "Curiosity" }
+  ],
   status: [
     "GenAI intern at AI Zoned",
     "RAG and LLM app builder",
@@ -102,7 +110,7 @@ export const projects = [
       "Built and deployed a Next.js and Supabase platform centralizing technical society event management with a gamified dashboard and real-time QR-based attendance.",
     impact: "Scaled impact to 800+ students and supported 5,000+ QR scans for a 24-hour event.",
     tags: ["Next.js", "TypeScript", "Tailwind CSS", "Framer Motion", "Supabase", "Resend"],
-    href: "#"
+    href: ""
   },
   {
     title: "Gmail Newsletters to Podcast",
@@ -112,7 +120,7 @@ export const projects = [
       "Built an automated pipeline that converts newsletters into audio summaries using Gmail API, Gemini 2.5 Flash, ElevenLabs, and Pydub.",
     impact: "Reduced manual reading time by approximately 1 hour daily.",
     tags: ["Gmail API", "Gemini 2.5 Flash", "ElevenLabs", "Pydub"],
-    href: "#"
+    href: ""
   },
   {
     title: "AI CA Exam Preparation Platform",
@@ -184,18 +192,6 @@ export const certificates = [
     summary:
       "AWS practitioner-level cloud learning credential aligned with backend and deployment workflows.",
     featured: true
-  },
-  {
-    title: "Verified Certificate Slot",
-    issuer: "Add issuer",
-    issuedAt: "2026-05",
-    credentialId: "Add ID",
-    verificationUrl: "",
-    mediaUrl: "",
-    skills: ["Add skill", "Add skill"],
-    summary:
-      "Duplicate this entry for each LinkedIn Learning, Coursera, Google, Microsoft, NVIDIA, or university certificate.",
-    featured: false
   }
 ];
 
