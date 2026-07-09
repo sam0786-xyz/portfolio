@@ -29,6 +29,12 @@ const SUPABASE_URL = process.env.SUPABASE_URL || env.SUPABASE_URL || env.Supabas
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || env.SUPABASE_ANON_KEY || env.Anon_key || env.Supabase_publisable_key || "";
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.Supabase_service_key || env.SUPABASE_SERVICE_KEY || env.SUPABASE_SERVICE_ROLE_KEY || env.service_role_key || env.Supabase_service_key || "";
 
+// Résumé is stored in a private Supabase Storage bucket so re-uploads survive
+// Cloud Run restarts. It is served back through /assets/<RESUME_OBJECT> (see
+// the GET intercept), which keeps the public URL stable and same-origin.
+const RESUME_BUCKET = process.env.RESUME_BUCKET || env.RESUME_BUCKET || "resume";
+const RESUME_OBJECT = "mohammad-sameer-resume.pdf";
+
 const types = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
@@ -420,6 +426,56 @@ async function supabaseFetch(path, options = {}) {
   }
 }
 
+// Upload the résumé PDF to Supabase Storage (upsert). Uses the service key so
+// it works against a private bucket with no policies. Returns true on success.
+async function uploadResumeToStorage(buffer) {
+  const key = SUPABASE_SERVICE_KEY || SUPABASE_ANON_KEY;
+  if (!SUPABASE_URL || !key) return false;
+  try {
+    const response = await fetch(
+      `${SUPABASE_URL.replace(/\/$/, "")}/storage/v1/object/${RESUME_BUCKET}/${RESUME_OBJECT}`,
+      {
+        method: "POST",
+        headers: {
+          apikey: key,
+          Authorization: `Bearer ${key}`,
+          "Content-Type": "application/pdf",
+          "x-upsert": "true",
+          "cache-control": "3600"
+        },
+        body: buffer
+      }
+    );
+    if (!response.ok) {
+      const summary = (await response.text()).substring(0, 100).replace(/\n/g, " ");
+      console.error(`Résumé storage upload failed [${response.status}]:`, summary);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error("Résumé storage upload error:", err.message || "Unknown error");
+    return false;
+  }
+}
+
+// Fetch the résumé PDF back from Storage. Returns a Buffer, or null if it is
+// not there / Storage is unavailable (caller falls back to the static asset).
+async function fetchResumeFromStorage() {
+  const key = SUPABASE_SERVICE_KEY || SUPABASE_ANON_KEY;
+  if (!SUPABASE_URL || !key) return null;
+  try {
+    const response = await fetch(
+      `${SUPABASE_URL.replace(/\/$/, "")}/storage/v1/object/${RESUME_BUCKET}/${RESUME_OBJECT}`,
+      { headers: { apikey: key, Authorization: `Bearer ${key}` } }
+    );
+    if (!response.ok) return null;
+    return Buffer.from(await response.arrayBuffer());
+  } catch (err) {
+    console.error("Résumé storage fetch error:", err.message || "Unknown error");
+    return null;
+  }
+}
+
 function xmlEscape(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -593,10 +649,18 @@ async function handleApi(request, response) {
       json(response, 400, { ok: false, error: "Only PDF uploads are supported." });
       return true;
     }
-    await mkdir(join(root, "assets"), { recursive: true });
-    const filename = "mohammad-sameer-resume.pdf";
-    await writeFile(join(root, "assets", filename), Buffer.from(match[1], "base64"));
-    json(response, 200, { ok: true, url: `/assets/${filename}` });
+    const buffer = Buffer.from(match[1], "base64");
+    // Source of truth: Supabase Storage (survives container restarts).
+    const persisted = await uploadResumeToStorage(buffer);
+    // Best-effort local cache so the static fallback stays current on this
+    // instance even before the next Storage read.
+    try {
+      await mkdir(join(root, "assets"), { recursive: true });
+      await writeFile(join(root, "assets", RESUME_OBJECT), buffer);
+    } catch (err) {
+      console.warn("Local résumé cache write failed:", err.message);
+    }
+    json(response, 200, { ok: true, url: `/assets/${RESUME_OBJECT}`, persisted });
     return true;
   }
 
@@ -702,6 +766,23 @@ createServer(async (request, response) => {
     } catch (error) {
       console.error("Sitemap generation failed:", error.message);
     }
+  }
+
+  // Résumé download: prefer the copy in Supabase Storage (persists across
+  // restarts); fall back to the committed static asset if Storage is empty or
+  // unavailable. Same-origin URL keeps the "download" attribute working.
+  if (request.method === "GET" && url === `/assets/${RESUME_OBJECT}`) {
+    const fromStorage = await fetchResumeFromStorage();
+    if (fromStorage) {
+      response.writeHead(200, {
+        "content-type": "application/pdf",
+        "content-disposition": `inline; filename="${RESUME_OBJECT}"`,
+        "cache-control": "public, max-age=300"
+      });
+      response.end(fromStorage);
+      return;
+    }
+    // else: fall through to static file serving below
   }
 
   // Server-render the home page so crawlers, ATS systems, and link-preview
