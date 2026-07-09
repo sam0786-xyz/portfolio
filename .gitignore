@@ -10,5 +10,7 @@ dist/
 build/
 .next/
 .vscode/
-supabase/
+# Track the SQL schema/migrations, but never the Supabase env/secrets.
+supabase/*
+!supabase/*.sql
 cookie.txt

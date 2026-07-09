@@ -71,13 +71,16 @@ export async function registerFocusUser(name, email) {
 export async function validateFocusEmail(email) {
   const normalized = email.trim().toLowerCase();
 
-  // Always verify against Supabase if available
+  // Verify against Supabase via a security-definer RPC. The focus_users table
+  // no longer exposes a public `SELECT *` (which would let anyone dump every
+  // visitor's name + email); the RPC only ever returns an exact-email match.
   const config = getSupabaseConfig();
   if (config.url && config.anonKey) {
     try {
-      const rows = await supabaseFetch(
-        `focus_users?email=eq.${encodeURIComponent(normalized)}&select=name,email&limit=1`
-      );
+      const rows = await supabaseFetch("rpc/focus_user_lookup", {
+        method: "POST",
+        body: JSON.stringify({ p_email: normalized })
+      });
       if (Array.isArray(rows) && rows.length > 0) {
         const user = rows[0];
         const authData = { name: user.name, email: user.email };
@@ -85,7 +88,7 @@ export async function validateFocusEmail(email) {
         return authData;
       }
     } catch {
-      // Supabase unavailable — fall back to localStorage below
+      // Supabase/RPC unavailable — fall back to localStorage below
     }
   }
 

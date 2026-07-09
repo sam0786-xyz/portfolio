@@ -13,11 +13,8 @@
     <meta property="og:image" content="https://sam18.xyz/assets/neural-console.png">
     <meta name="twitter:card" content="summary_large_image">
     <script>
-      (() => {
-        const stored = localStorage.getItem("sameer-theme");
-        const theme = stored || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-        document.documentElement.dataset.theme = theme;
-      })();
+      // Site is dark-only ("Glass & Void"); force dark to avoid an unstyled light flash.
+        document.documentElement.dataset.theme = "dark";
     </script>
     <link rel="stylesheet" href="/v3.css">
   </head>

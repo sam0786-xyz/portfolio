@@ -7,9 +7,24 @@ import { escapeHtml, skillIcon } from "./render.js";
 import { getSiteContent } from "./content-store.js";
 
 /* ── Hero ── */
+function resolveMetricValue(value, { projectCount, certCount }) {
+  if (value === "auto:projects") return `${projectCount}+`;
+  if (value === "auto:certs") return `${certCount}+`;
+  return value;
+}
+
 function renderHero(profile, projects, certificates) {
   const projectCount = projects?.length || 0;
   const certCount = certificates?.length || 0;
+  const metrics = Array.isArray(profile.metrics) && profile.metrics.length
+    ? profile.metrics
+    : [
+        { value: "auto:projects", label: "Shipped projects" },
+        { value: "auto:certs", label: "Certifications" },
+        { value: "3", label: "Cloud platforms" },
+        { value: "∞", label: "Curiosity" }
+      ];
+
   return `
     <section class="v3-hero v3-container" aria-labelledby="v3-hero-title">
       <div class="v3-hero-content reveal-up">
@@ -24,22 +39,11 @@ function renderHero(profile, projects, certificates) {
 
       <!-- Stats bar -->
       <div class="v3-grid v3-grid-4 stagger-children reveal-up" style="margin-top: var(--space-6);">
+        ${metrics.map((metric) => `
         <div class="v3-stat">
-          <span class="v3-stat-value">${projectCount}+</span>
-          <span class="v3-stat-label">Shipped projects</span>
-        </div>
-        <div class="v3-stat">
-          <span class="v3-stat-value">50+</span>
-          <span class="v3-stat-label">Certifications</span>
-        </div>
-        <div class="v3-stat">
-          <span class="v3-stat-value">3+</span>
-          <span class="v3-stat-label">Cloud platforms</span>
-        </div>
-        <div class="v3-stat">
-          <span class="v3-stat-value">∞</span>
-          <span class="v3-stat-label">Curiosity</span>
-        </div>
+          <span class="v3-stat-value">${escapeHtml(resolveMetricValue(metric.value, { projectCount, certCount }))}</span>
+          <span class="v3-stat-label">${escapeHtml(metric.label)}</span>
+        </div>`).join("")}
       </div>
     </section>`;
 }
@@ -132,22 +136,42 @@ function renderProjects(projects) {
         <h2>Selected Work</h2>
       </div>
       <div class="v3-staggered-grid">
-        ${projects.map((proj, i) => `
-          <a href="${escapeHtml(proj.href)}" class="v3-project-card reveal-up" style="background-image: ${gradients[i % gradients.length]};" ${proj.href?.startsWith("http") ? 'target="_blank" rel="noreferrer"' : ""}>
+        ${projects.map((proj, i) => {
+          const href = proj.href && proj.href !== "#" ? proj.href : "";
+          const isExternal = href.startsWith("http");
+          const inner = `
             <div class="v3-project-content">
               <div class="v3-project-type">${escapeHtml(proj.type)}</div>
               <h3 class="v3-project-title">${escapeHtml(proj.title)}</h3>
               <p class="v3-project-summary">${escapeHtml(proj.summary)}</p>
               <div class="v3-project-meta">
                 ${proj.status ? `<span class="v3-status v3-status-live">${escapeHtml(proj.status)}</span>` : ""}
+                ${href ? `<span class="v3-project-link">${isExternal ? "Visit ↗" : "Read →"}</span>` : ""}
               </div>
               <div class="v3-tags" style="margin-top: var(--space-2);">
                 ${(proj.tags || []).map(t => `<span class="v3-tag">${escapeHtml(t)}</span>`).join("")}
               </div>
-            </div>
-          </a>
-        `).join("")}
+            </div>`;
+          const style = `background-image: ${gradients[i % gradients.length]};`;
+          // Only emit a real link when there is somewhere to go; otherwise a
+          // non-navigating card avoids dead "#" anchors.
+          return href
+            ? `<a href="${escapeHtml(href)}" class="v3-project-card reveal-up" style="${style}" ${isExternal ? 'target="_blank" rel="noreferrer"' : ""}>${inner}</a>`
+            : `<article class="v3-project-card v3-project-card-static reveal-up" style="${style}">${inner}</article>`;
+        }).join("")}
       </div>
+    </section>`;
+}
+
+/* ── GitHub (populated client-side; hidden until it has data) ── */
+function renderGithub() {
+  return `
+    <section class="v3-section v3-container section-glow section-glow-teal" data-github-section hidden aria-labelledby="gh-heading">
+      <div class="reveal-up" style="margin-bottom: var(--space-5);">
+        <span class="eyebrow">Open Source</span>
+        <h2 id="gh-heading">Latest from GitHub</h2>
+      </div>
+      <div class="v3-grid v3-grid-3 stagger-children" data-github-grid></div>
     </section>`;
 }
 
@@ -158,5 +182,6 @@ export function renderHomeMarkup(content) {
     ${renderExperience(content.experience)}
     ${renderSkillsSection(content.skills)}
     ${renderProjects(content.projects)}
+    ${renderGithub()}
   `;
 }

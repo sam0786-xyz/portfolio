@@ -113,7 +113,9 @@ function initProgressBar() {
   const update = () => {
     const rect = article.getBoundingClientRect();
     const total = rect.height - window.innerHeight;
-    const progress = Math.min(1, Math.max(0, -rect.top / total));
+    // Short posts (article shorter than the viewport) have nothing to scroll —
+    // avoid dividing by zero/negative, which produced NaN width.
+    const progress = total <= 0 ? (rect.top <= 0 ? 1 : 0) : Math.min(1, Math.max(0, -rect.top / total));
     fill.style.width = `${(progress * 100).toFixed(1)}%`;
   };
   window.addEventListener("scroll", update, { passive: true });
@@ -164,13 +166,13 @@ function renderPost() {
         ${shareButtons(post)}
       </header>
 
-      <img class="article-cover" src="${post.cover}" alt="" style="width: 100%; border-radius: var(--radius-xl); margin-bottom: var(--space-6); border: 1px solid var(--glass-border);">
+      <img class="article-cover" src="${escapeHtml(post.cover)}" alt="" style="width: 100%; border-radius: var(--radius-xl); margin-bottom: var(--space-6); border: 1px solid var(--glass-border);">
 
-      <div style="display: grid; grid-template-columns: 1fr 240px; gap: var(--space-5); align-items: start;">
+      <div class="article-layout">
         <div class="article-body" data-article-body>
           ${post.body}
         </div>
-        <aside data-article-sidebar style="position: sticky; top: var(--space-7);"></aside>
+        <aside class="article-toc" data-article-sidebar></aside>
       </div>
 
       <!-- Author card -->

@@ -63,7 +63,12 @@ const skillLogos = {
 
 export function skillIcon(name) {
   const key = (typeof name === "string" && name) ? name.toLowerCase() : "";
-  const url = skillLogos[key] || skillLogos["generative ai"];
+  const url = skillLogos[key];
+  // Unknown skills previously fell back to the Gemini logo, mislabeling every
+  // unmapped tag. Show a neutral spark glyph instead so the icon never lies.
+  if (!url) {
+    return `<svg class="skill-svg skill-svg-generic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l1.9 6.1L20 10l-6.1 1.9L12 18l-1.9-6.1L4 10l6.1-1.9L12 2z" fill="currentColor"/></svg>`;
+  }
   return `<img class="skill-svg" src="${url}" alt="${escapeHtml(name || "skill")}" loading="lazy">`;
 }
 
