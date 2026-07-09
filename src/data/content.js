@@ -134,6 +134,14 @@ export const projects = [
   }
 ];
 
+/**
+ * Mini projects — the ongoing stream of smaller builds from the reskilling
+ * journey. Managed via the CMS ("Mini Projects" section); the home section
+ * stays hidden until at least one entry exists. Each entry: title, summary,
+ * date (YYYY-MM-DD), tags, href (GitHub repo or blog post).
+ */
+export const miniProjects = [];
+
 export const education = [
   {
     school: "Sharda University",

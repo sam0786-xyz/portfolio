@@ -48,9 +48,11 @@ export async function mountGithubRepos(root = document) {
       { headers: { Accept: "application/vnd.github+json" } }
     );
     if (!response.ok) throw new Error(`GitHub API ${response.status}`);
+    // Most recently pushed first: the section should always lead with
+    // whatever was just shipped, so regular activity is visible at a glance.
     const repos = (await response.json())
       .filter((repo) => !repo.fork && !repo.archived && !repo.private)
-      .sort((a, b) => (b.stargazers_count - a.stargazers_count) || (new Date(b.pushed_at) - new Date(a.pushed_at)))
+      .sort((a, b) => (new Date(b.pushed_at) - new Date(a.pushed_at)) || (b.stargazers_count - a.stargazers_count))
       .slice(0, MAX_REPOS);
 
     if (!repos.length) return; // nothing worth showing — leave hidden
