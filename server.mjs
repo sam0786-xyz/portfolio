@@ -4,7 +4,7 @@ import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { extname, join, normalize, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { defaultContent, mergeContent, renderHomeDocument } from "./src/ssr.mjs";
+import { defaultContent, mergeContent, renderBlogPostDocument, renderHomeDocument, renderPublicDocument } from "./src/ssr.mjs";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
 const env = loadEnv([".env", "supabase/.env"]);
@@ -16,7 +16,7 @@ const SITE_URL = (process.env.SITE_URL || env.SITE_URL || "https://sam18.xyz").r
 // root files are ever readable over HTTP. Everything else (server.mjs,
 // package.json, Dockerfile, cookie.txt, supabase/*, data/*, dotfiles, …) 404s.
 const PUBLIC_DIRS = new Set(["assets", "src", "blog", "certificates", "cms", "focus", "linkedin", "studio"]);
-const PUBLIC_ROOT_FILES = new Set(["index.html", "v3.css", "robots.txt", "sitemap.xml", "favicon.ico", "manifest.webmanifest"]);
+const PUBLIC_ROOT_FILES = new Set(["index.html", "v3.css", "robots.txt", "sitemap.xml", "llms.txt", "favicon.ico", "manifest.webmanifest"]);
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || env.ADMIN_USERNAME || "sam.xyz";
 const DEFAULT_ADMIN_HASH = "pbkdf2_sha256$210000$sameer-portfolio-admin-v1$fe2ed834797469c62a4774d0ec580f12fb8f3dfdd5730e9d3ba95193354798de";
@@ -521,8 +521,7 @@ function buildSitemap(posts) {
     { loc: "/", freq: "weekly", priority: "1.0" },
     { loc: "/blog/", freq: "weekly", priority: "0.8" },
     { loc: "/certificates/", freq: "monthly", priority: "0.7" },
-    { loc: "/linkedin/", freq: "monthly", priority: "0.6" },
-    { loc: "/focus/", freq: "monthly", priority: "0.4" }
+    { loc: "/linkedin/", freq: "monthly", priority: "0.6" }
   ];
   const staticUrls = staticRoutes
     .map((route) => `  <url>\n    <loc>${SITE_URL}${route.loc}</loc>\n    <changefreq>${route.freq}</changefreq>\n    <priority>${route.priority}</priority>\n  </url>`)
@@ -541,6 +540,23 @@ async function renderHomePage() {
   const posts = await readBlogPosts(false);
   content.blogPosts = posts.length ? posts : defaultContent().blogPosts;
   return renderHomeDocument(template, content);
+}
+
+async function getPublicContent() {
+  let content = defaultContent();
+  const stored = await readSiteContent();
+  if (stored) content = mergeContent(content, stored);
+  const posts = await readBlogPosts(false);
+  content.blogPosts = posts.length ? posts : defaultContent().blogPosts;
+  return content;
+}
+
+async function renderPublicPage(page, templatePath) {
+  const [template, content] = await Promise.all([
+    readFile(join(root, templatePath), "utf8"),
+    getPublicContent()
+  ]);
+  return renderPublicDocument(template, content, page);
 }
 
 async function handleApi(request, response) {
@@ -745,6 +761,21 @@ createServer(async (request, response) => {
 
   const url = request.url?.split("?")[0] || "/";
 
+  // Collapse file-style URLs into one canonical URL per public page. This
+  // avoids duplicate indexing when a crawler discovers an /index.html path.
+  const canonicalRedirects = new Map([
+    ["/index.html", "/"],
+    ["/blog/index.html", "/blog/"],
+    ["/certificates/index.html", "/certificates/"],
+    ["/linkedin/index.html", "/linkedin/"],
+    ["/focus/index.html", "/focus/"]
+  ]);
+  if (request.method === "GET" && canonicalRedirects.has(url)) {
+    response.writeHead(301, { location: canonicalRedirects.get(url), "cache-control": "public, max-age=86400" });
+    response.end();
+    return;
+  }
+
   // Dynamic feeds: generated from live blog data so they never drift.
   if (request.method === "GET" && (url === "/blog/rss.xml" || url === "/rss.xml" || url === "/feed.xml")) {
     try {
@@ -798,6 +829,28 @@ createServer(async (request, response) => {
     }
   }
 
+  const publicPageRoutes = new Map([
+    ["/blog", ["blog", "blog/index.html"]],
+    ["/blog/", ["blog", "blog/index.html"]],
+    ["/certificates", ["certificates", "certificates/index.html"]],
+    ["/certificates/", ["certificates", "certificates/index.html"]],
+    ["/linkedin", ["linkedin", "linkedin/index.html"]],
+    ["/linkedin/", ["linkedin", "linkedin/index.html"]],
+    ["/focus", ["focus", "focus/index.html"]],
+    ["/focus/", ["focus", "focus/index.html"]]
+  ]);
+  if (request.method === "GET" && publicPageRoutes.has(url)) {
+    try {
+      const [page, templatePath] = publicPageRoutes.get(url);
+      const html = await renderPublicPage(page, templatePath);
+      response.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" });
+      response.end(html);
+      return;
+    } catch (error) {
+      console.error(`SSR failed for ${url}:`, error.message);
+    }
+  }
+
   const adminOnlyRoutes = new Set(["/cms", "/cms/", "/cms/index.html", "/studio", "/studio/", "/studio/index.html"]);
   const targetUrl = adminOnlyRoutes.has(url) && !getSession(request) ? `/cms/login.html?next=${encodeURIComponent(url)}` : request.url || "/";
   const target = await resolveFile(targetUrl);
@@ -830,19 +883,31 @@ createServer(async (request, response) => {
 
       const jsonLd = {
         "@context": "https://schema.org",
-        "@type": "BlogPosting",
-        headline: post.title,
-        description: post.excerpt,
-        image: absoluteUrl(post.cover || "/assets/neural-console.png"),
-        datePublished: post.date,
-        dateModified: post.updatedAt || post.date,
-        keywords: (post.tags || []).join(", "),
-        author: { "@type": "Person", name: "Mohammad Sameer", url: SITE_URL },
-        publisher: { "@type": "Person", name: "Mohammad Sameer", url: SITE_URL },
-        mainEntityOfPage: { "@type": "WebPage", "@id": postUrl }
+        "@graph": [
+          {
+            "@type": "BlogPosting",
+            headline: post.title,
+            description: post.excerpt,
+            image: absoluteUrl(post.cover || "/assets/neural-console.png"),
+            datePublished: post.date,
+            dateModified: post.updatedAt || post.date,
+            keywords: (post.tags || []).join(", "),
+            author: { "@type": "Person", name: "Mohammad Sameer", url: SITE_URL },
+            publisher: { "@type": "Person", name: "Mohammad Sameer", url: SITE_URL },
+            mainEntityOfPage: { "@type": "WebPage", "@id": postUrl }
+          },
+          {
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL + "/" },
+              { "@type": "ListItem", position: 2, name: "Blog", item: SITE_URL + "/blog/" },
+              { "@type": "ListItem", position: 3, name: post.title, item: postUrl }
+            ]
+          }
+        ]
       };
 
-      let html = body.toString("utf8");
+      let html = renderBlogPostDocument(body.toString("utf8"), await getPublicContent(), post);
       html = html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
       html = html.replace(/<meta name="description" content="[^"]*">/, "");
       const ogTags = `

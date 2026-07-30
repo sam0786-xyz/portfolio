@@ -28,6 +28,10 @@ function renderHero(profile, projects, certificates) {
   return `
     <section class="v3-hero v3-container" aria-labelledby="v3-hero-title">
       <div class="v3-hero-content reveal-up">
+        <div class="candidate-availability" aria-label="Availability and contact details">
+          <span class="candidate-availability-status">${escapeHtml(profile.availability || "Open to opportunities")}</span>
+          ${profile.phone ? `<a href="tel:${escapeHtml(profile.phone.replace(/[^+\d]/g, ""))}" aria-label="Call Mohammad Sameer at ${escapeHtml(profile.phone)}">${escapeHtml(profile.phone)}</a>` : ""}
+        </div>
         <span class="eyebrow">AI / ML Engineer · Generative AI · Cloud Architecture</span>
         <h1 id="v3-hero-title">${escapeHtml(profile.name)}</h1>
         <p class="lede">${escapeHtml(profile.summary)}</p>

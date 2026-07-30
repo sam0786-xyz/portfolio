@@ -70,8 +70,18 @@ function renderHeader(active = "home") {
 
 function renderFooter(content) {
   const p = content.profile;
+  const phoneHref = p.phone ? p.phone.replace(/[^+\d]/g, "") : "";
   return `
       <div class="v3-container v3-footer">
+        <div class="v3-footer-cta">
+          <span class="eyebrow">${escapeHtml(p.availability || "Available for opportunities")}</span>
+          <h2>Let's build something together.</h2>
+          <p class="lede" style="margin: var(--space-2) auto var(--space-4);">I’m interested in challenging AI/ML roles and collaborations.</p>
+          <div class="v3-hero-ctas footer-contact-actions">
+            ${p.email ? `<a class="v3-btn v3-btn-primary" href="mailto:${escapeHtml(p.email)}">Email me</a>` : ""}
+            ${p.phone ? `<a class="v3-btn v3-btn-glass" href="tel:${escapeHtml(phoneHref)}">Call ${escapeHtml(p.phone)}</a>` : ""}
+          </div>
+        </div>
         <div class="v3-footer-brand">
           <strong>${escapeHtml(p.name)}</strong>
         </div>
@@ -81,6 +91,128 @@ function renderFooter(content) {
             .join("")}
         </div>
       </div>`;
+}
+
+function renderCertificatesMarkup(certificates = []) {
+  return `
+    <section class="v3-hero v3-container">
+      <div class="v3-hero-content">
+        <span class="eyebrow">Credentials / Proof</span>
+        <h1>Verified learning, mapped to practical AI work.</h1>
+        <p class="lede">A focused credential timeline for AI, ML, cloud, and production engineering skills, designed to make verification fast.</p>
+      </div>
+    </section>
+    <section class="v3-section v3-container">
+      <div class="v3-minimal-list" aria-label="Certificate timeline">
+        ${certificates.map((certificate) => `
+          <article class="v3-minimal-row">
+            <div>
+              <h2 class="v3-row-title">${escapeHtml(certificate.title)}</h2>
+              <span class="v3-row-meta">${escapeHtml(certificate.issuer)} · ${escapeHtml(certificate.issuedAt)}</span>
+              ${certificate.summary ? `<p>${escapeHtml(certificate.summary)}</p>` : ""}
+            </div>
+            <div class="v3-tags">${(certificate.skills || []).map((skill) => `<span class="v3-tag">${escapeHtml(skill)}</span>`).join("")}</div>
+          </article>`).join("")}
+      </div>
+    </section>`;
+}
+
+function renderBlogMarkup(posts = []) {
+  const published = posts.filter((post) => post.published !== false);
+  return `
+    <section class="v3-hero v3-container">
+      <div class="v3-hero-content">
+        <span class="eyebrow">Writing / Build Logs</span>
+        <h1>AI systems, explained from the workbench.</h1>
+        <p class="lede">Practical notes on Generative AI, RAG, product architecture, evaluation, and the decisions behind real implementations.</p>
+      </div>
+    </section>
+    <section class="v3-section v3-container">
+      <div class="v3-minimal-list" aria-label="Blog posts">
+        ${published.map((post) => `
+          <article class="v3-minimal-row">
+            <div>
+              <h2 class="v3-row-title"><a href="/blog/${encodeURIComponent(post.slug)}/">${escapeHtml(post.title)}</a></h2>
+              <p>${escapeHtml(post.excerpt)}</p>
+              <span class="v3-row-meta">${escapeHtml(post.date)} · ${escapeHtml(post.readingTime || "")}</span>
+            </div>
+            <div class="v3-tags">${(post.tags || []).map((tag) => `<span class="v3-tag">${escapeHtml(tag)}</span>`).join("")}</div>
+          </article>`).join("")}
+      </div>
+    </section>`;
+}
+
+function renderLinkedInMarkup(posts = []) {
+  return `
+    <section class="v3-hero v3-container">
+      <div class="v3-hero-content">
+        <span class="eyebrow">LinkedIn / Public Thinking</span>
+        <h1>Short-form updates from the AI build cycle.</h1>
+        <p class="lede">Selected posts, progress notes, and community updates from Mohammad Sameer's LinkedIn feed.</p>
+        <div class="v3-hero-ctas"><a class="v3-btn v3-btn-primary" href="https://linkedin.com/in/connect-to-sam-xyz" target="_blank" rel="noreferrer">Connect on LinkedIn</a><a class="v3-btn v3-btn-glass" href="/blog/">Read long-form notes</a></div>
+      </div>
+    </section>
+    <section class="v3-section v3-container">
+      <div class="v3-minimal-list">
+        ${posts.map((post) => `
+          <article class="v3-minimal-row">
+            <div>
+              <h2 class="v3-row-title"><a href="${escapeHtml(post.url)}" target="_blank" rel="noreferrer">${escapeHtml(post.title)}</a></h2>
+              ${post.summary ? `<p>${escapeHtml(post.summary)}</p>` : ""}
+              <span class="v3-row-meta">LinkedIn · ${escapeHtml(post.publishedAt || "")}</span>
+            </div>
+            <div class="v3-tags">${(post.tags || []).map((tag) => `<span class="v3-tag">${escapeHtml(tag)}</span>`).join("")}</div>
+          </article>`).join("")}
+      </div>
+    </section>`;
+}
+
+function renderFocusMarkup() {
+  return `
+    <section class="v3-hero v3-container">
+      <div class="v3-hero-content">
+        <span class="eyebrow">Focus OS / Private Workbench</span>
+        <h1>Focus sessions, tasks, and personal progress in one workspace.</h1>
+        <p class="lede">Focus OS is Mohammad Sameer's private deep-work tool: a Pomodoro timer with task tracking, session history, calendar planning, and productivity insights.</p>
+      </div>
+    </section>`;
+}
+
+function renderBlogPostMarkup(post) {
+  return `
+    <article class="v3-section v3-container" style="max-width: 960px; margin: 0 auto;">
+      <header style="margin-bottom: var(--space-5); text-align: center;">
+        <div class="v3-tags" style="justify-content: center; margin-bottom: var(--space-3);">${(post.tags || []).map((tag) => `<span class="v3-tag">${escapeHtml(tag)}</span>`).join("")}</div>
+        <h1>${escapeHtml(post.title)}</h1>
+        <p class="lede">${escapeHtml(post.excerpt)}</p>
+        <span class="mono-text">${escapeHtml(post.date)} · ${escapeHtml(post.readingTime || "")}</span>
+      </header>
+      <img class="article-cover" src="${escapeHtml(post.cover || "/assets/neural-console.png")}" alt="" style="width: 100%; border-radius: var(--radius-xl); margin-bottom: var(--space-6);">
+      <div class="article-body">${post.body || ""}</div>
+    </article>`;
+}
+
+/** Inject meaningful public-page content into the static app shells for bots and no-JS visitors. */
+export function renderPublicDocument(template, content, page) {
+  const views = {
+    blog: { rootId: "blog-root", active: "blog", markup: renderBlogMarkup(content.blogPosts) },
+    certificates: { rootId: "certificates-root", active: "certificates", markup: renderCertificatesMarkup(content.certificates) },
+    linkedin: { rootId: "linkedin-root", active: "linkedin", markup: renderLinkedInMarkup(content.linkedinPosts) },
+    focus: { rootId: "focus-root", active: "focus", markup: renderFocusMarkup() }
+  };
+  const view = views[page];
+  if (!view) return template;
+  return template
+    .replace(/<header\b([^>]*)>[\s\S]*?<\/header>/, `<header$1>${renderHeader(view.active)}</header>`)
+    .replace(new RegExp(`<main id="${view.rootId}">[\\s\\S]*?<\\/main>`), `<main id="${view.rootId}">${view.markup}</main>`)
+    .replace(/<footer\b([^>]*)>[\s\S]*?<\/footer>/, `<footer$1>${renderFooter(content)}</footer>`);
+}
+
+export function renderBlogPostDocument(template, content, post) {
+  return template
+    .replace(/<header\b([^>]*)>[\s\S]*?<\/header>/, `<header$1>${renderHeader("blog")}</header>`)
+    .replace(/<main id="post-root">[\s\S]*?<\/main>/, `<main id="post-root">${renderBlogPostMarkup(post)}</main>`)
+    .replace(/<footer\b([^>]*)>[\s\S]*?<\/footer>/, `<footer$1>${renderFooter(content)}</footer>`);
 }
 
 /**

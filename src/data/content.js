@@ -30,7 +30,8 @@ export const profile = {
   education: "B.Tech Computer Science, AI & ML Specialisation",
   semester: "6th semester, currently giving end-sem exams",
   location: "Greater Noida, India",
-  phone: "+91 8603829005 (IN) / +971 50 893 4973 (UAE)",
+  phone: "+91 8603829005",
+  availability: "Immediately available to join",
   email: "hello@sam18.xyz",
   resumeUrl: "/assets/mohammad-sameer-resume.pdf",
   avatarAlt: "Abstract neural console artwork for Mohammad Sameer",
@@ -130,7 +131,7 @@ export const projects = [
       "A full-stack AI product for automated answer grading and semantic material retrieval using Gemini LLMs, Qdrant, FastAPI, AWS, and Next.js.",
     impact: "Combines RAG, cloud APIs, authentication, and production data handling.",
     tags: ["RAG", "Gemini", "Qdrant", "FastAPI", "AWS", "Next.js"],
-    href: "/blog/genai-field-notes/"
+    href: "https://stagging.kartavvya.com"
   }
 ];
 

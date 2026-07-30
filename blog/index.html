@@ -4,14 +4,23 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="AI/ML and Generative AI blog by Mohammad Sameer.">
+    <meta name="author" content="Mohammad Sameer">
+    <meta name="robots" content="index, follow">
     <title>Blog | Mohammad Sameer</title>
     <link rel="canonical" href="https://sam18.xyz/blog/">
     <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Mohammad Sameer">
     <meta property="og:title" content="Blog | Mohammad Sameer">
     <meta property="og:description" content="Field notes on AI/ML, Generative AI, RAG, and building production systems by Mohammad Sameer.">
     <meta property="og:url" content="https://sam18.xyz/blog/">
     <meta property="og:image" content="https://sam18.xyz/assets/neural-console.png">
+    <meta property="og:image:alt" content="Mohammad Sameer AI/ML field notes">
     <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AI/ML & Generative AI Field Notes | Mohammad Sameer">
+    <meta name="twitter:description" content="Practical field notes on Generative AI, RAG, evaluation, and production AI systems.">
+    <meta name="twitter:image" content="https://sam18.xyz/assets/neural-console.png">
+    <link rel="alternate" type="application/rss+xml" title="Mohammad Sameer — AI/ML Field Notes" href="https://sam18.xyz/blog/rss.xml">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"CollectionPage","name":"Mohammad Sameer — AI/ML Field Notes","url":"https://sam18.xyz/blog/","description":"Practical notes on Generative AI, RAG, evaluation, and building production AI systems.","author":{"@type":"Person","name":"Mohammad Sameer","url":"https://sam18.xyz/"}}</script>
     <script>
       // Site is dark-only ("Glass & Void"); force dark to avoid an unstyled light flash.
         document.documentElement.dataset.theme = "dark";
@@ -20,17 +29,15 @@
   </head>
   <body>
 
-    <div id="globalLoader" class="global-loader">
+    <div id="globalLoader" class="global-loader" role="status" aria-live="polite" aria-label="Loading page">
       <div class="loader-spinner"></div>
     </div>
     <script>
-      window.addEventListener('load', () => {
+      window.addEventListener('load', () => window.setTimeout(() => {
+        if (window.__portfolioLoaderReady) return;
         const loader = document.getElementById('globalLoader');
-        if (loader) {
-          loader.classList.add('hidden');
-          setTimeout(() => loader.remove(), 500);
-        }
-      });
+        if (loader) { loader.classList.add('hidden'); loader.setAttribute('aria-hidden', 'true'); setTimeout(() => loader.remove(), 500); }
+      }, 3000));
     </script>
 
     <div class="app-shell">

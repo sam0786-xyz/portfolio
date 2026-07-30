@@ -19,12 +19,24 @@ export function renderBlogReactions(container, slug) {
     </div>
 
     <div class="comments-section">
-      <h3>Comments</h3>
+      <div class="comments-heading">
+        <div>
+          <span class="eyebrow">Join the conversation</span>
+          <h3>Comments</h3>
+        </div>
+        <p>Share a concise, respectful note. Your name appears with your comment.</p>
+      </div>
       <form class="comment-form" data-comment-form>
-        <input name="name" placeholder="Your name" required autocomplete="name">
-        <textarea name="body" placeholder="Share your thoughts..." required rows="3"></textarea>
-        <button class="primary-link" type="submit">Post comment</button>
+        <label for="comment-name-${slug}">Your name</label>
+        <input class="v3-input" id="comment-name-${slug}" name="name" placeholder="e.g., Priya Sharma" required autocomplete="name" maxlength="80">
+        <label for="comment-body-${slug}">Your comment</label>
+        <textarea class="v3-input" id="comment-body-${slug}" name="body" placeholder="What would you like to add?" required rows="4" maxlength="1200"></textarea>
+        <div class="comment-form-footer">
+          <p>Visible publicly after posting.</p>
+          <button class="v3-btn v3-btn-primary" type="submit">Post comment</button>
+        </div>
       </form>
+      <p class="comment-status" data-comment-status role="status" aria-live="polite"></p>
       <div class="comment-list" data-comment-list></div>
     </div>
   `;
@@ -57,8 +69,13 @@ export function renderBlogReactions(container, slug) {
     const name = form.get("name").toString().trim();
     const body = form.get("body").toString().trim();
     if (!name || !body) return;
+    const status = section.querySelector("[data-comment-status]");
+    status.textContent = "Posting your comment…";
     const ok = await postComment(section, slug, name, body);
-    if (ok) formEl.reset();
+    if (ok) {
+      formEl.reset();
+      status.textContent = "Thanks — your comment is now live.";
+    }
   });
 }
 
@@ -122,7 +139,10 @@ async function postComment(section, slug, name, body) {
   const config = await hydrateSupabaseConfig();
   const comment = { post_slug: slug, name, body, created_at: new Date().toISOString() };
 
-  if (!config.url || !config.anonKey) return false;
+  if (!config.url || !config.anonKey) {
+    section.querySelector("[data-comment-status]").textContent = "Comments are not available right now. Please try again later.";
+    return false;
+  }
 
   try {
     await supabaseFetch("blog_comments", {
@@ -138,12 +158,7 @@ async function postComment(section, slug, name, body) {
     return true;
   } catch (err) {
     console.error("Failed to post comment:", err);
-    const list = section.querySelector("[data-comment-list]");
-    list.insertAdjacentHTML("afterbegin", `<p class="comment-error" style="color:var(--danger,#e55)">Failed to post comment. Please try again.</p>`);
-    setTimeout(() => {
-      const errEl = list.querySelector(".comment-error");
-      if (errEl) errEl.remove();
-    }, 4000);
+    section.querySelector("[data-comment-status]").textContent = "Couldn’t post your comment. Please try again.";
     return false;
   }
 }

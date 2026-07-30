@@ -4,6 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="GenAI field notes by Mohammad Sameer.">
+    <meta name="robots" content="index, follow">
+    <link rel="alternate" type="application/rss+xml" title="Mohammad Sameer — AI/ML Field Notes" href="https://sam18.xyz/blog/rss.xml">
     <title>GenAI Field Notes | Mohammad Sameer</title>
     <script>
       // Site is dark-only ("Glass & Void"); force dark to avoid an unstyled light flash.
@@ -13,17 +15,15 @@
   </head>
   <body>
 
-    <div id="globalLoader" class="global-loader">
+    <div id="globalLoader" class="global-loader" role="status" aria-live="polite" aria-label="Loading page">
       <div class="loader-spinner"></div>
     </div>
     <script>
-      window.addEventListener('load', () => {
+      window.addEventListener('load', () => window.setTimeout(() => {
+        if (window.__portfolioLoaderReady) return;
         const loader = document.getElementById('globalLoader');
-        if (loader) {
-          loader.classList.add('hidden');
-          setTimeout(() => loader.remove(), 500);
-        }
-      });
+        if (loader) { loader.classList.add('hidden'); loader.setAttribute('aria-hidden', 'true'); setTimeout(() => loader.remove(), 500); }
+      }, 3000));
     </script>
 
     <div class="app-shell">

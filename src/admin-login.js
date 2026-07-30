@@ -1,9 +1,11 @@
 import { bootTheme } from "./theme.js";
+import { bootLoader, dismissLoader } from "./loader.js";
 
 const CMS_AUTH_KEY = "sameer-cms-auth-v1";
 // SHA-256 of "sameer-admin-2026"
 const ADMIN_HASH = "189dae6cfcc30b889226afa557f8c006c5b24b24468f0cfe9ea14df910789956";
 
+bootLoader();
 bootTheme();
 
 async function sha256(text) {
@@ -58,3 +60,5 @@ form.addEventListener("submit", async (event) => {
     status.textContent = "Invalid credentials.";
   }
 });
+
+dismissLoader();

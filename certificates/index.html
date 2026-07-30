@@ -4,14 +4,22 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Verified certificate timeline for Mohammad Sameer.">
+    <meta name="author" content="Mohammad Sameer">
+    <meta name="robots" content="index, follow">
     <title>Certificates | Mohammad Sameer</title>
     <link rel="canonical" href="https://sam18.xyz/certificates/">
     <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Mohammad Sameer">
     <meta property="og:title" content="Certificates | Mohammad Sameer">
     <meta property="og:description" content="Verified credentials and certificate timeline for Mohammad Sameer, AI/ML Engineer.">
     <meta property="og:url" content="https://sam18.xyz/certificates/">
     <meta property="og:image" content="https://sam18.xyz/assets/neural-console.png">
+    <meta property="og:image:alt" content="Verified AI and cloud credentials for Mohammad Sameer">
     <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AI/ML & Cloud Certificates | Mohammad Sameer">
+    <meta name="twitter:description" content="Verified learning credentials mapped to practical AI, ML, cloud, and production engineering skills.">
+    <meta name="twitter:image" content="https://sam18.xyz/assets/neural-console.png">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"CollectionPage","name":"Certificates | Mohammad Sameer","url":"https://sam18.xyz/certificates/","description":"Verified credentials and certificate timeline for Mohammad Sameer, AI/ML Engineer.","about":{"@type":"Person","name":"Mohammad Sameer","url":"https://sam18.xyz/"}}</script>
     <script>
       // Site is dark-only ("Glass & Void"); force dark to avoid an unstyled light flash.
         document.documentElement.dataset.theme = "dark";
@@ -20,17 +28,15 @@
   </head>
   <body>
 
-    <div id="globalLoader" class="global-loader">
+    <div id="globalLoader" class="global-loader" role="status" aria-live="polite" aria-label="Loading page">
       <div class="loader-spinner"></div>
     </div>
     <script>
-      window.addEventListener('load', () => {
+      window.addEventListener('load', () => window.setTimeout(() => {
+        if (window.__portfolioLoaderReady) return;
         const loader = document.getElementById('globalLoader');
-        if (loader) {
-          loader.classList.add('hidden');
-          setTimeout(() => loader.remove(), 500);
-        }
-      });
+        if (loader) { loader.classList.add('hidden'); loader.setAttribute('aria-hidden', 'true'); setTimeout(() => loader.remove(), 500); }
+      }, 3000));
     </script>
 
     <div class="app-shell">
