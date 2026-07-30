@@ -6,6 +6,8 @@
 
 - Website: https://sam18.xyz/
 - Contact: hello@sam18.xyz
+- Phone: +91 8603829005
+- Availability: Immediately available to join
 - LinkedIn: https://linkedin.com/in/connect-to-sam-xyz
 - GitHub: https://github.com/sam0786-xyz
 - Résumé: https://sam18.xyz/assets/mohammad-sameer-resume.pdf
@@ -16,6 +18,8 @@ Mohammad Sameer builds production-oriented Generative AI applications and AI/ML 
 
 Current role: Generative AI Developer Intern at AI Zoned.
 Education: B.Tech in Computer Science with an AI & ML specialization at Sharda University.
+Location: Greater Noida, India.
+Open to: AI/ML, Generative AI, and backend engineering opportunities.
 
 ## Areas of expertise
 
@@ -31,6 +35,13 @@ Education: B.Tech in Computer Science with an AI & ML specialization at Sharda U
 - Technova Society Website — a Next.js and Supabase event platform with a gamified dashboard and QR attendance.
 - Gmail Newsletters to Podcast — an automation pipeline using Gmail API, Gemini 2.5 Flash, ElevenLabs, and Pydub.
 - AI CA Exam Preparation Platform — an AI Zoned product for automated answer grading and semantic study-material retrieval using Gemini, Qdrant, FastAPI, AWS, and Next.js.
+
+## Recruiter quick answers
+
+- What does Mohammad Sameer build? Production-oriented LLM and RAG applications, FastAPI services, and cloud-connected AI product workflows.
+- What are his strongest technical areas? Generative AI, RAG, LangChain, Python, FastAPI, SQL, AWS, GCP, Azure, DynamoDB, Qdrant, and evaluation-minded product development.
+- What opportunities is he considering? AI/ML, Generative AI, and backend engineering roles.
+- Is he available to join? Yes, immediately.
 
 ## Primary pages
 

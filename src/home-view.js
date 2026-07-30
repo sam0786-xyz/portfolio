@@ -52,6 +52,44 @@ function renderHero(profile, projects, certificates) {
     </section>`;
 }
 
+/* ── Recruiter brief ──
+   A compact, factual summary makes the page easy to scan for people and
+   straightforward for search and answer engines to cite accurately. */
+function renderRecruiterBrief(profile) {
+  const phoneHref = profile.phone ? profile.phone.replace(/[^+\d]/g, "") : "";
+  return `
+    <section class="v3-container recruiter-brief reveal-up" aria-labelledby="recruiter-brief-title">
+      <div class="recruiter-brief-intro">
+        <span class="eyebrow">Recruiter brief</span>
+        <h2 id="recruiter-brief-title">A quick read before the résumé.</h2>
+        <p class="lede">Applied AI engineer with hands-on experience taking LLM and RAG ideas through to usable, cloud-connected products.</p>
+      </div>
+      <dl class="recruiter-facts">
+        <div>
+          <dt>Current role</dt>
+          <dd>${escapeHtml(profile.role)}${profile.company ? ` at ${escapeHtml(profile.company)}` : ""}</dd>
+        </div>
+        <div>
+          <dt>Open to</dt>
+          <dd>AI/ML, Generative AI, and backend engineering opportunities</dd>
+        </div>
+        <div>
+          <dt>Core strengths</dt>
+          <dd>RAG, LLM applications, FastAPI, cloud backends, and product delivery</dd>
+        </div>
+        <div>
+          <dt>Location & availability</dt>
+          <dd>${escapeHtml(profile.location)} · ${escapeHtml(profile.availability || "Open to opportunities")}</dd>
+        </div>
+      </dl>
+      <div class="recruiter-brief-actions">
+        ${profile.email ? `<a class="v3-btn v3-btn-primary" href="mailto:${escapeHtml(profile.email)}">Email Mohammad</a>` : ""}
+        ${profile.phone ? `<a class="v3-btn v3-btn-glass" href="tel:${escapeHtml(phoneHref)}">Call ${escapeHtml(profile.phone)}</a>` : ""}
+        <a class="v3-btn v3-btn-glass" href="${escapeHtml(profile.resumeUrl)}" download>Download résumé</a>
+      </div>
+    </section>`;
+}
+
 /* ── Experience ── */
 function renderExperience(experience) {
   if (!experience?.length) return "";
@@ -228,6 +266,7 @@ function renderGithub(profile) {
 export function renderHomeMarkup(content) {
   return `
     ${renderHero(content.profile, content.projects, content.certificates)}
+    ${renderRecruiterBrief(content.profile)}
     ${renderExperience(content.experience)}
     ${renderSkillsSection(content.skills)}
     ${renderProjects(content.projects)}

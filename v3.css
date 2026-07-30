@@ -279,6 +279,43 @@ h4 { font-family: var(--font-display); font-size: 1.1rem; font-weight: 500; }
 .candidate-availability > a:hover { color: var(--accent-1); }
 .footer-contact-actions { justify-content: center; }
 
+/* Recruiter brief: concise, high-signal answers for quick human review */
+.recruiter-brief {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.9fr) minmax(0, 1.5fr);
+  gap: var(--space-5);
+  padding-top: var(--space-4);
+  padding-bottom: var(--space-4);
+}
+.recruiter-brief-intro h2 { margin-bottom: var(--space-2); }
+.recruiter-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  margin: 0;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  background: var(--glass-border);
+}
+.recruiter-facts > div { padding: var(--space-3); background: var(--bg-surface-1); }
+.recruiter-facts dt {
+  margin-bottom: 6px;
+  color: var(--accent-1);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.recruiter-facts dd { margin: 0; color: var(--text-main); font-size: 0.94rem; line-height: 1.5; }
+.recruiter-brief-actions {
+  display: flex;
+  grid-column: 1 / -1;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
 /* Grids */
 .v3-grid   { display: grid; gap: var(--space-4); }
 .v3-grid-2 { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
@@ -1240,6 +1277,7 @@ details[open].v3-card > summary::after { transform: rotate(90deg); }
   .fs-main { flex-direction: column; }
   .fs-tasks { flex: none; width: 100%; }
   .comments-heading { align-items: flex-start; flex-direction: column; }
+  .recruiter-brief { grid-template-columns: 1fr; gap: var(--space-3); }
 }
 
 @media (max-width: 480px) {
@@ -1248,6 +1286,9 @@ details[open].v3-card > summary::after { transform: rotate(90deg); }
   .v3-hero-ctas .v3-btn { width: 100%; }
   .v3-project-card { aspect-ratio: 3/2; }
   .candidate-availability { align-items: flex-start; flex-direction: column; }
+  .recruiter-facts { grid-template-columns: 1fr; }
+  .recruiter-brief-actions { flex-direction: column; }
+  .recruiter-brief-actions .v3-btn { width: 100%; }
   .comment-form-footer { align-items: stretch; flex-direction: column; }
   .comment-form-footer .v3-btn { width: 100%; }
 }
