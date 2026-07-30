@@ -114,8 +114,11 @@ export function exportSiteContent() {
 
 function mergeContent(base, override) {
   if (!override || typeof override !== "object") return base;
+  const baseVer = Number(base.version) || 0;
+  const overVer = Number(override.version) || 0;
+  if (overVer > 0 && overVer < baseVer) return base;
   const next = { ...base, ...override };
-  next.version = Math.max(Number(base.version) || 0, Number(override.version) || 0);
+  next.version = Math.max(baseVer, overVer);
   next.profile = { ...base.profile, ...(override.profile || {}) };
   next.profile.socials = Array.isArray(override.profile?.socials)
     ? override.profile.socials
