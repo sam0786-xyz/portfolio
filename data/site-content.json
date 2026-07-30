@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "profile": {
     "name": "Mohammad Sameer",
     "role": "Generative AI Developer Intern",
@@ -8,6 +8,7 @@
     "semester": "6th semester, currently giving end-sem exams",
     "location": "Greater Noida, India",
     "phone": "+91 8603829005",
+    "availability": "Immediately available to join",
     "email": "hello@sam18.xyz",
     "resumeUrl": "/assets/mohammad-sameer-resume.pdf",
     "avatarAlt": "Abstract neural console artwork for Mohammad Sameer",

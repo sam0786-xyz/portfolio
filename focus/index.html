@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Focus OS for deep work by Mohammad Sameer.">
+    <meta name="robots" content="noindex, nofollow, noarchive">
     <title>Focus OS | Mohammad Sameer</title>
     <link rel="canonical" href="https://sam18.xyz/focus/">
     <meta property="og:type" content="website">
@@ -20,17 +21,15 @@
   </head>
   <body>
 
-    <div id="globalLoader" class="global-loader">
+    <div id="globalLoader" class="global-loader" role="status" aria-live="polite" aria-label="Loading page">
       <div class="loader-spinner"></div>
     </div>
     <script>
-      window.addEventListener('load', () => {
+      window.addEventListener('load', () => window.setTimeout(() => {
+        if (window.__portfolioLoaderReady) return;
         const loader = document.getElementById('globalLoader');
-        if (loader) {
-          loader.classList.add('hidden');
-          setTimeout(() => loader.remove(), 500);
-        }
-      });
+        if (loader) { loader.classList.add('hidden'); loader.setAttribute('aria-hidden', 'true'); setTimeout(() => loader.remove(), 500); }
+      }, 3000));
     </script>
 
     <div class="app-shell">

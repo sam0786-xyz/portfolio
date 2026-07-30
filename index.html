@@ -8,7 +8,9 @@
     <meta name="author" content="Mohammad Sameer">
     <meta name="keywords" content="Mohammad Sameer, AI/ML Engineer, Generative AI, RAG, LangChain, FastAPI, Machine Learning, Cloud, Python, GenAI Developer">
     <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#05070d">
     <link rel="canonical" href="https://sam18.xyz/">
+    <link rel="alternate" type="application/rss+xml" title="Mohammad Sameer — AI/ML Field Notes" href="https://sam18.xyz/blog/rss.xml">
 
     <!-- Open Graph / Facebook / LinkedIn -->
     <meta property="og:type" content="website">
@@ -18,29 +20,51 @@
     <meta property="og:url" content="https://sam18.xyz/">
     <meta property="og:image" content="https://sam18.xyz/assets/neural-console.png">
     <meta property="og:image:alt" content="Mohammad Sameer — AI/ML Engineer">
+    <meta property="og:locale" content="en_IN">
 
     <!-- Twitter / X -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Mohammad Sameer — AI/ML Engineer | Generative AI, RAG & Cloud">
     <meta name="twitter:description" content="AI/ML engineer building production Generative AI applications with RAG, FastAPI, LangChain, and cloud backends.">
     <meta name="twitter:image" content="https://sam18.xyz/assets/neural-console.png">
+    <meta name="twitter:site" content="@sam0786_xyz">
 
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "Person",
-      "name": "Mohammad Sameer",
-      "jobTitle": "Generative AI Developer",
-      "description": "AI and Machine Learning engineer building production-ready GenAI applications with RAG, FastAPI, LangChain, cloud backends, and practical product workflows.",
-      "url": "https://sam18.xyz",
-      "image": "https://sam18.xyz/assets/neural-console.png",
-      "email": "mailto:hello@sam18.xyz",
-      "worksFor": { "@type": "Organization", "name": "AI Zoned" },
-      "alumniOf": { "@type": "EducationalOrganization", "name": "Sharda University" },
-      "knowsAbout": ["Generative AI", "RAG", "LangChain", "Machine Learning", "FastAPI", "Python", "Cloud Computing", "LLMs"],
-      "sameAs": [
-        "https://linkedin.com/in/connect-to-sam-xyz",
-        "https://github.com/sam0786-xyz"
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://sam18.xyz/#website",
+          "url": "https://sam18.xyz/",
+          "name": "Mohammad Sameer — AI/ML Engineer Portfolio",
+          "inLanguage": "en-IN",
+          "publisher": { "@id": "https://sam18.xyz/#person" }
+        },
+        {
+          "@type": "ProfilePage",
+          "@id": "https://sam18.xyz/#profile",
+          "url": "https://sam18.xyz/",
+          "mainEntity": { "@id": "https://sam18.xyz/#person" }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://sam18.xyz/#person",
+          "name": "Mohammad Sameer",
+          "jobTitle": "Generative AI Developer",
+          "description": "AI and Machine Learning engineer building production-ready GenAI applications with RAG, FastAPI, LangChain, cloud backends, and practical product workflows.",
+          "url": "https://sam18.xyz/",
+          "image": "https://sam18.xyz/assets/neural-console.png",
+          "email": "mailto:hello@sam18.xyz",
+          "telephone": "+91 8603829005",
+          "worksFor": { "@type": "Organization", "name": "AI Zoned" },
+          "alumniOf": { "@type": "EducationalOrganization", "name": "Sharda University" },
+          "knowsAbout": ["Generative AI", "RAG", "LangChain", "Machine Learning", "FastAPI", "Python", "Cloud Computing", "LLMs"],
+          "sameAs": [
+            "https://linkedin.com/in/connect-to-sam-xyz",
+            "https://github.com/sam0786-xyz"
+          ]
+        }
       ]
     }
     </script>
@@ -55,17 +79,15 @@
   </head>
   <body>
 
-    <div id="globalLoader" class="global-loader">
+    <div id="globalLoader" class="global-loader" role="status" aria-live="polite" aria-label="Loading page">
       <div class="loader-spinner"></div>
     </div>
     <script>
-      window.addEventListener('load', () => {
+      window.addEventListener('load', () => window.setTimeout(() => {
+        if (window.__portfolioLoaderReady) return;
         const loader = document.getElementById('globalLoader');
-        if (loader) {
-          loader.classList.add('hidden');
-          setTimeout(() => loader.remove(), 500);
-        }
-      });
+        if (loader) { loader.classList.add('hidden'); loader.setAttribute('aria-hidden', 'true'); setTimeout(() => loader.remove(), 500); }
+      }, 3000));
     </script>
 
     <div class="app-shell">

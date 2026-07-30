@@ -62,6 +62,7 @@ function renderCms() {
               ${profileField("education", "Education")}
               ${profileField("semester", "Current state")}
               ${profileField("location", "Location")}
+              ${profileField("availability", "Availability")}
               ${profileField("phone", "Phone")}
               ${profileField("email", "Email")}
               ${profileField("resumeUrl", "Resume URL")}

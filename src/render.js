@@ -134,13 +134,17 @@ export function mountShell(active = "home") {
 
   if (footer) {
     const year = new Date().getFullYear();
+    const phoneHref = profile.phone ? profile.phone.replace(/[^+\d]/g, "") : "";
     footer.innerHTML = `
       <div class="v3-container v3-footer">
         <div class="v3-footer-cta">
-          <span class="eyebrow">Available for opportunities</span>
+          <span class="eyebrow">${escapeHtml(profile.availability || "Available for opportunities")}</span>
           <h2>Let's build something together.</h2>
           <p class="lede" style="margin: var(--space-2) auto var(--space-4);">I'm always interested in challenging AI/ML roles and collaborations.</p>
-          ${profile.email ? `<a class="v3-btn v3-btn-primary" href="mailto:${escapeHtml(profile.email)}">Get in touch</a>` : ""}
+          <div class="v3-hero-ctas footer-contact-actions">
+            ${profile.email ? `<a class="v3-btn v3-btn-primary" href="mailto:${escapeHtml(profile.email)}">Email me</a>` : ""}
+            ${profile.phone ? `<a class="v3-btn v3-btn-glass" href="tel:${escapeHtml(phoneHref)}">Call ${escapeHtml(profile.phone)}</a>` : ""}
+          </div>
         </div>
         <div class="v3-footer-grid">
           <div class="v3-footer-brand">

@@ -4,14 +4,22 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="LinkedIn post showcase for Mohammad Sameer.">
+    <meta name="author" content="Mohammad Sameer">
+    <meta name="robots" content="index, follow">
     <title>LinkedIn Posts | Mohammad Sameer</title>
     <link rel="canonical" href="https://sam18.xyz/linkedin/">
     <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Mohammad Sameer">
     <meta property="og:title" content="LinkedIn Posts | Mohammad Sameer">
     <meta property="og:description" content="LinkedIn highlights from Mohammad Sameer, AI/ML Engineer working in Generative AI.">
     <meta property="og:url" content="https://sam18.xyz/linkedin/">
     <meta property="og:image" content="https://sam18.xyz/assets/neural-console.png">
+    <meta property="og:image:alt" content="Mohammad Sameer LinkedIn updates">
     <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="LinkedIn Updates | Mohammad Sameer">
+    <meta name="twitter:description" content="Selected public updates on Generative AI, RAG, product building, and community work.">
+    <meta name="twitter:image" content="https://sam18.xyz/assets/neural-console.png">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"ProfilePage","name":"Mohammad Sameer LinkedIn Updates","url":"https://sam18.xyz/linkedin/","mainEntity":{"@type":"Person","name":"Mohammad Sameer","sameAs":"https://linkedin.com/in/connect-to-sam-xyz"}}</script>
     <script>
       // Site is dark-only ("Glass & Void"); force dark to avoid an unstyled light flash.
         document.documentElement.dataset.theme = "dark";
@@ -20,17 +28,15 @@
   </head>
   <body>
 
-    <div id="globalLoader" class="global-loader">
+    <div id="globalLoader" class="global-loader" role="status" aria-live="polite" aria-label="Loading page">
       <div class="loader-spinner"></div>
     </div>
     <script>
-      window.addEventListener('load', () => {
+      window.addEventListener('load', () => window.setTimeout(() => {
+        if (window.__portfolioLoaderReady) return;
         const loader = document.getElementById('globalLoader');
-        if (loader) {
-          loader.classList.add('hidden');
-          setTimeout(() => loader.remove(), 500);
-        }
-      });
+        if (loader) { loader.classList.add('hidden'); loader.setAttribute('aria-hidden', 'true'); setTimeout(() => loader.remove(), 500); }
+      }, 3000));
     </script>
 
     <div class="app-shell">
