@@ -18,7 +18,7 @@ export function setupScrollAnimations(root = document) {
         observer.unobserve(entry.target);
       });
     },
-    { threshold: 0.16, rootMargin: "0px 0px -8% 0px" }
+    { threshold: 0.04, rootMargin: "0px 0px 0px 0px" }
   );
 
   animated.forEach((element) => observer.observe(element));
