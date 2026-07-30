@@ -259,6 +259,14 @@ export function sanitizeLinkedInEmbed(embedHtml) {
 }
 
 export function renderLinkedInCard(post, options = {}) {
+  if (post.embedHtml) {
+    return `
+      <div class="reveal-up" style="display: flex; justify-content: center; margin-bottom: var(--space-4);">
+        ${post.embedHtml}
+      </div>
+    `;
+  }
+
   const dateStr = new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(new Date(post.publishedAt));
   return `
     <a href="${post.url}" class="v3-minimal-row reveal-up" target="_blank" rel="noreferrer">

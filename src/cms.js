@@ -416,7 +416,7 @@ function readCms() {
   next.skills = Array.from(skillGroups).map((groupEl) => {
     const gi = groupEl.dataset.skillGroup;
     const groupName = document.querySelector(`[data-skill-group-name="${gi}"]`)?.value?.trim() || "";
-    const items = Array.from(groupEl.querySelectorAll(".cms-chip"))
+    const items = Array.from(groupEl.querySelectorAll(".v3-tag"))
       .map(el => el.textContent.replace("×", "").trim())
       .filter(Boolean);
     return { group: groupName, items };
