@@ -24,19 +24,16 @@ A modern, dependency-free portfolio website built with vanilla JavaScript, HTML,
 | **Frontend** | Vanilla JS (ES Modules), HTML5, CSS3 |
 | **Server** | Node.js (`node:http`) — zero dependencies |
 | **Database** | [Supabase](https://supabase.com) (PostgreSQL + REST API) |
-| **Hosting** | Google Cloud Run (containerized) |
-| **CI/CD** | Google Cloud Build → auto-deploy on push |
+| **Hosting** | Netlify (Static Site) |
+| **CI/CD** | Netlify Auto-Deploy from GitHub |
 | **Domain** | `sam18.xyz` via custom DNS |
 | **Icons** | [Simple Icons CDN](https://simpleicons.org) for brand logos |
 
 ## Project Structure
 
 ```text
-├── server.mjs              # Node.js HTTP server (static files + API routes)
-├── Dockerfile              # Cloud Run container config
-├── package.json            # Scripts (start, dev, check)
-│
-├── index.html              # Home shell (server-rendered on request)
+├── server.mjs              # Local Node.js dev server (static files + local API routes)
+├── index.html              # Home shell (static entry)
 ├── v3.css                  # Global stylesheet (design tokens, components, animations)
 ├── blog/index.html                    # Blog listing shell
 ├── blog/genai-field-notes/index.html  # Shared blog-post template shell
@@ -49,58 +46,36 @@ A modern, dependency-free portfolio website built with vanilla JavaScript, HTML,
 │
 ├── src/
 │   ├── data/
-│   │   └── content.js      # Default site content (profile, projects, skills, blog, etc.)
-│   ├── ssr.mjs             # Server-side render helpers for the home page
+│   │   └── content.js      # Default site content fallback
 │   ├── main.js             # Home page renderer and interactions
-│   ├── home-view.js        # Home page markup (hero, experience, skills, projects, GitHub)
-│   ├── render.js           # Shared UI components (cards, pills, icons, skill logos)
-│   ├── github-repos.js     # Live GitHub repos section (progressive enhancement)
-│   ├── loader.js           # Global page-loader control
-│   ├── animations.js       # Scroll-triggered reveal animations + neural canvas
+│   ├── home-view.js        # Home page markup
+│   ├── render.js           # Shared UI components & utilities
+│   ├── animations.js       # IntersectionObserver scroll-reveals + neural canvas
 │   ├── theme.js            # Theme control (dark-only "Glass & Void")
-│   ├── content-store.js    # Content layer (localStorage + Supabase sync)
-│   ├── supabase-client.js  # Supabase REST API helper (browser)
-│   ├── blog.js             # Blog listing page logic
-│   ├── post.js             # Blog post page logic
-│   ├── blog-admin-store.js # Blog CRUD client for the studio
-│   ├── blog-reactions.js   # Like/dislike + comments (Supabase-backed)
-│   ├── certificates.js     # Certificate timeline page logic
-│   ├── linkedin.js         # LinkedIn showcase page logic
-│   ├── focus.js            # Focus OS — Pomodoro, tasks, calendar, streaks
-│   ├── focus-auth.js       # Focus OS email-based authentication
-│   ├── focus-store.js      # Focus OS data persistence layer
-│   ├── admin-login.js      # Admin login for CMS/Studio
+│   ├── content-store.js    # Content layer (localStorage fallback for static deploys)
 │   ├── cms.js              # Admin CMS (edit profile, projects, certs, blog)
-│   └── studio.js           # Writing studio (drafts, markdown)
+│   └── ...                 # Additional feature modules
 │
 ├── assets/                  # Static assets (resume PDF, images)
 ├── data/
-│   └── site-content.json    # CMS-managed content (auto-generated)
-└── supabase/
-    ├── schema.sql              # Database schema + RLS policies
-    ├── migrations.sql          # Incremental migrations
-    └── security-hardening.sql  # focus_users lockdown + comment constraints
+│   └── site-content.json    # CMS-managed content
 ```
 
-> Routing note: the Node server serves only an allowlist of top-level paths
-> (`assets/`, `src/`, the page directories, and a few root files). Source like
-> `server.mjs`, `package.json`, and `supabase/*` is never exposed over HTTP.
-> `/sitemap.xml` and `/blog/rss.xml` are generated dynamically from live posts.
+> **Deployment Architecture Note:**
+> The site is deployed as a **Static Site** on Netlify. Because there is no active Node.js backend in production (`server.mjs` is only used for local development), the site gracefully degrades its save operations. Changes made in the CMS are persisted to the browser's `localStorage`. The data layer (`content-store.js`) dynamically merges the base `site-content.json` file with your local storage overrides to render the site.
 
 ## Features
 
 ### 🏠 Portfolio Home
 - Hero section with contact links, status badges, and resume download
 - Interactive project showcase with tabbed detail view
-- Skills grid with **real brand logos** (Python, TensorFlow, AWS, etc.)
+- Skills grid with real brand logos
 - Separated Education and Leadership sections
 - Impact stats counter
-- Blog preview cards
 
 ### 📝 Blog
 - Markdown-ready blog posts with cover images
-- **Like/Dislike reactions** persisted to Supabase
-- **Comment system** with name + body, sorted by date
+- Scroll-triggered reveal animations optimized for tall content
 - Reading time estimates
 - Tag-based categorization
 
@@ -109,34 +84,23 @@ A modern, dependency-free portfolio website built with vanilla JavaScript, HTML,
 - Featured certificate highlighting
 
 ### 🔗 LinkedIn Showcase
-- Curated LinkedIn post cards with stats
-- Optional raw embed support for official LinkedIn iframes
+- Full iframe embeds of featured LinkedIn posts
 - Direct links to profile
 
-### 🧠 Focus OS
-- Email-based authentication (profiles stored in Supabase)
-- Pomodoro timer with session tracking
-- Task management with streaks
-- Calendar view
-- Data synced via Supabase with localStorage fallback
-
 ### 🔒 Admin CMS & Studio
-- Password-protected admin panel
-- Edit profile, projects, certificates, and blog posts
-- Resume PDF upload
-- Writing studio with draft management and markdown editing
+- Admin panel for editing profile, projects, certificates, and skills
+- Due to static hosting, saves are stored locally in the browser until manually committed to the repository `data/site-content.json`.
 
 ### ✨ Design & UX
 - Neural network canvas backdrop — animated particle system
-- Scroll-triggered fade/slide animations
+- Scroll-triggered fade/slide animations (optimized for all viewport heights)
 - Single, deliberate dark "Glass & Void" theme
 - Fully responsive (mobile → desktop)
-- Glassmorphism panels and micro-interactions
 
 ## Getting Started
 
 ### Prerequisites
-- Node.js 18+
+- Node.js 18+ (for local dev server)
 
 ### Local Development
 
@@ -145,61 +109,20 @@ A modern, dependency-free portfolio website built with vanilla JavaScript, HTML,
 git clone https://github.com/sam0786-xyz/portfolio.git
 cd portfolio
 
-# Start the dev server
+# Start the local dev server (enables CMS JSON saving)
 npm run dev
 ```
 
 Open [http://localhost:8080](http://localhost:8080)
 
-### Environment Variables
-
-Create a `.env` file in the project root:
-
-```env
-# Admin credentials
-ADMIN_USERNAME=your_username
-ADMIN_PASSWORD_HASH=your_pbkdf2_hash
-
-# Supabase (optional — falls back to localStorage)
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_key
-
-# Server
-PORT=8080
-HOST=0.0.0.0
-```
-
-### Docker
-
-```bash
-docker build -t portfolio .
-docker run -p 8080:8080 portfolio
-```
-
-## Database Setup (Supabase)
-
-Run the SQL from `supabase/schema.sql` in your Supabase SQL editor. This creates:
-
-| Table | Purpose |
-|---|---|
-| `site_content` | CMS-managed site content |
-| `focus_users` | Focus OS user profiles |
-| `focus_data` | Focus OS tasks, streaks, sessions |
-| `blog_reactions` | Blog like/dislike counts |
-| `blog_comments` | Blog comment threads |
-
-All tables include Row Level Security (RLS) policies for public read/write access on interaction tables and service-role-only access for admin content.
-
 ## Deployment
 
-The project auto-deploys to **Google Cloud Run** via Cloud Build:
+The project auto-deploys as a static site to **Netlify**:
 
 1. Push to the `sam-dev` branch
-2. Cloud Build triggers automatically
-3. Builds Docker container
-4. Deploys to Cloud Run
-5. Custom domain `sam18.xyz` routes to the service
+2. Netlify triggers automatically
+3. Serves the raw HTML/JS/CSS directly
+4. Custom domain `sam18.xyz` routes to the service
 
 ## Routes
 
