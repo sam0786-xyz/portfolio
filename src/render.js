@@ -39,13 +39,9 @@ const skillLogos = {
   "sql": "https://cdn.simpleicons.org/postgresql/52c7b8",
   "fastapi": "https://cdn.simpleicons.org/fastapi/52c7b8",
   "jwt authentication": "https://cdn.simpleicons.org/jsonwebtokens/52c7b8",
-  "aws": "https://cdn.simpleicons.org/amazonwebservices/52c7b8",
   "gcp": "https://cdn.simpleicons.org/googlecloud/52c7b8",
-  "azure": "https://cdn.simpleicons.org/azure/52c7b8",
-  "dynamodb": "https://cdn.simpleicons.org/amazondynamodb/52c7b8",
   "qdrant": "https://cdn.simpleicons.org/qdrant/52c7b8",
   "elevenlabs": "https://cdn.simpleicons.org/elevenlabs/52c7b8",
-  "twilio": "https://cdn.simpleicons.org/twilio/52c7b8",
   "next.js": "https://cdn.simpleicons.org/nextdotjs/52c7b8",
   "typescript": "https://cdn.simpleicons.org/typescript/52c7b8",
   "tailwind css": "https://cdn.simpleicons.org/tailwindcss/52c7b8",
@@ -69,7 +65,7 @@ export function skillIcon(name) {
   if (!url) {
     return `<svg class="skill-svg skill-svg-generic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l1.9 6.1L20 10l-6.1 1.9L12 18l-1.9-6.1L4 10l6.1-1.9L12 2z" fill="currentColor"/></svg>`;
   }
-  return `<img class="skill-svg" src="${url}" alt="${escapeHtml(name || "skill")}" loading="lazy">`;
+  return `<img class="skill-svg" src="${url}" alt="" loading="lazy">`;
 }
 
 /**

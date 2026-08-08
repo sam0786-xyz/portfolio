@@ -19,15 +19,15 @@ A modern, dependency-free portfolio website built with vanilla JavaScript, HTML,
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| **Frontend** | Vanilla JS (ES Modules), HTML5, CSS3 |
-| **Server** | Node.js (`node:http`) — zero dependencies |
-| **Database** | [Supabase](https://supabase.com) (PostgreSQL + REST API) |
-| **Hosting** | Netlify (Static Site) |
-| **CI/CD** | Netlify Auto-Deploy from GitHub |
-| **Domain** | `sam18.xyz` via custom DNS |
-| **Icons** | [Simple Icons CDN](https://simpleicons.org) for brand logos |
+| Layer        | Technology                                                  |
+| ------------ | ----------------------------------------------------------- |
+| **Frontend** | Vanilla JS (ES Modules), HTML5, CSS3                        |
+| **Server**   | Node.js (`node:http`) — zero dependencies                   |
+| **Database** | [Supabase](https://supabase.com) (PostgreSQL + REST API)    |
+| **Hosting**  | Google Cloud Run (containerized)                            |
+| **CI/CD**    | Google Cloud Build → auto-deploy on push                    |
+| **Domain**   | `sam18.xyz` via custom DNS                                  |
+| **Icons**    | [Simple Icons CDN](https://simpleicons.org) for brand logos |
 
 ## Project Structure
 
@@ -67,6 +67,7 @@ A modern, dependency-free portfolio website built with vanilla JavaScript, HTML,
 ## Features
 
 ### 🏠 Portfolio Home
+
 - Hero section with contact links, status badges, and resume download
 - Interactive project showcase with tabbed detail view
 - Skills grid with real brand logos
@@ -74,24 +75,29 @@ A modern, dependency-free portfolio website built with vanilla JavaScript, HTML,
 - Impact stats counter
 
 ### 📝 Blog
+
 - Markdown-ready blog posts with cover images
 - Scroll-triggered reveal animations optimized for tall content
 - Reading time estimates
 - Tag-based categorization
 
 ### 🎓 Certificates
+
 - Timeline layout with issuer, skills, and verification links
 - Featured certificate highlighting
 
 ### 🔗 LinkedIn Showcase
+
 - Full iframe embeds of featured LinkedIn posts
 - Direct links to profile
 
 ### 🔒 Admin CMS & Studio
+
 - Admin panel for editing profile, projects, certificates, and skills
 - Due to static hosting, saves are stored locally in the browser until manually committed to the repository `data/site-content.json`.
 
 ### ✨ Design & UX
+
 - Neural network canvas backdrop — animated particle system
 - Scroll-triggered fade/slide animations (optimized for all viewport heights)
 - Single, deliberate dark "Glass & Void" theme
@@ -100,6 +106,7 @@ A modern, dependency-free portfolio website built with vanilla JavaScript, HTML,
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js 18+ (for local dev server)
 
 ### Local Development
@@ -126,16 +133,16 @@ The project auto-deploys as a static site to **Netlify**:
 
 ## Routes
 
-| Path | Description | Auth |
-|---|---|---|
-| `/` | Portfolio home | Public |
-| `/blog/` | Blog listing | Public |
-| `/blog/:slug/` | Blog post with reactions | Public |
-| `/certificates/` | Certificate timeline | Public |
-| `/linkedin/` | LinkedIn showcase | Public |
-| `/focus/` | Focus OS workspace | Email login |
-| `/cms/` | Admin content manager | Admin password |
-| `/studio/` | Writing studio | Admin password |
+| Path             | Description              | Auth           |
+| ---------------- | ------------------------ | -------------- |
+| `/`              | Portfolio home           | Public         |
+| `/blog/`         | Blog listing             | Public         |
+| `/blog/:slug/`   | Blog post with reactions | Public         |
+| `/certificates/` | Certificate timeline     | Public         |
+| `/linkedin/`     | LinkedIn showcase        | Public         |
+| `/focus/`        | Focus OS workspace       | Email login    |
+| `/cms/`          | Admin content manager    | Admin password |
+| `/studio/`       | Writing studio           | Admin password |
 
 ## Scripts
 
@@ -149,7 +156,7 @@ npm run check    # Syntax-check all source files
 
 **Mohammad Sameer**  
 Generative AI Developer Intern at AI Zoned  
-B.Tech CS (AI & ML) — Sharda University  
+B.Tech CS (AI & ML) — Sharda University
 
 📧 [hello@sam18.xyz](mailto:hello@sam18.xyz)  
 🔗 [linkedin.com/in/connect-to-sam-xyz](https://linkedin.com/in/connect-to-sam-xyz)  

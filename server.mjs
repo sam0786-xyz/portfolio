@@ -41,6 +41,7 @@ const types = {
   ".js": "text/javascript; charset=utf-8",
   ".mjs": "text/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8",
+  ".txt": "text/plain; charset=utf-8",
   ".png": "image/png",
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
@@ -768,10 +769,23 @@ createServer(async (request, response) => {
     ["/blog/index.html", "/blog/"],
     ["/certificates/index.html", "/certificates/"],
     ["/linkedin/index.html", "/linkedin/"],
-    ["/focus/index.html", "/focus/"]
+    ["/focus/index.html", "/focus/"],
+    ["/blog", "/blog/"],
+    ["/certificates", "/certificates/"],
+    ["/linkedin", "/linkedin/"],
+    ["/focus", "/focus/"]
   ]);
   if (request.method === "GET" && canonicalRedirects.has(url)) {
     response.writeHead(301, { location: canonicalRedirects.get(url), "cache-control": "public, max-age=86400" });
+    response.end();
+    return;
+  }
+
+  // Serve each article at one canonical URL, rather than allowing both
+  // `/blog/slug` and `/blog/slug/` to compete in search results.
+  const blogPostWithoutSlash = url.match(/^\/blog\/([a-z0-9][a-z0-9-]*)$/i);
+  if (request.method === "GET" && blogPostWithoutSlash) {
+    response.writeHead(301, { location: `/blog/${blogPostWithoutSlash[1]}/`, "cache-control": "public, max-age=86400" });
     response.end();
     return;
   }

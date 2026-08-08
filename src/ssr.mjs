@@ -20,7 +20,7 @@ import {
   skills
 } from "./data/content.js";
 import { pages, escapeHtml } from "./render.js";
-import { renderHomeMarkup } from "./home-view.js";
+import { portfolioAnswers, renderHomeMarkup } from "./home-view.js";
 
 export function defaultContent() {
   return structuredClone({
@@ -54,9 +54,24 @@ export function mergeContent(base, override) {
     "blogPosts",
     "linkedinPosts"
   ]) {
-    if (Array.isArray(override[key])) next[key] = override[key];
+    if (key === "skills") next[key] = mergeSkills(base[key], override[key]);
+    else if (Array.isArray(override[key])) next[key] = override[key];
   }
   return next;
+}
+
+function mergeSkills(baseSkills, overrideSkills) {
+  if (!Array.isArray(overrideSkills) || !overrideSkills.length) return baseSkills;
+  const defaultsByGroup = new Map(
+    (baseSkills || []).map((group) => [String(group.group || group.category || "").trim().toLowerCase(), group])
+  );
+  const merged = overrideSkills
+    .map((group) => {
+      const key = String(group?.group || group?.category || "").trim().toLowerCase();
+      return Array.isArray(group?.items) && group.items.length ? group : defaultsByGroup.get(key) || null;
+    })
+    .filter(Boolean);
+  return merged.length ? merged : baseSkills;
 }
 
 function renderHeader(active = "home") {
@@ -222,8 +237,45 @@ export function renderBlogPostDocument(template, content, post) {
  * works even when the file is served by a static host.
  */
 export function renderHomeDocument(template, content) {
+  const profile = content.profile || {};
+  const siteUrl = "https://sam18.xyz/";
+  const sameAs = (profile.socials || [])
+    .map((link) => link.href)
+    .filter((href) => /^https:\/\//.test(href || ""));
+  const knowsAbout = (content.skills || []).flatMap((group) => group.items || []);
+  const person = {
+    "@type": "Person",
+    "@id": "https://sam18.xyz/#person",
+    name: profile.name || "Mohammad Sameer",
+    jobTitle: profile.role || "AI/ML Engineer",
+    description: profile.summary || "AI and Machine Learning engineer building production-ready applications.",
+    url: siteUrl,
+    ...(profile.email ? { email: profile.email } : {}),
+    ...(profile.phone ? { telephone: profile.phone } : {}),
+    ...(profile.location ? { address: { "@type": "PostalAddress", addressLocality: profile.location, addressCountry: "IN" } } : {}),
+    ...(profile.company ? { worksFor: { "@type": "Organization", name: profile.company } } : {}),
+    ...(knowsAbout.length ? { knowsAbout } : {}),
+    ...(sameAs.length ? { sameAs } : {})
+  };
+  const schema = {
+    "@context": "https://schema.org",
+    "@graph": [
+      { "@type": "WebSite", "@id": "https://sam18.xyz/#website", url: siteUrl, name: "Mohammad Sameer — AI/ML Engineer Portfolio", inLanguage: "en-IN", publisher: { "@id": "https://sam18.xyz/#person" } },
+      { "@type": "ProfilePage", "@id": "https://sam18.xyz/#profile", url: siteUrl, mainEntity: { "@id": "https://sam18.xyz/#person" } },
+      person,
+      {
+        "@type": "FAQPage",
+        mainEntity: portfolioAnswers(profile, content.skills).map((item) => ({
+          "@type": "Question",
+          name: item.question,
+          acceptedAnswer: { "@type": "Answer", text: item.answer }
+        }))
+      }
+    ]
+  };
   return template
     .replace("<!--SSR-HEADER-->", renderHeader("home"))
     .replace("<!--SSR-HOME-->", renderHomeMarkup(content))
-    .replace("<!--SSR-FOOTER-->", renderFooter(content));
+    .replace("<!--SSR-FOOTER-->", renderFooter(content))
+    .replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/, `<script type="application/ld+json">${JSON.stringify(schema).replaceAll("<", "\\u003c")}</script>`);
 }
