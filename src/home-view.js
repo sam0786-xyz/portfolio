@@ -160,6 +160,51 @@ function renderSkillsSection(skills) {
     </section>`;
 }
 
+/* Clear, on-page answers help recruiters and answer engines quote the
+   portfolio accurately. The same facts are also represented in the schema. */
+export function portfolioAnswers(profile, skills) {
+  const skillsSummary = (skills || [])
+    .flatMap((group) => Array.isArray(group.items) ? group.items : [])
+    .slice(0, 8)
+    .join(", ");
+  const name = profile.name || "Mohammad Sameer";
+  return [
+    {
+      question: `What does ${name} build?`,
+      answer: profile.summary || "Production-oriented AI and machine learning applications."
+    },
+    {
+      question: `What are ${name}'s strongest technical areas?`,
+      answer: skillsSummary || "Generative AI, RAG, FastAPI, cloud backends, and product delivery."
+    },
+    {
+      question: "What opportunities is he considering?",
+      answer: "AI/ML, Generative AI, and backend engineering opportunities."
+    },
+    {
+      question: "Where is he based and when is he available?",
+      answer: `${profile.location || "India"}${profile.availability ? ` · ${profile.availability}` : ""}`
+    }
+  ];
+}
+
+function renderQuickAnswers(profile, skills) {
+  return `
+    <section class="v3-section v3-container" aria-labelledby="quick-answers-title">
+      <div class="reveal-up" style="margin-bottom: var(--space-5);">
+        <span class="eyebrow">Quick answers</span>
+        <h2 id="quick-answers-title">The essentials, clearly answered.</h2>
+      </div>
+      <div class="v3-grid v3-grid-2 stagger-children">
+        ${portfolioAnswers(profile, skills).map((item) => `
+          <article class="v3-card reveal-up">
+            <h3 class="v3-row-title">${escapeHtml(item.question)}</h3>
+            <p>${escapeHtml(item.answer)}</p>
+          </article>`).join("")}
+      </div>
+    </section>`;
+}
+
 /* ── Projects (major work — unchanged "Selected Work" section) ── */
 function renderProjects(projects) {
   if (!projects?.length) return "";
@@ -270,6 +315,7 @@ export function renderHomeMarkup(content) {
     ${renderExperience(content.experience)}
     ${renderSkillsSection(content.skills)}
     ${renderProjects(content.projects)}
+    ${renderQuickAnswers(content.profile, content.skills)}
     ${renderMiniProjects(content.miniProjects)}
     ${renderGithub(content.profile)}
   `;

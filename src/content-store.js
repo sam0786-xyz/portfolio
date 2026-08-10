@@ -135,7 +135,9 @@ function mergeContent(base, override) {
     "certificates",
     "blogPosts"
   ]) {
-    if (key === "blogPosts" && Array.isArray(override[key]) && !override[key].length && base[key]?.length) {
+    if (key === "skills") {
+      next[key] = mergeSkills(base[key], override[key]);
+    } else if (key === "blogPosts" && Array.isArray(override[key]) && !override[key].length && base[key]?.length) {
       next[key] = base[key];
     } else {
       next[key] = Array.isArray(override[key]) ? override[key] : base[key];
@@ -143,6 +145,20 @@ function mergeContent(base, override) {
   }
   next.education = mergeEducation(base.education, next.education);
   return next;
+}
+
+function mergeSkills(baseSkills, overrideSkills) {
+  if (!Array.isArray(overrideSkills) || !overrideSkills.length) return baseSkills;
+  const defaultsByGroup = new Map(
+    (baseSkills || []).map((group) => [String(group.group || group.category || "").trim().toLowerCase(), group])
+  );
+  const merged = overrideSkills
+    .map((group) => {
+      const key = String(group?.group || group?.category || "").trim().toLowerCase();
+      return Array.isArray(group?.items) && group.items.length ? group : defaultsByGroup.get(key) || null;
+    })
+    .filter(Boolean);
+  return merged.length ? merged : baseSkills;
 }
 
 function mergeEducation(baseEducation, overrideEducation) {
